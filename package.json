@@ -1,0 +1,27 @@
+{
+    "name": "js-webpack-starter",
+    "version": "1.0.1",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "server": "node development-server.js dist",
+        "build": "webpack --mode production --devtool false",
+        "build-watch": "webpack --watch",
+        "start": "npm run build-watch"
+    },
+    "author": "aberridg",
+    "license": "ISC",
+    "dependencies": {},
+    "devDependencies": {
+        "@babel/core": "^7.10.4",
+        "@babel/plugin-transform-runtime": "^7.10.4",
+        "@babel/preset-env": "^7.10.4",
+        "babel-loader": "^8.1.0",
+        "copy-webpack-plugin": "^6.0.3",
+        "core-js": "^3.6.5",
+        "d3": "^5.16.0",
+        "live-server": "^1.2.1",
+        "webpack": "^4.43.0",
+        "webpack-cli": "^3.3.12"
+    }
+}
