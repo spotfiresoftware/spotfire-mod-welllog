@@ -1,164 +1,20 @@
 /*
- * Copyright © 2020. TIBCO Software Inc.
- * This file is subject to the license terms contained
- * in the license file that is distributed with this file.
- */
+ Copyright (c) 2016 TIBCO Software Inc
 
-//@ts-check
-import * as d3 from "d3";
-import { invalidateTooltip } from "./extended-api.js";
-import { nodeFormattedPathAsArray } from "./extended-api.js";
-import { addHandlersSelection } from "./ui-input.js";
+ THIS SOFTWARE IS PROVIDED BY TIBCO SOFTWARE INC. ''AS IS'' AND ANY EXPRESS OR
+ IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT 
+ SHALL TIBCO SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, 
+ EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, 
+ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
 
-/**
- * @typedef {{
- *          colorIndex: number;
- *          markedColor: string;
- *          unmarkedColor: string;
- *          markedSegments: number[][]
- *          name: string;
- *          sum: number;
- *          }} RenderGroup;
- */
-
-/**
- * Prepare some dom elements that will persist  throughout mod lifecycle
- */
-const modContainer = d3.select("#mod-container");
-
-/**
- * Main svg container
- */
-const svg = modContainer.append("svg").attr("xmlns", "http://www.w3.org/2000/svg");
-
-const config = {
-    pPerfilIndicadorCurvasBR: "Sim",
-    pPerfilEixoY: "Profundidade",
-    pPerfilHeightMultiplier: 2,
-    pPerfilTrack01EspessuraCurva01: "MEDIA",
-    pPerfilTrack01TracoCurva01: "SOLIDO",
-    pPerfilTrack01CorCurva01: "VERDE",
-    pPerfilTrack01PreenchimentoArea01: "ESQUERDA",
-    pPerfilTrack01CorArea01: "GRADIENTE ESPECTRO",
-    pPerfilTrack01EscalaMinCurva01: "",
-    pPerfilTrack01EscalaMaxCurva01: "",
-    pPerfilTrack01Limite01Curva01: "",
-    pPerfilTrack01Limite02Curva01: "",
-    pPerfilTrack01EspessuraCurva02: "MEDIA",
-    pPerfilTrack01TracoCurva02: "SOLIDO",
-    pPerfilTrack01CorCurva02: "PRETO",
-    pPerfilTrack01PreenchimentoArea02: "",
-    pPerfilTrack01CorArea02: "PRETO",
-    pPerfilTrack01EscalaMinCurva02: "",
-    pPerfilTrack01EscalaMaxCurva02: "",
-    pPerfilTrack01Limite01Curva02: "",
-    pPerfilTrack01Limite02Curva02: "",
-    pPerfilTrack02EspessuraCurva01: "MEDIA",
-    pPerfilTrack02TracoCurva01: "SOLIDO",
-    pPerfilTrack02CorCurva01: "PRETO",
-    pPerfilTrack02PreenchimentoArea01: "ESQUERDA",
-    pPerfilTrack02CorArea01: "AZUL",
-    pPerfilTrack02EscalaMinCurva01: "",
-    pPerfilTrack02EscalaMaxCurva01: "",
-    pPerfilTrack02Limite01Curva01: "175",
-    pPerfilTrack02Limite02Curva01: "",
-    pPerfilTrack02EspessuraCurva02: "MEDIA",
-    pPerfilTrack02TracoCurva02: "SOLIDO",
-    pPerfilTrack02CorCurva02: "VERMELHO",
-    pPerfilTrack02PreenchimentoArea02: "",
-    pPerfilTrack02CorArea02: "VERMELHO",
-    pPerfilTrack02EscalaMinCurva02: "",
-    pPerfilTrack02EscalaMaxCurva02: "",
-    pPerfilTrack02Limite01Curva02: "",
-    pPerfilTrack02Limite02Curva02: "",
-    pPerfilTrack03EspessuraCurva01: "MEDIA",
-    pPerfilTrack03TracoCurva01: "SOLIDO",
-    pPerfilTrack03CorCurva01: "AZUL",
-    pPerfilTrack03PreenchimentoArea01: "ENTRE",
-    pPerfilTrack03CorArea01: "AZUL",
-    pPerfilTrack03EscalaMinCurva01: "",
-    pPerfilTrack03EscalaMaxCurva01: "",
-    pPerfilTrack03Limite01Curva01: "",
-    pPerfilTrack03Limite02Curva01: "",
-    pPerfilTrack03EspessuraCurva02: "MEDIA",
-    pPerfilTrack03TracoCurva02: "SOLIDO",
-    pPerfilTrack03CorCurva02: "VERMELHO",
-    pPerfilTrack03PreenchimentoArea02: "",
-    pPerfilTrack03CorArea02: "VERMELHO",
-    pPerfilTrack03EscalaMinCurva02: "",
-    pPerfilTrack03EscalaMaxCurva02: "",
-    pPerfilTrack03Limite01Curva02: "",
-    pPerfilTrack03Limite02Curva02: "",
-    pPerfilTrack04EspessuraCurva01: "MEDIA",
-    pPerfilTrack04TracoCurva01: "TRACEJADO",
-    pPerfilTrack04CorCurva01: "VERMELHO",
-    pPerfilTrack04PreenchimentoArea01: "ESQUERDA",
-    pPerfilTrack04CorArea01: "GRADIENTE VERMELHO",
-    pPerfilTrack04EscalaMinCurva01: "",
-    pPerfilTrack04EscalaMaxCurva01: "",
-    pPerfilTrack04Limite01Curva01: "",
-    pPerfilTrack04Limite02Curva01: "",
-    pPerfilTrack04EspessuraCurva02: "PEQUENA",
-    pPerfilTrack04TracoCurva02: "SOLIDO",
-    pPerfilTrack04CorCurva02: "VERMELHO",
-    pPerfilTrack04PreenchimentoArea02: "",
-    pPerfilTrack04CorArea02: "VERMELHO",
-    pPerfilTrack04EscalaMinCurva02: "",
-    pPerfilTrack04EscalaMaxCurva02: "",
-    pPerfilTrack04Limite01Curva02: "",
-    pPerfilTrack04Limite02Curva02: "",
-    pPerfilTrack05EspessuraCurva01: "PEQUENA",
-    pPerfilTrack05TracoCurva01: "SOLIDO",
-    pPerfilTrack05CorCurva01: "PRETO",
-    pPerfilTrack05PreenchimentoArea01: "",
-    pPerfilTrack05CorArea01: "PRETO",
-    pPerfilTrack05EscalaMinCurva01: "",
-    pPerfilTrack05EscalaMaxCurva01: "",
-    pPerfilTrack05Limite01Curva01: "",
-    pPerfilTrack05Limite02Curva01: "",
-    pPerfilTrack05EspessuraCurva02: "MEDIA",
-    pPerfilTrack05TracoCurva02: "SOLIDO",
-    pPerfilTrack05CorCurva02: "PRETO",
-    pPerfilTrack05PreenchimentoArea02: "",
-    pPerfilTrack05CorArea02: "PRETO",
-    pPerfilTrack05EscalaMinCurva02: "",
-    pPerfilTrack05EscalaMaxCurva02: "",
-    pPerfilTrack05Limite01Curva02: "",
-    pPerfilTrack05Limite02Curva02: "",
-    pPerfilTrack06Curva01: "",
-    pPerfilTrack06EspessuraCurva01: "MEDIA",
-    pPerfilTrack06TracoCurva01: "SOLIDO",
-    pPerfilTrack06CorCurva01: "PRETO",
-    pPerfilTrack06PreenchimentoArea01: "",
-    pPerfilTrack06CorArea01: "PRETO",
-    pPerfilTrack06EscalaMinCurva01: "",
-    pPerfilTrack06EscalaMaxCurva01: "",
-    pPerfilTrack06Limite01Curva01: "",
-    pPerfilTrack06Limite02Curva01: "",
-    pPerfilTrack06Curva02: "",
-    pPerfilTrack06EspessuraCurva02: "MEDIA",
-    pPerfilTrack06TracoCurva02: "SOLIDO",
-    pPerfilTrack06CorCurva02: "PRETO",
-    pPerfilTrack06PreenchimentoArea02: "",
-    pPerfilTrack06CorArea02: "PRETO",
-    pPerfilTrack06EscalaMinCurva02: "",
-    pPerfilTrack06EscalaMaxCurva02: "",
-    pPerfilTrack06Limite01Curva02: "",
-    pPerfilTrack06Limite02Curva02: "",
-    pPerfilTrack01TipoEscalaCurva01: "linear",
-    pPerfilTrack01TipoEscalaCurva02: "linear",
-    pPerfilTrack02TipoEscalaCurva01: "linear",
-    pPerfilTrack02TipoEscalaCurva02: "log",
-    pPerfilTrack03TipoEscalaCurva01: "linear",
-    pPerfilTrack03TipoEscalaCurva02: "linear",
-    pPerfilTrack04TipoEscalaCurva01: "linear",
-    pPerfilTrack04TipoEscalaCurva02: "log",
-    pPerfilTrack05TipoEscalaCurva01: "linear",
-    pPerfilTrack05TipoEscalaCurva02: "linear",
-    pPerfilTrack06TipoEscalaCurva01: "linear",
-    pPerfilTrack06TipoEscalaCurva02: "linear"
-};
-
+//////////////////////////////////////////////////////////////////////////////
+// #region Drawing Code
+//
 
 var pPerfilEixoY;
 var zoneLogTrackWidth = 120;
@@ -193,313 +49,189 @@ function getCurveData(lineIndex, curveName, sfData) {
     return null;
 }
 	
+	
 
 
-/**
- * A container for X axis labels.
- * Instead of figuring out the layout in special cases when labels don't fit, we delegate
- * this job to the DOM layout engine.
- */
-const xLabelsContainer = modContainer.append("div").attr("class", "x-axis-label-container");
 
-/**
- * Renders the chart.
- * @param {Object} state
- * @param {Spotfire.Mod} mod
- * @param {Spotfire.DataView} dataView - dataView
- * @param {Spotfire.Size} windowSize - windowSize
- * @param {Spotfire.ModProperty<string>} example - an example property
- */
-export async function render(state, mod, dataView, windowSize, example) {
-    if (state.preventRender) {
-        // Early return if the state currently disallows rendering.
+//
+// Main Drawing Method
+//
+function renderCore(sfdata) {
+	//well = sfdata["config"]["pPerfilNomePoco"];
+	
+	
+    if (resizing) {
         return;
     }
-
-    const onSelection = ({ dragSelectActive }) => {
-        state.preventRender = dragSelectActive;
-    };
-
-    const styling = mod.getRenderContext().styling;
-    const { tooltip, popout } = mod.controls;
-    const { radioButton, checkbox } = popout.components;
-    const { section } = popout;
-
-    invalidateTooltip(tooltip);
-
-    /**
-     * The DataView can contain errors which will cause rowCount method to throw.
-     */
-    let errors = await dataView.getErrors();
-    if (errors.length > 0) {
-        svg.selectAll("*").remove();
-        mod.controls.errorOverlay.show(errors, "dataView");
-        return;
-    }
-
-    mod.controls.errorOverlay.hide("dataView");
-
-    // Return and wait for next call to render when reading data was aborted.
-    // Last rendered data view is still valid from a users perspective since
-    // a document modification was made during a progress indication.
-    // Hard abort if row count exceeds an arbitrary selected limit
-    const xLimit = 1250;
-    const colorLimit = 100;
-    const colorCount = (await dataView.hierarchy("Color")).leafCount;
-    const xCount = (await dataView.hierarchy("X")).leafCount;
-    if (colorCount > colorLimit || xCount > xLimit) {
-        svg.selectAll("*").remove();
-        mod.controls.errorOverlay.show(`Exceeded data size limit (colors: ${colorLimit}, x: ${xLimit})`, "rowCount");
-        return;
-    } else {
-        mod.controls.errorOverlay.hide("rowCount");
-    }
-
-    const allRows = await dataView.allRows();
-
-    if (allRows == null) {
-        // Return and wait for next call to render when reading data was aborted.
-        // Last rendered data view is still valid from a users perspective since
-        // a document modification was made during a progress indication.
-        return;
-    }
-
-    const colorHierarchy = await dataView.hierarchy("Color");
-    const xHierarchy = await dataView.hierarchy("X");
-
-    const xLeaves = (await xHierarchy.root()).leaves();
-    const colorLeaves = (await colorHierarchy.root()).leaves();
-
-    const xAxisMeta = await mod.visualization.axis("X");
-    const yAxisMeta = await mod.visualization.axis("Y");
-    const colorAxisMeta = await mod.visualization.axis("Color");
-
-    const margin = { top: 20, right: 40, bottom: 40, left: 80 };
-
-    /**
-     * Maximum number of Y scale ticks is an approximate number
-     * To get the said number we divide total available height by font size with some arbitrary padding
-     */
-    const yScaleTickNumber = windowSize.height / (styling.scales.font.fontSize * 2 + 6);
-
-    /**
-     * Sets the viewBox to match windowSize
-     */
-    svg.attr("viewBox", [0, 0, windowSize.width, windowSize.height]);
-    svg.selectAll("*").remove();
-
-    /**
-     * Creates a clipping region that will be used to mask out everything outside of it.
-     */
-    svg.append("defs")
-        .append("clipPath")
-        .attr("id", "clipPath")
-        .append("rect")
-        .attr("x", margin.left)
-        .attr("y", margin.top)
-        .attr("width", windowSize.width - margin.left)
-        .attr("height", windowSize.height - (margin.bottom + margin.top));
-
-    /**
-     * Background rectangle - used to catch click events and clear marking.
-     */
-    svg.append("rect")
-        .attr("fill", "#000")
-        .attr("fill-opacity", 0)
-        .attr("x", 0)
-        .attr("y", 0)
-        .attr("width", windowSize.width)
-        .attr("height", windowSize.height)
-        .on("click", () => dataView.clearMarking());
-
-    /**
-     * Prepare groups that will hold all elements of an area chart.
-     * The groups are drawn in a specific order for the best user experience:
-     * - 'unmarked-area', 'unmarked line' - contains all areas and lines drawn with their respective 'unmarked' color
-     * - 'marked-area', 'marked-line' - contains areas and lines that we consider 'marked' (consecutive marked points)
-     * - 'unmarked-circles' - contains circles that represent unmarked points; only appear in a special case when 'X axis expression' == 'Color axis expression'
-     * - 'marked-circles' - contains circles that represent marked points; will show only edge points if the whole group is marked;
-     * - 'hover-line' - contains all lines; lines are hidden by default but show up with an outline when hovered
-     */
-    svg.append("g").attr("class", "unmarked-area").attr("clip-path", "url(#clipPath)");
-    svg.append("g").attr("class", "unmarked-line").attr("clip-path", "url(#clipPath)");
-    svg.append("g").attr("class", "marked-area").attr("clip-path", "url(#clipPath)");
-    svg.append("g").attr("class", "marked-line").attr("clip-path", "url(#clipPath)");
-
-    svg.append("g").attr("class", "hover-line").attr("clip-path", "url(#clipPath)");
-
-    for (const row of allRows) {
-        console.log(row.categorical("X").value());
-    }
-
-    for (const colorLeaf of colorLeaves) {
-        console.log(colorLeaf.formattedPath());
-    }
-    for (const xLeaf of xLeaves) {
-        console.log(xLeaf.formattedPath());
-    }
-
-    // Now render here!
-
-    var escala = 'linear'
+	
+	sfData = sfdata;
+	
+    if (sfdata.data.length <= 1) {
+      let noDIV = d3.select("js_chart").selectAll("div").remove();
+      let noSVG = d3.select("js_chart").selectAll("svg").remove();
+	  return;
+	}
+	
+	
+	var escala = 'linear'
 	var scwidth = window.innerWidth -30;
     var scheight = window.innerHeight -30;
 
 	//Propriedades do gráfico:
-	var pPerfilHeightMultiplier = config["pPerfilHeightMultiplier"];
-	pPerfilEixoY = config["pPerfilEixoY"]; //'Profundidade' ou 'Cora'
-	var pPerfilIndicadorCurvasBR = config["pPerfilIndicadorCurvasBR"];
+	var pPerfilHeightMultiplier = sfdata["config"]["pPerfilHeightMultiplier"];
+	pPerfilEixoY = sfdata["config"]["pPerfilEixoY"]; //'Profundidade' ou 'Cora'
+	var pPerfilIndicadorCurvasBR = sfdata["config"]["pPerfilIndicadorCurvasBR"];
 	
 	var zoneLogTrackWidth = 120;
 	var numberOfTracks = 4;
 	
 	var trackWidth = (scwidth - zoneLogTrackWidth - zoneLogTrackWidth)/(numberOfTracks);
 	
-	console.log(JSON.stringify(config));
+	console.log(JSON.stringify(sfdata["config"]));
 	
 	//Track 01: ----------------------------------------------------------------------------------
-	var pPerfilTrack01EspessuraCurva01 = config["pPerfilTrack01EspessuraCurva01"];
-	var pPerfilTrack01TracoCurva01 = config["pPerfilTrack01TracoCurva01"];
-	var pPerfilTrack01CorCurva01 = config["pPerfilTrack01CorCurva01"];
-	var pPerfilTrack01PreenchimentoArea01 = config["pPerfilTrack01PreenchimentoArea01"];
-	var pPerfilTrack01CorArea01 = config["pPerfilTrack01CorArea01"];
-	var pPerfilTrack01EscalaMinCurva01 = config["pPerfilTrack01EscalaMinCurva01"];
-	var pPerfilTrack01EscalaMaxCurva01 = config["pPerfilTrack01EscalaMaxCurva01"];
-	var pPerfilTrack01Limite01Curva01 = config["pPerfilTrack01Limite01Curva01"];
-	var pPerfilTrack01Limite02Curva01 = config["pPerfilTrack01Limite02Curva01"];
-	var pPerfilTrack01TipoEscalaCurva01 =  config["pPerfilTrack01TipoEscalaCurva01"];
+	var pPerfilTrack01EspessuraCurva01 = sfdata["config"]["pPerfilTrack01EspessuraCurva01"];
+	var pPerfilTrack01TracoCurva01 = sfdata["config"]["pPerfilTrack01TracoCurva01"];
+	var pPerfilTrack01CorCurva01 = sfdata["config"]["pPerfilTrack01CorCurva01"];
+	var pPerfilTrack01PreenchimentoArea01 = sfdata["config"]["pPerfilTrack01PreenchimentoArea01"];
+	var pPerfilTrack01CorArea01 = sfdata["config"]["pPerfilTrack01CorArea01"];
+	var pPerfilTrack01EscalaMinCurva01 = sfdata["config"]["pPerfilTrack01EscalaMinCurva01"];
+	var pPerfilTrack01EscalaMaxCurva01 = sfdata["config"]["pPerfilTrack01EscalaMaxCurva01"];
+	var pPerfilTrack01Limite01Curva01 = sfdata["config"]["pPerfilTrack01Limite01Curva01"];
+	var pPerfilTrack01Limite02Curva01 = sfdata["config"]["pPerfilTrack01Limite02Curva01"];
+	var pPerfilTrack01TipoEscalaCurva01 =  sfdata["config"]["pPerfilTrack01TipoEscalaCurva01"];
 
-	var pPerfilTrack01EspessuraCurva02 = config["pPerfilTrack01EspessuraCurva02"];
-	var pPerfilTrack01TracoCurva02 = config["pPerfilTrack01TracoCurva02"];
-	var pPerfilTrack01CorCurva02 = config["pPerfilTrack01CorCurva02"];
-	var pPerfilTrack01PreenchimentoArea02 = config["pPerfilTrack01PreenchimentoArea02"];
-	var pPerfilTrack01CorArea02 = config["pPerfilTrack01CorArea02"];
-	var pPerfilTrack01EscalaMinCurva02 = config["pPerfilTrack01EscalaMinCurva02"];
-	var pPerfilTrack01EscalaMaxCurva02 = config["pPerfilTrack01EscalaMaxCurva02"];
-	var pPerfilTrack01Limite01Curva02 = config["pPerfilTrack01Limite01Curva02"];
-	var pPerfilTrack01Limite02Curva02 = config["pPerfilTrack01Limite02Curva02"];
-    var pPerfilTrack01TipoEscalaCurva02 =  config["pPerfilTrack01TipoEscalaCurva02"];
+	var pPerfilTrack01EspessuraCurva02 = sfdata["config"]["pPerfilTrack01EspessuraCurva02"];
+	var pPerfilTrack01TracoCurva02 = sfdata["config"]["pPerfilTrack01TracoCurva02"];
+	var pPerfilTrack01CorCurva02 = sfdata["config"]["pPerfilTrack01CorCurva02"];
+	var pPerfilTrack01PreenchimentoArea02 = sfdata["config"]["pPerfilTrack01PreenchimentoArea02"];
+	var pPerfilTrack01CorArea02 = sfdata["config"]["pPerfilTrack01CorArea02"];
+	var pPerfilTrack01EscalaMinCurva02 = sfdata["config"]["pPerfilTrack01EscalaMinCurva02"];
+	var pPerfilTrack01EscalaMaxCurva02 = sfdata["config"]["pPerfilTrack01EscalaMaxCurva02"];
+	var pPerfilTrack01Limite01Curva02 = sfdata["config"]["pPerfilTrack01Limite01Curva02"];
+	var pPerfilTrack01Limite02Curva02 = sfdata["config"]["pPerfilTrack01Limite02Curva02"];
+    var pPerfilTrack01TipoEscalaCurva02 =  sfdata["config"]["pPerfilTrack01TipoEscalaCurva02"];
 	
 	
 	//Track 02: ----------------------------------------------------------------------------------
-	var pPerfilTrack02EspessuraCurva01 = config["pPerfilTrack02EspessuraCurva01"];
-	var pPerfilTrack02TracoCurva01 = config["pPerfilTrack02TracoCurva01"];
-	var pPerfilTrack02CorCurva01 = config["pPerfilTrack02CorCurva01"];
-	var pPerfilTrack02PreenchimentoArea01 = config["pPerfilTrack02PreenchimentoArea01"];
-	var pPerfilTrack02CorArea01 = config["pPerfilTrack02CorArea01"];
-	var pPerfilTrack02EscalaMinCurva01 = config["pPerfilTrack02EscalaMinCurva01"];
-	var pPerfilTrack02EscalaMaxCurva01 = config["pPerfilTrack02EscalaMaxCurva01"];
-	var pPerfilTrack02Limite01Curva01 = config["pPerfilTrack02Limite01Curva01"];
-	var pPerfilTrack02Limite02Curva01 = config["pPerfilTrack02Limite02Curva01"];
-	var pPerfilTrack02TipoEscalaCurva01 =  config["pPerfilTrack02TipoEscalaCurva01"];
+	var pPerfilTrack02EspessuraCurva01 = sfdata["config"]["pPerfilTrack02EspessuraCurva01"];
+	var pPerfilTrack02TracoCurva01 = sfdata["config"]["pPerfilTrack02TracoCurva01"];
+	var pPerfilTrack02CorCurva01 = sfdata["config"]["pPerfilTrack02CorCurva01"];
+	var pPerfilTrack02PreenchimentoArea01 = sfdata["config"]["pPerfilTrack02PreenchimentoArea01"];
+	var pPerfilTrack02CorArea01 = sfdata["config"]["pPerfilTrack02CorArea01"];
+	var pPerfilTrack02EscalaMinCurva01 = sfdata["config"]["pPerfilTrack02EscalaMinCurva01"];
+	var pPerfilTrack02EscalaMaxCurva01 = sfdata["config"]["pPerfilTrack02EscalaMaxCurva01"];
+	var pPerfilTrack02Limite01Curva01 = sfdata["config"]["pPerfilTrack02Limite01Curva01"];
+	var pPerfilTrack02Limite02Curva01 = sfdata["config"]["pPerfilTrack02Limite02Curva01"];
+	var pPerfilTrack02TipoEscalaCurva01 =  sfdata["config"]["pPerfilTrack02TipoEscalaCurva01"];
 	
-	var pPerfilTrack02EspessuraCurva02 = config["pPerfilTrack02EspessuraCurva02"];
-	var pPerfilTrack02TracoCurva02 = config["pPerfilTrack02TracoCurva02"];
-	var pPerfilTrack02CorCurva02 = config["pPerfilTrack02CorCurva02"];
-	var pPerfilTrack02PreenchimentoArea02 = config["pPerfilTrack02PreenchimentoArea02"];
-	var pPerfilTrack02CorArea02 = config["pPerfilTrack02CorArea02"];
-	var pPerfilTrack02EscalaMinCurva02 = config["pPerfilTrack02EscalaMinCurva02"];
-	var pPerfilTrack02EscalaMaxCurva02 = config["pPerfilTrack02EscalaMaxCurva02"];
-	var pPerfilTrack02Limite01Curva02 = config["pPerfilTrack02Limite01Curva02"];
-	var pPerfilTrack02Limite02Curva02 = config["pPerfilTrack02Limite02Curva02"];
-	var pPerfilTrack02TipoEscalaCurva02 =  config["pPerfilTrack02TipoEscalaCurva02"];
+	var pPerfilTrack02EspessuraCurva02 = sfdata["config"]["pPerfilTrack02EspessuraCurva02"];
+	var pPerfilTrack02TracoCurva02 = sfdata["config"]["pPerfilTrack02TracoCurva02"];
+	var pPerfilTrack02CorCurva02 = sfdata["config"]["pPerfilTrack02CorCurva02"];
+	var pPerfilTrack02PreenchimentoArea02 = sfdata["config"]["pPerfilTrack02PreenchimentoArea02"];
+	var pPerfilTrack02CorArea02 = sfdata["config"]["pPerfilTrack02CorArea02"];
+	var pPerfilTrack02EscalaMinCurva02 = sfdata["config"]["pPerfilTrack02EscalaMinCurva02"];
+	var pPerfilTrack02EscalaMaxCurva02 = sfdata["config"]["pPerfilTrack02EscalaMaxCurva02"];
+	var pPerfilTrack02Limite01Curva02 = sfdata["config"]["pPerfilTrack02Limite01Curva02"];
+	var pPerfilTrack02Limite02Curva02 = sfdata["config"]["pPerfilTrack02Limite02Curva02"];
+	var pPerfilTrack02TipoEscalaCurva02 =  sfdata["config"]["pPerfilTrack02TipoEscalaCurva02"];
 	
 	
 	//Track 03: ----------------------------------------------------------------------------------
-	var pPerfilTrack03EspessuraCurva01 = config["pPerfilTrack03EspessuraCurva01"];
-	var pPerfilTrack03TracoCurva01 = config["pPerfilTrack03TracoCurva01"];
-	var pPerfilTrack03CorCurva01 = config["pPerfilTrack03CorCurva01"];
-	var pPerfilTrack03PreenchimentoArea01 = config["pPerfilTrack03PreenchimentoArea01"];
-	var pPerfilTrack03CorArea01 = config["pPerfilTrack03CorArea01"];
-	var pPerfilTrack03EscalaMinCurva01 = config["pPerfilTrack03EscalaMinCurva01"];
-	var pPerfilTrack03EscalaMaxCurva01 = config["pPerfilTrack03EscalaMaxCurva01"];
-	var pPerfilTrack03Limite01Curva01 = config["pPerfilTrack03Limite01Curva01"];
-	var pPerfilTrack03Limite02Curva01 = config["pPerfilTrack03Limite02Curva01"];
-	var pPerfilTrack03TipoEscalaCurva01 =  config["pPerfilTrack03TipoEscalaCurva01"];
+	var pPerfilTrack03EspessuraCurva01 = sfdata["config"]["pPerfilTrack03EspessuraCurva01"];
+	var pPerfilTrack03TracoCurva01 = sfdata["config"]["pPerfilTrack03TracoCurva01"];
+	var pPerfilTrack03CorCurva01 = sfdata["config"]["pPerfilTrack03CorCurva01"];
+	var pPerfilTrack03PreenchimentoArea01 = sfdata["config"]["pPerfilTrack03PreenchimentoArea01"];
+	var pPerfilTrack03CorArea01 = sfdata["config"]["pPerfilTrack03CorArea01"];
+	var pPerfilTrack03EscalaMinCurva01 = sfdata["config"]["pPerfilTrack03EscalaMinCurva01"];
+	var pPerfilTrack03EscalaMaxCurva01 = sfdata["config"]["pPerfilTrack03EscalaMaxCurva01"];
+	var pPerfilTrack03Limite01Curva01 = sfdata["config"]["pPerfilTrack03Limite01Curva01"];
+	var pPerfilTrack03Limite02Curva01 = sfdata["config"]["pPerfilTrack03Limite02Curva01"];
+	var pPerfilTrack03TipoEscalaCurva01 =  sfdata["config"]["pPerfilTrack03TipoEscalaCurva01"];
 
-	var pPerfilTrack03EspessuraCurva02 = config["pPerfilTrack03EspessuraCurva02"];
-	var pPerfilTrack03TracoCurva02 = config["pPerfilTrack03TracoCurva02"];
-	var pPerfilTrack03CorCurva02 = config["pPerfilTrack03CorCurva02"];
-	var pPerfilTrack03PreenchimentoArea02 = config["pPerfilTrack03PreenchimentoArea02"];
-	var pPerfilTrack03CorArea02 = config["pPerfilTrack03CorArea02"];
-	var pPerfilTrack03EscalaMinCurva02 = config["pPerfilTrack03EscalaMinCurva02"];
-	var pPerfilTrack03EscalaMaxCurva02 = config["pPerfilTrack03EscalaMaxCurva02"];
-	var pPerfilTrack03Limite01Curva02 = config["pPerfilTrack03Limite01Curva02"];
-	var pPerfilTrack03Limite02Curva02 = config["pPerfilTrack03Limite02Curva02"];
-	var pPerfilTrack03TipoEscalaCurva02 =  config["pPerfilTrack03TipoEscalaCurva02"];
+	var pPerfilTrack03EspessuraCurva02 = sfdata["config"]["pPerfilTrack03EspessuraCurva02"];
+	var pPerfilTrack03TracoCurva02 = sfdata["config"]["pPerfilTrack03TracoCurva02"];
+	var pPerfilTrack03CorCurva02 = sfdata["config"]["pPerfilTrack03CorCurva02"];
+	var pPerfilTrack03PreenchimentoArea02 = sfdata["config"]["pPerfilTrack03PreenchimentoArea02"];
+	var pPerfilTrack03CorArea02 = sfdata["config"]["pPerfilTrack03CorArea02"];
+	var pPerfilTrack03EscalaMinCurva02 = sfdata["config"]["pPerfilTrack03EscalaMinCurva02"];
+	var pPerfilTrack03EscalaMaxCurva02 = sfdata["config"]["pPerfilTrack03EscalaMaxCurva02"];
+	var pPerfilTrack03Limite01Curva02 = sfdata["config"]["pPerfilTrack03Limite01Curva02"];
+	var pPerfilTrack03Limite02Curva02 = sfdata["config"]["pPerfilTrack03Limite02Curva02"];
+	var pPerfilTrack03TipoEscalaCurva02 =  sfdata["config"]["pPerfilTrack03TipoEscalaCurva02"];
 	
 	
 	//Track 04: ----------------------------------------------------------------------------------
-	var pPerfilTrack04EspessuraCurva01 = config["pPerfilTrack04EspessuraCurva01"];
-	var pPerfilTrack04TracoCurva01 = config["pPerfilTrack04TracoCurva01"];
-	var pPerfilTrack04CorCurva01 = config["pPerfilTrack04CorCurva01"];
-	var pPerfilTrack04PreenchimentoArea01 = config["pPerfilTrack04PreenchimentoArea01"];
-	var pPerfilTrack04CorArea01 = config["pPerfilTrack04CorArea01"];
-	var pPerfilTrack04EscalaMinCurva01 = config["pPerfilTrack04EscalaMinCurva01"];
-	var pPerfilTrack04EscalaMaxCurva01 = config["pPerfilTrack04EscalaMaxCurva01"];
-	var pPerfilTrack04Limite01Curva01 = config["pPerfilTrack04Limite01Curva01"];
-	var pPerfilTrack04Limite02Curva01 = config["pPerfilTrack04Limite02Curva01"];
-	var pPerfilTrack04TipoEscalaCurva01 =  config["pPerfilTrack04TipoEscalaCurva01"];
+	var pPerfilTrack04EspessuraCurva01 = sfdata["config"]["pPerfilTrack04EspessuraCurva01"];
+	var pPerfilTrack04TracoCurva01 = sfdata["config"]["pPerfilTrack04TracoCurva01"];
+	var pPerfilTrack04CorCurva01 = sfdata["config"]["pPerfilTrack04CorCurva01"];
+	var pPerfilTrack04PreenchimentoArea01 = sfdata["config"]["pPerfilTrack04PreenchimentoArea01"];
+	var pPerfilTrack04CorArea01 = sfdata["config"]["pPerfilTrack04CorArea01"];
+	var pPerfilTrack04EscalaMinCurva01 = sfdata["config"]["pPerfilTrack04EscalaMinCurva01"];
+	var pPerfilTrack04EscalaMaxCurva01 = sfdata["config"]["pPerfilTrack04EscalaMaxCurva01"];
+	var pPerfilTrack04Limite01Curva01 = sfdata["config"]["pPerfilTrack04Limite01Curva01"];
+	var pPerfilTrack04Limite02Curva01 = sfdata["config"]["pPerfilTrack04Limite02Curva01"];
+	var pPerfilTrack04TipoEscalaCurva01 =  sfdata["config"]["pPerfilTrack04TipoEscalaCurva01"];
 
-	var pPerfilTrack04EspessuraCurva02 = config["pPerfilTrack04EspessuraCurva02"];
-	var pPerfilTrack04TracoCurva02 = config["pPerfilTrack04TracoCurva02"];
-	var pPerfilTrack04CorCurva02 = config["pPerfilTrack04CorCurva02"];
-	var pPerfilTrack04PreenchimentoArea02 = config["pPerfilTrack04PreenchimentoArea02"];
-	var pPerfilTrack04CorArea02 = config["pPerfilTrack04CorArea02"];
-	var pPerfilTrack04EscalaMinCurva02 = config["pPerfilTrack04EscalaMinCurva02"];
-	var pPerfilTrack04EscalaMaxCurva02 = config["pPerfilTrack04EscalaMaxCurva02"];
-	var pPerfilTrack04Limite01Curva02 = config["pPerfilTrack04Limite01Curva02"];
-	var pPerfilTrack04Limite02Curva02 = config["pPerfilTrack04Limite02Curva02"];
-	var pPerfilTrack04TipoEscalaCurva02 =  config["pPerfilTrack04TipoEscalaCurva02"];
+	var pPerfilTrack04EspessuraCurva02 = sfdata["config"]["pPerfilTrack04EspessuraCurva02"];
+	var pPerfilTrack04TracoCurva02 = sfdata["config"]["pPerfilTrack04TracoCurva02"];
+	var pPerfilTrack04CorCurva02 = sfdata["config"]["pPerfilTrack04CorCurva02"];
+	var pPerfilTrack04PreenchimentoArea02 = sfdata["config"]["pPerfilTrack04PreenchimentoArea02"];
+	var pPerfilTrack04CorArea02 = sfdata["config"]["pPerfilTrack04CorArea02"];
+	var pPerfilTrack04EscalaMinCurva02 = sfdata["config"]["pPerfilTrack04EscalaMinCurva02"];
+	var pPerfilTrack04EscalaMaxCurva02 = sfdata["config"]["pPerfilTrack04EscalaMaxCurva02"];
+	var pPerfilTrack04Limite01Curva02 = sfdata["config"]["pPerfilTrack04Limite01Curva02"];
+	var pPerfilTrack04Limite02Curva02 = sfdata["config"]["pPerfilTrack04Limite02Curva02"];
+	var pPerfilTrack04TipoEscalaCurva02 =  sfdata["config"]["pPerfilTrack04TipoEscalaCurva02"];
 	
 	//Track 05: ----------------------------------------------------------------------------------
-	var pPerfilTrack05EspessuraCurva01 = config["pPerfilTrack05EspessuraCurva01"];
-	var pPerfilTrack05TracoCurva01 = config["pPerfilTrack05TracoCurva01"];
-	var pPerfilTrack05CorCurva01 = config["pPerfilTrack05CorCurva01"];
-	var pPerfilTrack05PreenchimentoArea01 = config["pPerfilTrack05PreenchimentoArea01"];
-	var pPerfilTrack05CorArea01 = config["pPerfilTrack05CorArea01"];
-	var pPerfilTrack05EscalaMinCurva01 = config["pPerfilTrack05EscalaMinCurva01"];
-	var pPerfilTrack05EscalaMaxCurva01 = config["pPerfilTrack05EscalaMaxCurva01"];
-	var pPerfilTrack05Limite01Curva01 = config["pPerfilTrack05Limite01Curva01"];
-	var pPerfilTrack05Limite02Curva01 = config["pPerfilTrack05Limite02Curva01"];
-	var pPerfilTrack05TipoEscalaCurva01 =  config["pPerfilTrack05TipoEscalaCurva01"];
+	var pPerfilTrack05EspessuraCurva01 = sfdata["config"]["pPerfilTrack05EspessuraCurva01"];
+	var pPerfilTrack05TracoCurva01 = sfdata["config"]["pPerfilTrack05TracoCurva01"];
+	var pPerfilTrack05CorCurva01 = sfdata["config"]["pPerfilTrack05CorCurva01"];
+	var pPerfilTrack05PreenchimentoArea01 = sfdata["config"]["pPerfilTrack05PreenchimentoArea01"];
+	var pPerfilTrack05CorArea01 = sfdata["config"]["pPerfilTrack05CorArea01"];
+	var pPerfilTrack05EscalaMinCurva01 = sfdata["config"]["pPerfilTrack05EscalaMinCurva01"];
+	var pPerfilTrack05EscalaMaxCurva01 = sfdata["config"]["pPerfilTrack05EscalaMaxCurva01"];
+	var pPerfilTrack05Limite01Curva01 = sfdata["config"]["pPerfilTrack05Limite01Curva01"];
+	var pPerfilTrack05Limite02Curva01 = sfdata["config"]["pPerfilTrack05Limite02Curva01"];
+	var pPerfilTrack05TipoEscalaCurva01 =  sfdata["config"]["pPerfilTrack05TipoEscalaCurva01"];
 
-	var pPerfilTrack05EspessuraCurva02 = config["pPerfilTrack05EspessuraCurva02"];
-	var pPerfilTrack05TracoCurva02 = config["pPerfilTrack05TracoCurva02"];
-	var pPerfilTrack05CorCurva02 = config["pPerfilTrack05CorCurva02"];
-	var pPerfilTrack05PreenchimentoArea02 = config["pPerfilTrack05PreenchimentoArea02"];
-	var pPerfilTrack05CorArea02 = config["pPerfilTrack05CorArea02"];
-	var pPerfilTrack05EscalaMinCurva02 = config["pPerfilTrack05EscalaMinCurva02"];
-	var pPerfilTrack05EscalaMaxCurva02 = config["pPerfilTrack05EscalaMaxCurva02"];
-	var pPerfilTrack05Limite01Curva02 = config["pPerfilTrack05Limite01Curva02"];
-	var pPerfilTrack05Limite02Curva02 = config["pPerfilTrack05Limite02Curva02"];
-	var pPerfilTrack05TipoEscalaCurva02 =  config["pPerfilTrack05TipoEscalaCurva02"];
+	var pPerfilTrack05EspessuraCurva02 = sfdata["config"]["pPerfilTrack05EspessuraCurva02"];
+	var pPerfilTrack05TracoCurva02 = sfdata["config"]["pPerfilTrack05TracoCurva02"];
+	var pPerfilTrack05CorCurva02 = sfdata["config"]["pPerfilTrack05CorCurva02"];
+	var pPerfilTrack05PreenchimentoArea02 = sfdata["config"]["pPerfilTrack05PreenchimentoArea02"];
+	var pPerfilTrack05CorArea02 = sfdata["config"]["pPerfilTrack05CorArea02"];
+	var pPerfilTrack05EscalaMinCurva02 = sfdata["config"]["pPerfilTrack05EscalaMinCurva02"];
+	var pPerfilTrack05EscalaMaxCurva02 = sfdata["config"]["pPerfilTrack05EscalaMaxCurva02"];
+	var pPerfilTrack05Limite01Curva02 = sfdata["config"]["pPerfilTrack05Limite01Curva02"];
+	var pPerfilTrack05Limite02Curva02 = sfdata["config"]["pPerfilTrack05Limite02Curva02"];
+	var pPerfilTrack05TipoEscalaCurva02 =  sfdata["config"]["pPerfilTrack05TipoEscalaCurva02"];
 	
 	
 	//Track 06: ----------------------------------------------------------------------------------
-	var pPerfilTrack06Curva01 = config["pPerfilTrack06Curva01"].trim() != '' ? config["pPerfilTrack06Curva01"] : null;
-	var pPerfilTrack06EspessuraCurva01 = config["pPerfilTrack06EspessuraCurva01"];
-	var pPerfilTrack06TracoCurva01 = config["pPerfilTrack06TracoCurva01"];
-	var pPerfilTrack06CorCurva01 = config["pPerfilTrack06CorCurva01"];
-	var pPerfilTrack06PreenchimentoArea01 = config["pPerfilTrack06PreenchimentoArea01"];
-	var pPerfilTrack06CorArea01 = config["pPerfilTrack06CorArea01"];
-	var pPerfilTrack06EscalaMinCurva01 = config["pPerfilTrack06EscalaMinCurva01"];
-	var pPerfilTrack06EscalaMaxCurva01 = config["pPerfilTrack06EscalaMaxCurva01"];
-	var pPerfilTrack06Limite01Curva01 = config["pPerfilTrack06Limite01Curva01"];
-	var pPerfilTrack06Limite02Curva01 = config["pPerfilTrack06Limite02Curva01"];
-	var pPerfilTrack06TipoEscalaCurva01 =  config["pPerfilTrack06TipoEscalaCurva01"];
+	var pPerfilTrack06Curva01 = sfdata["config"]["pPerfilTrack06Curva01"].trim() != '' ? sfdata["config"]["pPerfilTrack06Curva01"] : null;
+	var pPerfilTrack06EspessuraCurva01 = sfdata["config"]["pPerfilTrack06EspessuraCurva01"];
+	var pPerfilTrack06TracoCurva01 = sfdata["config"]["pPerfilTrack06TracoCurva01"];
+	var pPerfilTrack06CorCurva01 = sfdata["config"]["pPerfilTrack06CorCurva01"];
+	var pPerfilTrack06PreenchimentoArea01 = sfdata["config"]["pPerfilTrack06PreenchimentoArea01"];
+	var pPerfilTrack06CorArea01 = sfdata["config"]["pPerfilTrack06CorArea01"];
+	var pPerfilTrack06EscalaMinCurva01 = sfdata["config"]["pPerfilTrack06EscalaMinCurva01"];
+	var pPerfilTrack06EscalaMaxCurva01 = sfdata["config"]["pPerfilTrack06EscalaMaxCurva01"];
+	var pPerfilTrack06Limite01Curva01 = sfdata["config"]["pPerfilTrack06Limite01Curva01"];
+	var pPerfilTrack06Limite02Curva01 = sfdata["config"]["pPerfilTrack06Limite02Curva01"];
+	var pPerfilTrack06TipoEscalaCurva01 =  sfdata["config"]["pPerfilTrack06TipoEscalaCurva01"];
 
-	var pPerfilTrack06Curva02 = config["pPerfilTrack06Curva02"].trim() != '' ? config["pPerfilTrack06Curva02"] : null;
-	var pPerfilTrack06EspessuraCurva02 = config["pPerfilTrack06EspessuraCurva02"];
-	var pPerfilTrack06TracoCurva02 = config["pPerfilTrack06TracoCurva02"];
-	var pPerfilTrack06CorCurva02 = config["pPerfilTrack06CorCurva02"];
-	var pPerfilTrack06PreenchimentoArea02 = config["pPerfilTrack06PreenchimentoArea02"];
-	var pPerfilTrack06CorArea02 = config["pPerfilTrack06CorArea02"];
-	var pPerfilTrack06EscalaMinCurva02 = config["pPerfilTrack06EscalaMinCurva02"];
-	var pPerfilTrack06EscalaMaxCurva02 = config["pPerfilTrack06EscalaMaxCurva02"];
-	var pPerfilTrack06Limite01Curva02 = config["pPerfilTrack06Limite01Curva02"];
-	var pPerfilTrack06Limite02Curva02 = config["pPerfilTrack06Limite02Curva02"];
-	var pPerfilTrack06TipoEscalaCurva02 =  config["pPerfilTrack06TipoEscalaCurva02"];
+	var pPerfilTrack06Curva02 = sfdata["config"]["pPerfilTrack06Curva02"].trim() != '' ? sfdata["config"]["pPerfilTrack06Curva02"] : null;
+	var pPerfilTrack06EspessuraCurva02 = sfdata["config"]["pPerfilTrack06EspessuraCurva02"];
+	var pPerfilTrack06TracoCurva02 = sfdata["config"]["pPerfilTrack06TracoCurva02"];
+	var pPerfilTrack06CorCurva02 = sfdata["config"]["pPerfilTrack06CorCurva02"];
+	var pPerfilTrack06PreenchimentoArea02 = sfdata["config"]["pPerfilTrack06PreenchimentoArea02"];
+	var pPerfilTrack06CorArea02 = sfdata["config"]["pPerfilTrack06CorArea02"];
+	var pPerfilTrack06EscalaMinCurva02 = sfdata["config"]["pPerfilTrack06EscalaMinCurva02"];
+	var pPerfilTrack06EscalaMaxCurva02 = sfdata["config"]["pPerfilTrack06EscalaMaxCurva02"];
+	var pPerfilTrack06Limite01Curva02 = sfdata["config"]["pPerfilTrack06Limite01Curva02"];
+	var pPerfilTrack06Limite02Curva02 = sfdata["config"]["pPerfilTrack06Limite02Curva02"];
+	var pPerfilTrack06TipoEscalaCurva02 =  sfdata["config"]["pPerfilTrack06TipoEscalaCurva02"];
 	
 	
 	
@@ -644,8 +376,8 @@ export async function render(state, mod, dataView, windowSize, example) {
 	
     var WELL = '';
 		
-	var ZONE = new Array(dataView.rowCount());
-	var FACIES = new Array(dataView.rowCount());
+	var ZONE = new Array(sfdata.data.length);
+	var FACIES = new Array(sfdata.data.length);
 
 	
 	
@@ -670,16 +402,17 @@ export async function render(state, mod, dataView, windowSize, example) {
 
 	var index =0;
 	var zoneMarkIds = [];
-    var faciesMarkIds = [];	
-    var dataRows = await dataView.allRows();
+	var faciesMarkIds = [];	
 	
-    for (index = 0; index < dataRows.length; index++)  {		
-			var item = dataRows[index];
-            var nextItem = null;
-	        if (dataRows[index+1]) { nextItem = dataRows[index+1]; }
+    for (index = 0; index < sfdata.data.length; index++) {
+		
+    		item = sfdata.data[index];
+			
+            nextItem = null;
+	        if (sfdata.data[index+1]) { nextItem = sfdata.data[index+1]; }
 			
 			profundidade = (pPerfilEixoY == 'Cota') ? item.items[1] : item.items[0];
-			var nextProfundidade = null;
+			nextProfundidade = null;
 			if (nextItem) { 
 				nextProfundidade = (pPerfilEixoY == 'Cota') ? nextItem.items[1] : nextItem.items[0]; 
 			}
@@ -693,7 +426,7 @@ export async function render(state, mod, dataView, windowSize, example) {
 					zonaDepthLast = nextProfundidade;
 				}
 				
-				if (nomeZona != item.items[7] || index == dataRows.length -1)  { 
+				if (nomeZona != item.items[7] || index == sfdata.data.length -1)  { 
 				    if (nomeZona) {
 						ZONAS_DOMINIO.push(nomeZona);
 						ZONAS_RECT.push({"data_type": "rectangle",
@@ -721,7 +454,7 @@ export async function render(state, mod, dataView, windowSize, example) {
 					facieDepthLast = nextProfundidade;
 				}
 				
-				if (nomeFacie != item.items[8] || index == dataRows.length-1)  { 
+				if (nomeFacie != item.items[8] || index == sfdata.data.length-1)  { 
 				    if (nomeFacie) {
 						FACIES_DOMINIO.push(nomeFacie);
 						FACIES_RECT.push({"data_type": "rectangle",
@@ -750,14 +483,14 @@ export async function render(state, mod, dataView, windowSize, example) {
     }	
 
 
-	var colorZone = d3.scaleOrdinal(d3.schemeCategory10).domain(ZONAS_DOMINIO);
+	colorZone = d3.scaleOrdinal(d3.schemeCategory10).domain(ZONAS_DOMINIO);
 	
 	ZONAS_RECT.forEach ( function ( item ) {
 		let itemZona = item;
 		itemZona.fill = colorZone(itemZona.label);
 	})
 	
-	var colorFacie = d3.scaleOrdinal(d3.schemeCategory10).domain(FACIES_DOMINIO);
+	colorFacie = d3.scaleOrdinal(d3.schemeCategory10).domain(FACIES_DOMINIO);
 	
 	FACIES_RECT.forEach ( function ( item ) {
 		let itemFacie = item;
@@ -831,7 +564,7 @@ export async function render(state, mod, dataView, windowSize, example) {
                                         "fill_colors": [getColor(CorPreenchimentoAreaTrack(pPerfilTrack02CorArea01),'normal'),
 				                                        getColor(CorPreenchimentoAreaTrack(pPerfilTrack02CorArea01),'dark'),
 								                        getColor(CorPreenchimentoAreaTrack(pPerfilTrack02CorArea01),'light')],
-				                        // Duplicate ?? "gradient_color_scale": [GradientePreenchimentoAreaTrack(pPerfilTrack02CorArea01), null, null],
+				                        "gradient_color_scale": [GradientePreenchimentoAreaTrack(pPerfilTrack02CorArea01), null, null],
                                         "fill_direction": DirecaoPreenchimentoAreaTrack(pPerfilTrack02PreenchimentoArea01),
                                         "gradient_color_scale": [GradientePreenchimentoAreaTrack(pPerfilTrack02CorArea01), null, null],
                                         "max_scale_x": pPerfilTrack02EscalaMaxCurva01,
@@ -926,7 +659,7 @@ export async function render(state, mod, dataView, windowSize, example) {
                                         "fill_colors": [getColor(CorPreenchimentoAreaTrack(pPerfilTrack04CorArea01),'normal'),
 				                                        getColor(CorPreenchimentoAreaTrack(pPerfilTrack04CorArea01),'dark'),
 								                        getColor(CorPreenchimentoAreaTrack(pPerfilTrack04CorArea01),'light')],
-				                        // Duplicate?? "gradient_color_scale": [GradientePreenchimentoAreaTrack(pPerfilTrack04CorArea01), null, null],
+				                        "gradient_color_scale": [GradientePreenchimentoAreaTrack(pPerfilTrack04CorArea01), null, null],
                                         "fill_direction": DirecaoPreenchimentoAreaTrack(pPerfilTrack04PreenchimentoArea01),
                                         "gradient_color_scale": [GradientePreenchimentoAreaTrack(pPerfilTrack04CorArea01), null, null],
                                         "max_scale_x": pPerfilTrack04EscalaMaxCurva01,
@@ -991,6 +724,14 @@ export async function render(state, mod, dataView, windowSize, example) {
                         }
                      }];		 
 	 
+	 
+	 	 
+	 
+ 
+	 
+
+	 
+
 	var plot_template_Facies = [{
                      "components": [{
                        "rectangles": FACIES_RECT,
@@ -1031,15 +772,113 @@ export async function render(state, mod, dataView, windowSize, example) {
 	 
 	 
 	
-	var result_1 = multipleLogPlot("js_chart",
+	result_1 = multipleLogPlot("js_chart",
 	                           [plot_template_1, plot_template_2, plot_template_3, plot_template_4, plot_template_Zone, plot_template_Facies],
-							   allRows);
+							   sfdata);
 	
     //displayWelcomeMessage ( document.getElementById ( "js_chart" ), sfdata );
 	
-
+	
+    wait ( sfdata.wait, sfdata.static );
 
 }
+
+// 
+// #endregion Drawing Code
+//////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+// #region Marking Code
+//
+
+//
+// This method receives the marking mode and marking rectangle coordinates
+// on mouse-up when drawing a marking rectangle
+//
+function markModel(markMode, rectangle)
+{
+	// Implementation of logic to call markIndices or markIndices2 goes here
+	
+    var indicesToMark = [];
+    var markData = {};
+    markData.markMode = markMode;
+
+	
+	var y0 = y_function.invert(rectangle.y -110);
+	var y1 = y_function.invert(-110 + rectangle.y + rectangle.height);
+
+	var depthIndex = getCurveIndex('DEPTH', sfData);	
+	
+    var bisectData = d3.bisector( function(d) { return d.items[depthIndex]; } ).left; 
+
+	var i = bisectData(sfData.data, y0);
+	
+    var d1 = sfData.data[i];
+    var d0 = sfData.data[i - 1];                              
+
+	var d = null;
+		
+	if (d0 && d1) {
+	    if (d0[depthIndex] && d1[depthIndex]) {		
+             d = (y0 - d0[depthIndex] > d1[depthIndex] - y0) ? d1 : d0;
+	    }
+	}
+	if (d == null) { d = d1; }
+	if (d == null) { d = d0; }
+
+	var j = d.hints.index;
+	
+	//console.log("sfData.data[j].items[depthIndex]:");
+	//console.log( sfData.data[j].items[depthIndex]);	
+	
+	while (sfData.data[j].items[depthIndex] <= y1) {
+		indicesToMark.push(sfData.data[j].hints.index);
+		j = j+1;
+	}
+	
+
+    markData.indexSet = indicesToMark;
+    markIndices ( markData );	
+}
+
+//
+// Legacy mark function 2014 HF2
+//
+function mark(event)
+{
+}
+
+// 
+// #endregion Marking Code
+//////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+// #region Resizing Code
+//
+
+var resizing = false;
+
+window.onresize = function (event) {
+    resizing = true;
+    if ($("#js_chart")) {
+		location.reload();
+    }
+    resizing = false;
+}
+
+// 
+// #endregion Resizing Code
+//////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
 
 function curveBox(template_for_plotting, sfData){
 	
@@ -1101,9 +940,9 @@ function curveBox(template_for_plotting, sfData){
 
 
     //////////////  Initiate Divs + SVGs. Different depending single SVG or header separate =>////////////// 
-    let svg;
-    let svg_holder;
-    let svg_header;
+    let svg = ""
+    let svg_holder = ""
+    let svg_header = ""
 
 		
       svg_holder = d3.select("#"+div_id).append("div")
@@ -1175,12 +1014,12 @@ function curveBox(template_for_plotting, sfData){
   
   let x_functions_for_each_curvename = {}; //// populate with {"curvename":curvename,"x_func":func}
   
-  let mins = [];
-  let maxes = [];
+  let mins = []
+  let maxes = []
   let curvesDescription = '';
-  let y;
-  let yAxis; 
-  let yAxis2;
+  let y
+  let yAxis 
+  let yAxis2
 
     //////////////////// define y scale, aka the one for the depth  ////////////////////
 	
@@ -1310,6 +1149,11 @@ function curveBox(template_for_plotting, sfData){
     //// Code that assumes multiple curves are plotted in same curvebox  
 
 	
+
+	
+
+  
+
     var gridlines_obj = d3.axisTop()
                       .ticks((width-margin.left-margin.right)/25)
                       .tickFormat("")
