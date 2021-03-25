@@ -186,7 +186,13 @@ function getCurveData(lineIndex, curveName, sfData) {
     for (var nCol = 0; nCol < sfData.columns.length; nCol++ )
     {
         if (curveName == sfData.columns[nCol]) {
-			var item = sfData.data[lineIndex].continuous(curveName).value();
+            var item;
+            if (curveName == "ZONE" || curveName == "FACIES") {
+                item = sfData.data[lineIndex].categorical(curveName).value();
+            } else {
+                item = sfData.data[lineIndex].continuous(curveName).value();
+            }
+			 
 			return item;
 		}
     }
@@ -1035,7 +1041,7 @@ export async function render(state, mod, dataView, windowSize, example) {
     
 	 
 	
-	var result_1 = multipleLogPlot("js_chart",
+	var result_1 = multipleLogPlot("mod-container",
 	                           [plot_template_1, plot_template_2, plot_template_3, plot_template_4, plot_template_Zone, plot_template_Facies],
 							   sfData);
 	
@@ -1679,7 +1685,7 @@ function curveBox(template_for_plotting, sfData){
                   .attr("y", function(d) { return y(this_rectangle.depth_top) + Math.abs( y(this_rectangle.depth_top) - y(this_rectangle.depth_bottom) )/2 }) 
                   .style("font-size", "10px")  
                   .attr("text-anchor", "middle")  
-                  .text(this_rectangle.label.trim())
+                  .text(this_rectangle.label[0].key ?  this_rectangle.label[0].key.trim() : "") // not the "right way" to do this... Needs updating!
 			      .call(wrap)
 			      .attr("transform", function (d) { //return "translate(0,0)";
 				                                    return "translate(0,"+ ( this.getBBox().height/2 -1 ) +")"; 
@@ -1700,7 +1706,11 @@ function curveBox(template_for_plotting, sfData){
                  var areaMark = d3.area()
                                   .x1(width- margin.right)
                                   .x0(margin.left+1)
-                                  .defined(function(d,i) { return d.hints.marked; } )
+                                  .defined(
+                                      function(d,i) { 
+                                          //return d.hints.marked; 
+                                          return false; // Needs updating!
+                                        } )
                                   .y(function(d,i) { return y(getCurveData(i, depth_curve_name, sfData)); });
 
 					  
