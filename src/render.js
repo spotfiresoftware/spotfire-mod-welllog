@@ -186,7 +186,7 @@ function getCurveData(lineIndex, curveName, sfData) {
     for (var nCol = 0; nCol < sfData.columns.length; nCol++ )
     {
         if (curveName == sfData.columns[nCol]) {
-			var item = sfData.data[lineIndex].items[nCol];
+			var item = sfData.data[lineIndex].continuous(curveName).value();
 			return item;
 		}
     }
@@ -270,8 +270,8 @@ export async function render(state, mod, dataView, windowSize, example) {
     const xLeaves = (await xHierarchy.root()).leaves();
     const colorLeaves = (await colorHierarchy.root()).leaves();
 
-    const xAxisMeta = await mod.visualization.axis("X");
-    const yAxisMeta = await mod.visualization.axis("Y");
+    //const xAxisMeta = await mod.visualization.axis("X");
+    //const yAxisMeta = await mod.visualization.axis("Y");
     const colorAxisMeta = await mod.visualization.axis("Color");
 
     const margin = { top: 20, right: 40, bottom: 40, left: 80 };
@@ -678,22 +678,22 @@ export async function render(state, mod, dataView, windowSize, example) {
             var nextItem = null;
 	        if (dataRows[index+1]) { nextItem = dataRows[index+1]; }
 			
-			profundidade = (pPerfilEixoY == 'Cota') ? item.items[1] : item.items[0];
+			profundidade = (pPerfilEixoY == 'Cota') ? item.items[1] : item.continuous("DEPTH").value(); // needs further work!
 			var nextProfundidade = null;
 			if (nextItem) { 
-				nextProfundidade = (pPerfilEixoY == 'Cota') ? nextItem.items[1] : nextItem.items[0]; 
+				nextProfundidade = (pPerfilEixoY == 'Cota') ? nextItem.items[1] :  item.continuous("DEPTH").value(); 
 			}
 			else { nextProfundidade =  profundidade}
 			
 			if (!isNaN(profundidade) && (profundidade !== null)) {
-                ZONE[index] =   (item.items[7] ? item.items[7] : null);
-                FACIES[index] =  (item.items[8] ? item.items[8] : null);
+                ZONE[index] =   (item.categorical("ZONE").value() ? item.categorical("ZONE").value() : null);
+                FACIES[index] =  (item.categorical("FACIES").value()? item.categorical("FACIES").value() : null);
 	
-				if (nomeZona == item.items[7]) {
+				if (nomeZona == item.categorical("ZONE").value()) {
 					zonaDepthLast = nextProfundidade;
 				}
 				
-				if (nomeZona != item.items[7] || index == dataRows.length -1)  { 
+				if (nomeZona != item.categorical("ZONE").value() || index == dataRows.length -1)  { 
 				    if (nomeZona) {
 						ZONAS_DOMINIO.push(nomeZona);
 						ZONAS_RECT.push({"data_type": "rectangle",
@@ -714,14 +714,14 @@ export async function render(state, mod, dataView, windowSize, example) {
 					zoneMarkIds = [];
 
 				}
-				nomeZona = item.items[7];
-				zoneMarkIds.push(item.hints.index);
+				nomeZona =  item.categorical("ZONE").value();
+				zoneMarkIds.push(index); // needs updating!
 				
-				if (nomeFacie == item.items[8]) {
+				if (nomeFacie == item.categorical("FACIES").value()) {
 					facieDepthLast = nextProfundidade;
 				}
 				
-				if (nomeFacie != item.items[8] || index == dataRows.length-1)  { 
+				if (nomeFacie != item.categorical("FACIES").value()|| index == dataRows.length-1)  { 
 				    if (nomeFacie) {
 						FACIES_DOMINIO.push(nomeFacie);
 						FACIES_RECT.push({"data_type": "rectangle",
@@ -742,8 +742,8 @@ export async function render(state, mod, dataView, windowSize, example) {
 					faciesMarkIds = [];
 			
 				}
-				nomeFacie = item.items[8];
-				faciesMarkIds.push(item.hints.index);
+				nomeFacie = item.categorical("FACIES").value();
+				faciesMarkIds.push(index); // needs updating!
 				
 				
 			}
@@ -1028,12 +1028,16 @@ export async function render(state, mod, dataView, windowSize, example) {
                      }];		 
 	 
 	 
-	 
+    let sfData = {};
+    sfData.data = allRows;
+    sfData.columns = ["DEPTH", "GR", "CAL", "PHIN", "PHID", "RESD", "ZONE", "FACIES"];
+
+    
 	 
 	
 	var result_1 = multipleLogPlot("js_chart",
 	                           [plot_template_1, plot_template_2, plot_template_3, plot_template_4, plot_template_Zone, plot_template_Facies],
-							   allRows);
+							   sfData);
 	
     //displayWelcomeMessage ( document.getElementById ( "js_chart" ), sfdata );
 	
@@ -1276,13 +1280,10 @@ function curveBox(template_for_plotting, sfData){
     let curveUnit = "";
     if (curve_units[k]){curveUnit = curve_units[k]}   
 	
-	
-	
 	if (!isNaN(min) && !isNaN(max) ) {
 	   header_text_line = min.toFixed(1)+" - "+curve_names[k]+" "+curveUnit+" - "+max.toFixed(1);
 	}
 	else { header_text_line = curve_names[k]; }
-
 		
     //////////////  Building curvebox parts that aren't header. First define size & title =>////////////// 
     svg.attr("class","components")
@@ -1336,7 +1337,7 @@ function curveBox(template_for_plotting, sfData){
 		  
       let translate_string = "translate(0,"+(17+(k*38.5)).toString()+")";
 	  
-      xAxis_header = function(g) { return  g.attr("transform", translate_string)
+      let xAxis_header = function(g) { return  g.attr("transform", translate_string)
 	                                        .call(d3.axisBottom(x_functions_for_each_curvename[curve_names[k]])
 						                    .ticks((width-margin.left-margin.right)/25)
 	                                        .tickSizeOuter(0)) };

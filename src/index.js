@@ -11,7 +11,7 @@ import "core-js/es/array";
 import { render } from "./render.js";
 
 const Spotfire = window.Spotfire;
-const DEBUG = false;
+const DEBUG = true;
 
 Spotfire.initialize(async (mod) => {
     /**

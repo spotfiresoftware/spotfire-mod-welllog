@@ -37,16 +37,115 @@
                 }
             },
             {
-                "name": "Y",
+                "name": "DEPTH",
                 "mode": "continuous",
-                "allowMultipleMeasures": true,
+                "allowMultipleMeasures": false,
                 "placement": "left",
                 "propertyControl": {
-                    "title": "Y-axis"
+                    "title": "Depth Axis"
                 },
+                "allowNonAggregatingMeasures": true,
                 "legendItem": {
-                    "title": "Y-axis",
-                    "defaultVisibility": "hidden"
+                    "title": "Depth Axis",
+                    "defaultVisibility": "visible"
+                }
+            },
+            {
+                "name": "GR",
+                "mode": "continuous",
+                "allowMultipleMeasures": false,
+                "placement": "bottom",
+                "propertyControl": {
+                    "title": "GR"
+                },
+                "allowNonAggregatingMeasures": true,
+                "legendItem": {
+                    "title": "GR",
+                    "defaultVisibility": "visible"
+                }
+            },
+            {
+                "name": "CAL",
+                "mode": "continuous",
+                "allowMultipleMeasures": false,
+                "placement": "bottom",
+                "propertyControl": {
+                    "title": "CAL"
+                },
+                "allowNonAggregatingMeasures": true,
+                "legendItem": {
+                    "title": "CAL",
+                    "defaultVisibility": "visible"
+                }
+            },
+            {
+                "name": "PHIN",
+                "mode": "continuous",
+                "allowMultipleMeasures": false,
+                "placement": "bottom",
+                "propertyControl": {
+                    "title": "PHIN"
+                },
+                "allowNonAggregatingMeasures": true,
+                "legendItem": {
+                    "title": "PHIN",
+                    "defaultVisibility": "visible"
+                }
+            },
+            {
+                "name": "PHID",
+                "mode": "continuous",
+                "allowMultipleMeasures": false,
+                "placement": "bottom",
+                "propertyControl": {
+                    "title": "PHID"
+                },
+                "allowNonAggregatingMeasures": true,
+                "legendItem": {
+                    "title": "PHID",
+                    "defaultVisibility": "visible"
+                }
+            },
+            {
+                "name": "RESD",
+                "mode": "continuous",
+                "allowMultipleMeasures": false,
+                "placement": "bottom",
+                "propertyControl": {
+                    "title": "RESD"
+                },
+                "allowNonAggregatingMeasures": true,
+                "legendItem": {
+                    "title": "RESD",
+                    "defaultVisibility": "visible"
+                }
+            },
+            {
+                "name": "ZONE",
+                "mode": "categorical",
+                "allowMultipleMeasures": false,
+                "placement": "bottom",
+                "propertyControl": {
+                    "title": "ZONE"
+                },
+                "allowNonAggregatingMeasures": true,
+                "legendItem": {
+                    "title": "ZONE",
+                    "defaultVisibility": "visible"
+                }
+            },
+            {
+                "name": "FACIES",
+                "mode": "categorical",
+                "allowMultipleMeasures": false,
+                "placement": "bottom",
+                "propertyControl": {
+                    "title": "FACIES"
+                },
+                "allowNonAggregatingMeasures": true,
+                "legendItem": {
+                    "title": "FACIES",
+                    "defaultVisibility": "visible"
                 }
             }
         ]
