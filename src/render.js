@@ -262,6 +262,8 @@ export async function render(state, mod, dataView, windowSize, example) {
     }
 
     const allRows = await dataView.allRows();
+    console.log(allRows);
+    allRows.sort((a, b) => a.continuous("DEPTH").value() - b.continuous("DEPTH").value());
 
     if (allRows == null) {
         // Return and wait for next call to render when reading data was aborted.
