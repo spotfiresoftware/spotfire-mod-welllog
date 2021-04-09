@@ -6,6 +6,8 @@
 
 //@ts-check
 import * as d3 from "d3";
+import { sliderRight } from 'd3-simple-slider';
+import * as $ from "jquery";
 import { invalidateTooltip } from "./extended-api.js";
 import { nodeFormattedPathAsArray } from "./extended-api.js";
 import { addHandlersSelection } from "./ui-input.js";
@@ -30,6 +32,16 @@ const modContainer = d3.select("#mod-container");
  * Main svg container
  */
 const svg = modContainer.append("svg").attr("xmlns", "http://www.w3.org/2000/svg");
+
+var depthCurveName;
+var depthUnit;
+var selectedWell;
+var wellColumnName;
+var zoneLogTrackWidth = 140;
+var ZoomPanelWidth = 32;
+var depthLabelPanelWidth = 15;
+var verticalZoomHeightMultiplier = 5;
+var sliderZoom;
 
 const config = {
     pPerfilIndicadorCurvasBR: "Sim",
@@ -159,6 +171,179 @@ const config = {
     pPerfilTrack06TipoEscalaCurva02: "linear"
 };
 
+/*--------------------------------------------------
+
+	VanillaDrawer Ver.1.0 2017-05-16
+
+--------------------------------------------------*/
+function VanillaDrawer() {
+    this.drawer_menu_w = 300;
+    this.drawer_menu_span = 20;
+    this.drawer_content_scroll_x = 0;
+    this.drawer_content_scroll_y = 0;
+    this.drawer_menu_x = 0;
+    this.drawer_content_rect = "";
+    this.drawer_content_x = 0;
+    this.drawer_content_y = 0;
+    this.drawer_content_w = 0;
+    this.drawer_content_h = 0;
+    this.touch_start_x = 0;
+    this.touch_start_y = 0;
+    this.touch_move_x = 0;
+    this.touch_move_y = 0;
+    this.touch_diff = 0;
+    this.scroll_start = 0;
+    this.scroll_end = 0;
+    this.scroll_diff = 0;
+    this.drawer_content = document.getElementById("drawer_content");
+    this.drawer_wall = document.getElementById("drawer_wall");
+    this.drawer_menu = document.getElementById("drawer_menu");
+    this.drawer_menu.style.width = this.drawer_menu_w + "px";
+    this.drawer_menu.style.left = "-" + this.drawer_menu_w + "px";
+    // --------------------------------------------------
+    this.drawer_menu_open = function () {
+        this.drawer_menu_x = parseInt(this.drawer_menu.style.left);
+        if (this.drawer_menu_x >= 0) {
+            return false;
+        }
+        this.drawer_menu.scrollTop = 0;
+        this.drawer_content_scroll_x = window.pageXOffset;
+        this.drawer_content_scroll_y = window.pageYOffset;
+        this.drawer_content_rect = this.drawer_content.getBoundingClientRect();
+        this.drawer_content_x = Math.round(this.drawer_content_rect.left);
+        this.drawer_content_y = Math.round(this.drawer_content_rect.top);
+        this.drawer_content_w = Math.round(this.drawer_content_rect.width);
+        this.drawer_content_h = Math.round(this.drawer_content_rect.height);
+        vanilla_drawer.drawer_menu_open_effect(
+            this.drawer_content_w,
+            this.drawer_content_x,
+            this.drawer_content_y,
+            this.drawer_menu_x
+        );
+    };
+    // --------------------------------------------------
+    this.drawer_menu_open_effect = function (drawer_content_w, drawer_content_x, drawer_content_y, drawer_menu_x) {
+        this.drawer_wall.style.display = "block";
+        drawer_menu_x = drawer_menu_x + this.drawer_menu_span;
+        this.drawer_menu.style.left = drawer_menu_x + "px";
+        if (drawer_menu_x >= 0) {
+            this.drawer_content.style.position = "fixed";
+            this.drawer_content.style.zIndex = "1";
+            this.drawer_content.style.width = drawer_content_w + "px";
+            this.drawer_content.style.left = drawer_content_x + "px";
+            this.drawer_content.style.top = drawer_content_y + "px";
+        } else {
+            setTimeout(function () {
+                vanilla_drawer.drawer_menu_open_effect(
+                    drawer_content_w,
+                    drawer_content_x,
+                    drawer_content_y,
+                    drawer_menu_x
+                );
+            }, 10);
+        }
+    };
+    // --------------------------------------------------
+    this.drawer_menu_close = function () {
+        this.drawer_menu_x = parseInt(this.drawer_menu.style.left);
+        vanilla_drawer.drawer_menu_close_effect(
+            this.drawer_content_w,
+            this.drawer_content_x,
+            this.drawer_content_y,
+            this.drawer_menu_x
+        );
+    };
+    // --------------------------------------------------
+    this.drawer_menu_close_effect = function (drawer_content_w, drawer_content_x, drawer_content_y, drawer_menu_x) {
+        drawer_menu_x = drawer_menu_x - this.drawer_menu_span;
+        this.drawer_menu.style.left = drawer_menu_x + "px";
+        if (drawer_menu_x <= -1 * this.drawer_menu_w) {
+            this.drawer_wall.style.display = "none";
+            this.drawer_content.style.position = "static";
+            window.scrollTo(0, this.drawer_content_scroll_y);
+        } else {
+            setTimeout(function () {
+                vanilla_drawer.drawer_menu_close_effect(
+                    drawer_content_w,
+                    drawer_content_x,
+                    drawer_content_y,
+                    drawer_menu_x
+                );
+            }, 10);
+        }
+    };
+    // --------------------------------------------------
+    this.touch_start = function (event) {
+        this.touch_start_x = 0;
+        this.touch_start_y = 0;
+        this.touch_move_x = 0;
+        this.touch_move_y = 0;
+        this.touch_diff = 0;
+        this.scroll_start = 0;
+        this.scroll_end = 0;
+        this.scroll_diff = 0;
+        this.scroll_start = window.pageYOffset;
+        this.touch_start_x = event.touches[0].pageX;
+        this.touch_start_y = event.touches[0].pageY;
+    };
+    // --------------------------------------------------
+    this.touch_move = function (event) {
+        this.touch_move_x = event.changedTouches[0].pageX;
+        this.touch_move_y = event.changedTouches[0].pageY;
+    };
+    // --------------------------------------------------
+    this.touch_end = function (event) {
+        this.scroll_end = window.pageYOffset;
+        if (this.scroll_end < this.scroll_start) {
+            this.scroll_diff = this.scroll_start - this.scroll_end;
+        } else if (this.scroll_end > this.scroll_start) {
+            this.scroll_diff = this.scroll_end - this.scroll_start;
+        }
+        if (this.touch_start_y < this.touch_move_y) {
+            this.touch_diff = this.touch_move_y - this.touch_start_y;
+        } else if (this.touch_start_y > this.touch_move_y) {
+            this.touch_diff = this.touch_start_y - this.touch_move_y;
+        }
+        if (this.touch_start_x > this.touch_move_x) {
+            if (this.touch_start_x > this.touch_move_x + 50 && this.touch_diff < 50 && this.scroll_diff < 50) {
+                vanilla_drawer.drawer_menu_close();
+            }
+        } else if (this.touch_start_x < this.touch_move_x) {
+            if (this.touch_start_x + 50 < this.touch_move_x && this.touch_diff < 50 && this.scroll_diff < 50) {
+                vanilla_drawer.drawer_menu_open();
+            }
+        }
+    };
+
+    window.addEventListener(
+        "load",
+        function (event) {
+            window.addEventListener(
+                "touchstart",
+                function (event) {
+                    vanilla_drawer.touch_start(event);
+                },
+                false
+            );
+            window.addEventListener(
+                "touchmove",
+                function (event) {
+                    vanilla_drawer.touch_move(event);
+                },
+                false
+            );
+            window.addEventListener(
+                "touchend",
+                function (event) {
+                    vanilla_drawer.touch_end(event);
+                },
+                false
+            );
+        },
+        false
+    );
+}
+
 var pPerfilEixoY;
 var zoneLogTrackWidth = 120;
 //var pPerfilHeightMultiplier;
@@ -176,19 +361,14 @@ function getCurveIndex(curveName, sfData) {
 }
 
 function getCurveData(lineIndex, curveName, sfData) {
-    for (var nCol = 0; nCol < sfData.columns.length; nCol++) {
-        if (curveName == sfData.columns[nCol]) {
-            var item;
-            if (curveName == "ZONE" || curveName == "FACIES") {
-                item = sfData.data[lineIndex].categorical(curveName).value();
-            } else {
-                item = sfData.data[lineIndex].continuous(curveName).value();
-            }
-
-            return item;
-        }
+    var item;
+    if (curveName == "ZONE" || curveName == "FACIES" || curveName == "WELL") {
+        item = sfData[lineIndex].categorical(curveName).value();
+    } else {
+        item = sfData[lineIndex].continuous(curveName).value();
     }
-    return null;
+
+    return item;
 }
 
 /**
@@ -207,7 +387,6 @@ const xLabelsContainer = modContainer.append("div").attr("class", "x-axis-label-
  * @param {Spotfire.ModProperty<string>} example - an example property
  */
 export async function render(state, mod, dataView, windowSize, example) {
-
     if (state.preventRender) {
         // Early return if the state currently disallows rendering.
         return;
@@ -274,9 +453,7 @@ export async function render(state, mod, dataView, windowSize, example) {
     const colorAxisMeta = await mod.visualization.axis("Color");
 
     const margin = { top: 20, right: 40, bottom: 40, left: 80 };
-    modContainer
-        .style("height", windowSize.height - margin.bottom - margin.top)
-        .style("overflow-y", "scroll");
+    modContainer.style("height", windowSize.height - margin.bottom - margin.top).style("overflow-y", "scroll");
 
     /**
      * Maximum number of Y scale ticks is an approximate number
@@ -723,6 +900,153 @@ export async function render(state, mod, dataView, windowSize, example) {
         }
     }
 
+    function getFillColor(name, type) {
+        if (name == "black") {
+            if (type == "light") {
+                return "#484848";
+            } else if (type == "dark") {
+                return "#000000";
+            } else {
+                return "#212121";
+            }
+        } else if (name == "green") {
+            if (type == "light") {
+                return "#80e27e";
+            } else if (type == "dark") {
+                return "#087f23";
+            } else {
+                return "#4caf50";
+            }
+        } else if (name == "blue") {
+            if (type == "light") {
+                return "#757de8";
+            } else if (type == "dark") {
+                return "#002984";
+            } else {
+                return "#3f51b5";
+            }
+        } else if (name == "red") {
+            if (type == "light") {
+                return "#ff7961";
+            } else if (type == "dark") {
+                return "#ba000d";
+            } else {
+                return "#f44336";
+            }
+        } else if (name == "fuchsia") {
+            if (type == "light") {
+                return "#e35183";
+            } else if (type == "dark") {
+                return "#78002e";
+            } else {
+                return "#ad1457";
+            }
+        } else if (name == "yellow") {
+            if (type == "light") {
+                return "#ffff72";
+            } else if (type == "dark") {
+                return "#c8b900";
+            } else {
+                return "#ffeb3b";
+            }
+        } else if (name == "cyan") {
+            if (type == "light") {
+                return "#00FFFF";
+            } else if (type == "dark") {
+                return "#008B8B";
+            } else {
+                return "#40E0D0";
+            }
+        } else if (name == "brown") {
+            if (type == "light") {
+                return "#CD853F";
+            } else if (type == "dark") {
+                return "#8B4513";
+            } else {
+                return "#A0522D";
+            }
+        } else if (name == "darkgreen") {
+            if (type == "light") {
+                return "#556B2F";
+            } else if (type == "dark") {
+                return "#004d00";
+            } else {
+                return "#006400";
+            }
+        } else if (name == "purple") {
+            if (type == "light") {
+                return "#d05ce3";
+            } else if (type == "dark") {
+                return "#6a0080";
+            } else {
+                return "#9c27b0";
+            }
+        } else if (name.search("interpolate") >= 0) {
+            if (type == "light") {
+                return "RGBA(255,255,255, 0.55)";
+            } else if (type == "dark") {
+                return "RGBA(0,0,0, 0.25)";
+            } else {
+                return "interpolator";
+            }
+        }
+    }
+
+    function getColorInterpolator(value) {
+        if (value == "interpolateBlues") {
+            return d3.interpolateBlues;
+        } else if (value == "interpolateReds") {
+            return d3.interpolateReds;
+        } else if (value == "interpolateRdBu") {
+            return d3.interpolateRdBu;
+        } else if (value == "interpolateViridis") {
+            return d3.interpolateViridis;
+        } else if (value == "interpolatePlasma") {
+            return d3.interpolatePlasma;
+        } else if (value == "interpolateCool") {
+            return d3.interpolateCool;
+        } else if (value == "interpolateWarm") {
+            return d3.interpolateWarm;
+        } else if (value == "interpolateSpectral") {
+            return d3.interpolateSpectral;
+        } else {
+            return null;
+        }
+    }
+
+    function getFillColorName(value) {
+        if (value == "#212121") {
+            return "black";
+        }
+        if (value == "#4caf50") {
+            return "green";
+        }
+        if (value == "#3f51b5") {
+            return "blue";
+        }
+        if (value == "#f44336") {
+            return "red";
+        }
+        if (value == "#ad1457") {
+            return "fuchsia";
+        }
+        if (value == "#ffeb3b") {
+            return "yellow";
+        }
+        if (value == "#40E0D0") {
+            return "cyan";
+        }
+        if (value == "#A0522D") {
+            return "brown";
+        }
+        if (value == "#006400") {
+            return "darkgreen";
+        }
+        if (value == "#9c27b0") {
+            return "purple";
+        } else return "";
+    }
+
     var WELL = "";
 
     var ZONE = new Array(dataView.rowCount());
@@ -746,448 +1070,477 @@ export async function render(state, mod, dataView, windowSize, example) {
     var index = 0;
     var zoneMarkIds = [];
     var faciesMarkIds = [];
-    var dataRows = await dataView.allRows();
 
-    for (index = 0; index < dataRows.length; index++) {
-        var item = dataRows[index];
-        var nextItem = null;
-        if (dataRows[index + 1]) {
-            nextItem = dataRows[index + 1];
+
+    var plot_templates;
+ 
+    var vanilla_drawer;
+
+    var updateAccordionTools = true;
+
+    var y_function;
+    var sfRawData;
+
+    var initialized = false;
+    var tooltipDiv;
+
+    function buildTemplates(sfdata) {
+        depthCurveName = "DEPTH";
+        depthUnit = "km";
+
+        wellColumnName = "WELL";
+
+        selectedWell = getCurveData(0, wellColumnName, sfdata);
+
+        var escala = "linear";
+        var scwidth = window.innerWidth;
+        var scheight = window.innerHeight;
+
+        var numberOfTracks = 4;
+
+        var trackWidth =
+            (scwidth - zoneLogTrackWidth - zoneLogTrackWidth - ZoomPanelWidth - depthLabelPanelWidth - 30) /
+            numberOfTracks;
+
+        if (zoneLogTrackWidth > trackWidth) {
+            trackWidth = (scwidth - ZoomPanelWidth - depthLabelPanelWidth - 30) / (numberOfTracks + 2);
+            zoneLogTrackWidth = trackWidth;
         }
 
-        profundidade = pPerfilEixoY == "Cota" ? item.items[1] : item.continuous("DEPTH").value(); // needs further work!
-        var nextProfundidade = null;
-        if (nextItem) {
-            nextProfundidade = pPerfilEixoY == "Cota" ? nextItem.items[1] : item.continuous("DEPTH").value();
-        } else {
-            nextProfundidade = profundidade;
-        }
+        var pPerfilTrack01CorArea01 = "interpolateSpectral";
+        var pPerfilTrack01CorCurva01 = "green";
+        var pPerfilTrack01EscalaMaxCurva01 = "";
+        var pPerfilTrack01EscalaMinCurva01 = "";
+        var pPerfilTrack01EspessuraCurva01 = "2";
+        var pPerfilTrack01Limite01Curva01 = "";
+        var pPerfilTrack01Limite02Curva01 = "";
+        var pPerfilTrack01PreenchimentoArea01 = "right";
+        var pPerfilTrack01TipoEscalaCurva01 = "linear";
+        var pPerfilTrack01TracoCurva01 = "2,2";
 
-        if (!isNaN(profundidade) && profundidade !== null) {
-            ZONE[index] = item.categorical("ZONE").formattedValue() ? item.categorical("ZONE").formattedValue() : null;
-            FACIES[index] = item.categorical("FACIES").formattedValue()
-                ? item.categorical("FACIES").formattedValue()
-                : null;
+        var pPerfilTrack02CorArea01 = "blue";
+        var pPerfilTrack02CorCurva01 = "black";
+        var pPerfilTrack02EscalaMaxCurva01 = "";
+        var pPerfilTrack02EscalaMinCurva01 = "";
+        var pPerfilTrack02EspessuraCurva01 = "1";
+        var pPerfilTrack02Limite01Curva01 = "175";
+        var pPerfilTrack02Limite02Curva01 = "180";
+        var pPerfilTrack02PreenchimentoArea01 = "left";
+        var pPerfilTrack02TipoEscalaCurva01 = "linear";
+        var pPerfilTrack02TracoCurva01 = "solid";
 
-            if (nomeZona == item.categorical("ZONE").formattedValue()) {
-                zonaDepthLast = nextProfundidade;
-            }
+        var pPerfilTrack03CorArea01 = "blue";
+        var pPerfilTrack03CorArea02 = "red";
+        var pPerfilTrack03CorCurva01 = "blue";
+        var pPerfilTrack03CorCurva02 = "red";
+        var pPerfilTrack03EscalaMaxCurva01 = "";
+        var pPerfilTrack03EscalaMaxCurva02 = "";
+        var pPerfilTrack03EscalaMinCurva01 = "";
+        var pPerfilTrack03EscalaMinCurva02 = "";
+        var pPerfilTrack03EspessuraCurva01 = "1";
+        var pPerfilTrack03EspessuraCurva02 = "1";
+        var pPerfilTrack03Limite01Curva01 = "";
+        var pPerfilTrack03Limite01Curva02 = "";
+        var pPerfilTrack03Limite02Curva01 = "";
+        var pPerfilTrack03Limite02Curva02 = "";
+        var pPerfilTrack03PreenchimentoArea01 = "between";
+        var pPerfilTrack03PreenchimentoArea02 = "between";
+        var pPerfilTrack03TipoEscalaCurva01 = "linear";
+        var pPerfilTrack03TipoEscalaCurva02 = "linear";
+        var pPerfilTrack03TracoCurva01 = "solid";
+        var pPerfilTrack03TracoCurva02 = "solid";
 
-            if (nomeZona != item.categorical("ZONE").formattedValue() || index == dataRows.length - 1) {
-                if (nomeZona) {
-                    ZONAS_DOMINIO.push(nomeZona);
-                    ZONAS_RECT.push({
-                        data_type: "rectangle",
-                        depth_top: zonaDepthFirst,
-                        depth_bottom: zonaDepthLast,
-                        x_starting_upper_left_corner: 0,
-                        fill: "red",
-                        opacity: 0.5,
-                        label: nomeZona,
-                        label_orientation: "horizontal",
-                        lable_position: "left",
-                        markIds: [...zoneMarkIds]
-                    });
+        var pPerfilTrack04CorArea01 = "interpolateReds";
+        var pPerfilTrack04CorCurva01 = "red";
+        var pPerfilTrack04EscalaMaxCurva01 = "";
+        var pPerfilTrack04EscalaMinCurva01 = "";
+        var pPerfilTrack04EspessuraCurva01 = "1";
+        var pPerfilTrack04Limite01Curva01 = "";
+        var pPerfilTrack04Limite02Curva01 = "";
+        var pPerfilTrack04PreenchimentoArea01 = "left";
+        var pPerfilTrack04TipoEscalaCurva01 = "linear";
+        var pPerfilTrack04TracoCurva01 = "5,5";
+
+        var plot_template_1 = [
+            {
+                components: [
+                    {
+                        curves: [
+                            {
+                                curveColors: [getFillColor(pPerfilTrack01CorCurva01, "normal")],
+                                curveNames: ["GR"],
+                                curveStrokeDashArray: [pPerfilTrack01TracoCurva01],
+                                curveUnits: [""],
+                                dataType: "curve",
+                                depthCurveName: depthCurveName,
+                                depthUnit: depthUnit,
+                                fill: [
+                                    {
+                                        curve2: "",
+                                        curveName: "GR",
+                                        cutoffs: [
+                                            -99999999,
+                                            pPerfilTrack01Limite01Curva01,
+                                            pPerfilTrack01Limite02Curva01
+                                        ],
+                                        fill: "yes",
+                                        fillColors: [
+                                            getFillColor(pPerfilTrack01CorArea01, "normal"),
+                                            getFillColor(pPerfilTrack01CorArea01, "dark"),
+                                            getFillColor(pPerfilTrack01CorArea01, "light")
+                                        ],
+                                        fillDirection: pPerfilTrack01PreenchimentoArea01,
+                                        colorInterpolator: [getColorInterpolator(pPerfilTrack01CorArea01), null, null],
+                                        maxScaleX: pPerfilTrack01EscalaMaxCurva01,
+                                        minScaleX: pPerfilTrack01EscalaMinCurva01
+                                    }
+                                ],
+                                scaleTypeLinearLog: [pPerfilTrack01TipoEscalaCurva01],
+                                strokeLinecap: ["butt"],
+                                strokeWidth: [pPerfilTrack01EspessuraCurva01],
+                                wellNames: [selectedWell]
+                            }
+                        ]
+                    }
+                ],
+                trackBox: {
+                    width: trackWidth,
+                    height: scheight,
+                    div_id: "well_holder_track_01",
+                    margin: { top: 5, right: 10, bottom: 5, left: 60 }
                 }
-                zonaDepthFirst = profundidade;
-                zonaDepthLast = nextProfundidade;
-                zoneMarkIds = [];
             }
-            nomeZona = item.categorical("ZONE").formattedValue() != "(Empty)" ? item.categorical("ZONE").formattedValue() : null;
+        ];
 
-            zoneMarkIds.push(index); // needs updating!
-
-            if (nomeFacie == item.categorical("FACIES").formattedValue()) {
-                facieDepthLast = nextProfundidade;
-            }
-
-            if (nomeFacie != item.categorical("FACIES").formattedValue() || index == dataRows.length - 1) {
-                if (nomeFacie && nomeFacie != "") {
-                    console.log(nomeFacie);
-                    FACIES_DOMINIO.push(nomeFacie);
-                    FACIES_RECT.push({
-                        data_type: "rectangle",
-                        depth_top: facieDepthFirst,
-                        depth_bottom: facieDepthLast,
-                        x_starting_upper_left_corner: 0,
-                        fill: "red",
-                        opacity: 0.5,
-                        label: nomeFacie,
-                        label_orientation: "horizontal",
-                        lable_position: "left",
-                        markIds: [...faciesMarkIds]
-                    });
+        var plot_template_2 = [
+            {
+                components: [
+                    {
+                        curves: [
+                            {
+                                curveColors: [getFillColor(pPerfilTrack02CorCurva01, "normal")],
+                                curveNames: ["CAL"],
+                                curveStrokeDashArray: [pPerfilTrack02TracoCurva01],
+                                curveUnits: [""],
+                                dataType: "curve",
+                                depthCurveName: depthCurveName,
+                                depthUnit: depthUnit,
+                                fill: [
+                                    {
+                                        curve2: "",
+                                        curveName: "CAL",
+                                        cutoffs: [
+                                            -99999999,
+                                            pPerfilTrack02Limite01Curva01,
+                                            pPerfilTrack02Limite02Curva01
+                                        ],
+                                        fill: "yes",
+                                        fillColors: [
+                                            getFillColor(pPerfilTrack02CorArea01, "normal"),
+                                            getFillColor(pPerfilTrack02CorArea01, "dark"),
+                                            getFillColor(pPerfilTrack02CorArea01, "light")
+                                        ],
+                                        colorInterpolator: [getColorInterpolator(pPerfilTrack02CorArea01), null, null],
+                                        fillDirection: pPerfilTrack02PreenchimentoArea01,
+                                        colorInterpolator: [getColorInterpolator(pPerfilTrack02CorArea01), null, null],
+                                        maxScaleX: pPerfilTrack02EscalaMaxCurva01,
+                                        minScaleX: pPerfilTrack02EscalaMinCurva01
+                                    }
+                                ],
+                                scaleTypeLinearLog: [pPerfilTrack02TipoEscalaCurva01],
+                                strokeLinecap: ["butt"],
+                                strokeWidth: [pPerfilTrack02EspessuraCurva01],
+                                wellNames: [selectedWell]
+                            }
+                        ]
+                    }
+                ],
+                trackBox: {
+                    width: trackWidth,
+                    height: scheight,
+                    div_id: "well_holder_track_02",
+                    margin: { top: 5, right: 10, bottom: 5, left: 60 }
                 }
-                facieDepthFirst = profundidade;
-                facieDepthLast = nextProfundidade;
-                faciesMarkIds = [];
             }
-            nomeFacie = item.categorical("FACIES").formattedValue() != "(Empty)" ? item.categorical("FACIES").formattedValue() : null;
-            faciesMarkIds.push(index); // needs updating!
-        }
+        ];
+
+        var plot_template_3 = [
+            {
+                components: [
+                    {
+                        curves: [
+                            {
+                                curveColors: [
+                                    getFillColor(pPerfilTrack03CorCurva01, "normal"),
+                                    getFillColor(pPerfilTrack03CorCurva02, "normal")
+                                ],
+                                curveNames: ["PHIN", "PHID"],
+                                curveStrokeDashArray: [pPerfilTrack03TracoCurva01, pPerfilTrack03TracoCurva02],
+                                curveUnits: ["", ""],
+                                dataType: "curve",
+                                depthCurveName: depthCurveName,
+                                depthUnit: depthUnit,
+                                fill: [
+                                    {
+                                        curveName: "PHIN",
+                                        fill: "yes",
+                                        fillDirection: pPerfilTrack03PreenchimentoArea01,
+                                        cutoffs: [
+                                            -99999999,
+                                            pPerfilTrack03Limite01Curva01,
+                                            pPerfilTrack03Limite02Curva01
+                                        ],
+                                        fillColors: [
+                                            getFillColor(pPerfilTrack03CorArea01, "normal"),
+                                            getFillColor(pPerfilTrack03CorArea01, "dark"),
+                                            getFillColor(pPerfilTrack03CorArea01, "light")
+                                        ],
+                                        colorInterpolator: [getColorInterpolator(pPerfilTrack03CorArea01), null, null],
+                                        maxScaleX: pPerfilTrack03EscalaMaxCurva01,
+                                        minScaleX: pPerfilTrack03EscalaMinCurva01,
+                                        curve2: "PHID"
+                                    },
+                                    {
+                                        curveName: "PHID",
+                                        fill: "yes",
+                                        fillDirection: pPerfilTrack03PreenchimentoArea02,
+                                        cutoffs: [
+                                            -99999999,
+                                            pPerfilTrack03Limite01Curva02,
+                                            pPerfilTrack03Limite02Curva02
+                                        ],
+                                        fillColors: [
+                                            getFillColor(pPerfilTrack03CorArea02, "normal"),
+                                            getFillColor(pPerfilTrack03CorArea02, "dark"),
+                                            getFillColor(pPerfilTrack03CorArea02, "light")
+                                        ],
+                                        colorInterpolator: [getColorInterpolator(pPerfilTrack03CorArea02), null, null],
+                                        maxScaleX: pPerfilTrack03EscalaMaxCurva02,
+                                        minScaleX: pPerfilTrack03EscalaMinCurva02,
+                                        curve2: "PHIN"
+                                    }
+                                ],
+                                scaleTypeLinearLog: [pPerfilTrack03TipoEscalaCurva01, pPerfilTrack03TipoEscalaCurva02],
+                                strokeLinecap: ["butt"],
+                                strokeWidth: [pPerfilTrack03EspessuraCurva01, pPerfilTrack03EspessuraCurva02],
+                                wellNames: [selectedWell]
+                            }
+                        ]
+                    }
+                ],
+                trackBox: {
+                    width: trackWidth,
+                    height: scheight,
+                    div_id: "well_holder_track_02",
+                    margin: { top: 5, right: 10, bottom: 5, left: 60 }
+                }
+            }
+        ];
+
+        var plot_template_4 = [
+            {
+                components: [
+                    {
+                        curves: [
+                            {
+                                curveColors: [getFillColor(pPerfilTrack04CorCurva01, "normal")],
+                                curveNames: ["RESD"],
+                                curveStrokeDashArray: [pPerfilTrack04TracoCurva01],
+                                curveUnits: [""],
+                                dataType: "curve",
+                                depthCurveName: depthCurveName,
+                                depthUnit: depthUnit,
+                                fill: [
+                                    {
+                                        curve2: "",
+                                        curveName: "RESD",
+                                        cutoffs: [
+                                            -99999999,
+                                            pPerfilTrack04Limite01Curva01,
+                                            pPerfilTrack04Limite02Curva01
+                                        ],
+                                        fill: "yes",
+                                        fillColors: [
+                                            getFillColor(pPerfilTrack04CorArea01, "normal"),
+                                            getFillColor(pPerfilTrack04CorArea01, "dark"),
+                                            getFillColor(pPerfilTrack04CorArea01, "light")
+                                        ],
+                                        colorInterpolator: [getColorInterpolator(pPerfilTrack04CorArea01), null, null],
+                                        fillDirection: pPerfilTrack04PreenchimentoArea01,
+                                        maxScaleX: pPerfilTrack04EscalaMaxCurva01,
+                                        minScaleX: pPerfilTrack04EscalaMinCurva01
+                                    }
+                                ],
+                                scaleTypeLinearLog: [pPerfilTrack04TipoEscalaCurva01],
+                                strokeLinecap: ["butt"],
+                                strokeWidth: [pPerfilTrack04EspessuraCurva01],
+                                wellNames: [selectedWell]
+                            }
+                        ]
+                    }
+                ],
+                trackBox: {
+                    width: trackWidth,
+                    height: scheight,
+                    div_id: "well_holder_track_02",
+                    margin: { top: 5, right: 10, bottom: 5, left: 60 }
+                }
+            }
+        ];
+
+        var plot_template_Zone = [
+            {
+                components: [
+                    {
+                        //"rectangles": ZONAS_RECT,
+                        curves: [
+                            {
+                                curveColors: [null, null, null],
+                                curveNames: ["ZONE"],
+                                curveStrokeDashArray: [null],
+                                curveUnits: [""],
+                                dataType: "category",
+                                depthCurveName: depthCurveName,
+                                depthUnit: depthUnit,
+                                fill: [
+                                    {
+                                        curve2: "",
+                                        curveName: "",
+                                        cutoffs: [null, null, null],
+                                        fill: "no",
+                                        fillColors: [null, null, null],
+                                        colorInterpolator: [null, null, null],
+                                        fillDirection: "",
+                                        maxScaleX: "",
+                                        minScaleX: ""
+                                    }
+                                ],
+                                scaleTypeLinearLog: [null],
+                                strokeLinecap: ["butt"],
+                                strokeWidth: [null],
+                                wellNames: [selectedWell]
+                            }
+                        ]
+                    }
+                ],
+                trackBox: {
+                    width: zoneLogTrackWidth,
+                    height: scheight,
+                    div_id: "zone_well_holder",
+                    margin: { top: 5, right: 10, bottom: 5, left: 60 }
+                }
+            }
+        ];
+
+        var plot_template_Facies = [
+            {
+                components: [
+                    {
+                        //"rectangles": FACIES_RECT,
+                        curves: [
+                            {
+                                curveColors: [null, null, null],
+                                curveNames: ["FACIES"],
+                                curveStrokeDashArray: [null],
+                                curveUnits: [""],
+                                dataType: "category",
+                                depthCurveName: depthCurveName,
+                                depthUnit: depthUnit,
+                                fill: [
+                                    {
+                                        curve2: "",
+                                        curveName: "",
+                                        cutoffs: [null, null, null],
+                                        fill: "no",
+                                        fillColors: [null, null, null],
+                                        colorInterpolator: [null, null, null],
+                                        fillDirection: "",
+                                        maxScaleX: "",
+                                        minScaleX: ""
+                                    }
+                                ],
+                                scaleTypeLinearLog: [null],
+                                strokeLinecap: ["butt"],
+                                strokeWidth: [null],
+                                wellNames: [selectedWell]
+                            }
+                        ]
+                    }
+                ],
+                trackBox: {
+                    width: zoneLogTrackWidth,
+                    height: scheight,
+                    div_id: "zone_well_holder",
+                    margin: { top: 5, right: 10, bottom: 5, left: 60 }
+                }
+            }
+        ];
+
+        return [
+            plot_template_1,
+            plot_template_2,
+            plot_template_3,
+            plot_template_4,
+            plot_template_Zone,
+            plot_template_Facies
+        ];
     }
 
-    console.log(ZONAS_RECT);
+    function Initialize(div_id, templates, sfData) {
+        d3.select("#" + div_id)
+            .style("margin", "0")
+            .style("padding", "0")
+            .style("border", "0");
 
-    var colorZone = d3.scaleOrdinal(d3.schemeCategory10).domain(ZONAS_DOMINIO);
+        $("#" + div_id).append(
+            '<DIV id=drawer_content style="DISPLAY: none"></DIV>' +
+                "<DIV id=drawer_wall></DIV>" +
+                '<DIV id=drawer_menu><DIV id="drawer_menu_content" style="position:relative;">' +
+                '<A id=abtnfechar style="cursor: pointer; float: right;"><IMG style="HEIGHT: 18px; WIDTH: 18px; PADDING-RIGHT:5px; PADDING-TOP:3px;" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABoAAAAaCAYAAACpSkzOAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH5QMaATMDnvmzBwAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAADF0lEQVRIx72WMW/bRhTH3zveMR3irp2kIgWcD5CgSwqkMAzIJzJSjW4NsmXoVCBLp2ZsvoD1UQya5MmMmwbwFmctIgEB5HYOamUIyXf3OohsVdaSqA55C0EQd7/3Hv/3vwdhOIA6wnBwNBwestbBL72e/gQA4OCgD5tC66B+3uz3Qx4ODzkMB0dL+wIuvfwshPgJERkRsSiK87IsH5yemncHB31I03glJElOoNfTHc/zZr7vMzMDM6Nz7lkUHT8FAPCaEIAF3PO8DiLe63Y/N+NxOtc6wOl00oRgBbkjpfxNKQXVeqwSvr+7e1tNJm+eYxgOjoQQPyxDloOIXhPRE2OSX+vsG5V8JaU8kVJ+ek3BXFU2wuHwkAHgWsgS7IqI9oxJLur/sVTJ2QrI3zAAQOz3Q676iut+OBEBEXWNSS4BAHo93ZFSzqSUa4WCiFAUBaDWwU1EnFf9XRtlWQIz71QbtF1z7pzdxy2z46IoEACgZRde5nnxTZaZd0LrAIxJLonoLhFdrVvIzKiUAqUUtIC8zvP8uyxbHA+RJCdQwS6IKNgEaxPW2isiepJl4z/qM4iNM8GVkl5tauM60Vhr76ZpfFHvCU1Jrzjl2AaAiFyWJTrnuklyctnvhxDH0T/fV1nKNmqsK2HmnTiO3jchAAACPlKIVa1DxLnv+9x2I6UUI+Jc66ATx9F/XF+sMMhZGwk3pS+lBCHE2729/c/SNP4XzLvGIMdSyhv/u0VCgOd5X3Y63bPTU/On1gFMpxPAJUgbg2xdIBFdEtG3xiSvtA5gWwuCPM9fLCzoxtcLY25nxNua6rm1dh8RQAgvU0rda2vEoq26iOhlWZYPjEk+pGnywTn3iIg2Juf7PiPiXFTq2gQ5y/P8YT0/aB1AmsZvWxoxKKVAWGtHlYx5DeRxlo1/rw1yCyNmZkZr7cibTN7Eu7u3FSLeb84Ni/skf5Rl41lzEppOJ6B1gGkaz27d+sIAwPdCiOvmhWdRdPzjRxu3RD1ARtHxU+fcCAAwz/MX1tr9TZB6SKkvT2beqW5gdM6NakgYDuAvrltBwrCYxZ8AAAAASUVORK5CYII="></I></I></A>' +
+                '<DIV id="selectedWellDiv" style="clear: right; color: black; display:flex; align-items: center;"></DIV>' +
+                '<DIV id="accordionConf" style="clear: right;">' +
+                "</DIV>" +
+                "</DIV>" +
+                "</DIV>"
+        );
 
-    ZONAS_RECT.forEach(function (item) {
-        let itemZona = item;
-        itemZona.fill = colorZone(itemZona.label);
-    });
+        vanilla_drawer = new VanillaDrawer();
 
-    var colorFacie = d3.scaleOrdinal(d3.schemeCategory10).domain(FACIES_DOMINIO);
+        $("#drawer_menu").mousedown(function (evt) {
+            evt.preventDefault();
+            evt.stopPropagation();
+        });
 
-    FACIES_RECT.forEach(function (item) {
-        let itemFacie = item;
-        itemFacie.fill = colorFacie(itemFacie.label);
-    });
+        $("#drawer_wall").click(function (evt) {
+            document.getElementById("drawer_wall").focus();
+            vanilla_drawer.drawer_menu_close();
+        });
 
-    //var example_template = curveBoxTemplateExamples('example');
-    //example_template[0].curve_box["height_multiplier_components"] = pPerfilHeightMultiplier;
+        $("#abtnfechar").click(function (evt) {
+            document.getElementById("drawer_wall").focus();
+            vanilla_drawer.drawer_menu_close();
+        });
+    }
 
-    var plot_template_1 = [
-        {
-            components: [
-                {
-                    curves: [
-                        {
-                            curve_colors: [getColor(CorLinhaTrack(pPerfilTrack01CorCurva01), "normal")],
-                            curve_names: ["GR"],
-                            curve_stroke_dasharray: [TracoLinhaTrack(pPerfilTrack01TracoCurva01)],
-                            curve_units: [""],
-                            data_type: "curve",
-                            depth_curve_name: "DEPTH",
-                            depth_units_string: [""],
-                            fill: [
-                                {
-                                    curve2: "",
-                                    curve_name: "GR",
-                                    cutoffs: [-99999999, pPerfilTrack01Limite01Curva01, pPerfilTrack01Limite02Curva01],
-                                    fill: PreenchimentoAreaTrack(pPerfilTrack01PreenchimentoArea01),
-                                    fill_colors: [
-                                        getColor(CorPreenchimentoAreaTrack(pPerfilTrack01CorArea01), "normal"),
-                                        getColor(CorPreenchimentoAreaTrack(pPerfilTrack01CorArea01), "dark"),
-                                        getColor(CorPreenchimentoAreaTrack(pPerfilTrack01CorArea01), "light")
-                                    ],
-                                    fill_direction: DirecaoPreenchimentoAreaTrack(pPerfilTrack01PreenchimentoArea01),
-                                    gradient_color_scale: [
-                                        GradientePreenchimentoAreaTrack(pPerfilTrack01CorArea01),
-                                        null,
-                                        null
-                                    ],
-                                    max_scale_x: pPerfilTrack01EscalaMaxCurva01,
-                                    min_scale_x: pPerfilTrack01EscalaMinCurva01
-                                }
-                            ],
-                            scale_linear_log_or_yours: [pPerfilTrack01TipoEscalaCurva01],
-                            stroke_linecap: ["butt"],
-                            stroke_width: [EspessuraLinhaTrack(pPerfilTrack01EspessuraCurva01)],
-                            well_names: [WELL]
-                        }
-                    ]
-                }
-            ],
-            curve_box: {
-                width: trackWidth,
-                height: scheight,
-                height_multiplier_components: pPerfilHeightMultiplier,
-                div_id: "well_holder_track_01",
-                margin: { top: 20, right: 10, bottom: 20, left: 40 }
-            }
-        }
-    ];
+    /**
+     *
+     * Drawing code!
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     */
 
-    var plot_template_2 = [
-        {
-            components: [
-                {
-                    curves: [
-                        {
-                            curve_colors: [getColor(CorLinhaTrack(pPerfilTrack02CorCurva01), "normal")],
-                            curve_names: ["CAL"],
-                            curve_stroke_dasharray: [TracoLinhaTrack(pPerfilTrack02TracoCurva01)],
-                            curve_units: [""],
-                            data_type: "curve",
-                            depth_curve_name: "DEPTH",
-                            depth_units_string: [""],
-                            fill: [
-                                {
-                                    curve2: "",
-                                    curve_name: "CAL",
-                                    cutoffs: [-99999999, pPerfilTrack02Limite01Curva01, pPerfilTrack02Limite02Curva01],
-                                    fill: PreenchimentoAreaTrack(pPerfilTrack02PreenchimentoArea01),
-                                    fill_colors: [
-                                        getColor(CorPreenchimentoAreaTrack(pPerfilTrack02CorArea01), "normal"),
-                                        getColor(CorPreenchimentoAreaTrack(pPerfilTrack02CorArea01), "dark"),
-                                        getColor(CorPreenchimentoAreaTrack(pPerfilTrack02CorArea01), "light")
-                                    ],
-                                    // Duplicate ?? "gradient_color_scale": [GradientePreenchimentoAreaTrack(pPerfilTrack02CorArea01), null, null],
-                                    fill_direction: DirecaoPreenchimentoAreaTrack(pPerfilTrack02PreenchimentoArea01),
-                                    gradient_color_scale: [
-                                        GradientePreenchimentoAreaTrack(pPerfilTrack02CorArea01),
-                                        null,
-                                        null
-                                    ],
-                                    max_scale_x: pPerfilTrack02EscalaMaxCurva01,
-                                    min_scale_x: pPerfilTrack02EscalaMinCurva01
-                                }
-                            ],
-                            scale_linear_log_or_yours: [pPerfilTrack02TipoEscalaCurva01],
-                            stroke_linecap: ["butt"],
-                            stroke_width: [EspessuraLinhaTrack(pPerfilTrack02EspessuraCurva01)],
-                            well_names: [WELL]
-                        }
-                    ]
-                }
-            ],
-            curve_box: {
-                width: trackWidth,
-                height: scheight,
-                height_multiplier_components: pPerfilHeightMultiplier,
-                div_id: "well_holder_track_02",
-                margin: { top: 20, right: 10, bottom: 20, left: 40 }
-            }
-        }
-    ];
+    var dataRows = await dataView.allRows();
 
-    var plot_template_3 = [
-        {
-            components: [
-                {
-                    curves: [
-                        {
-                            curve_colors: [
-                                getColor(CorLinhaTrack(pPerfilTrack03CorCurva01), "normal"),
-                                getColor(CorLinhaTrack(pPerfilTrack03CorCurva02), "normal")
-                            ],
-                            curve_names: ["PHIN", "PHID"],
-                            curve_stroke_dasharray: [
-                                TracoLinhaTrack(pPerfilTrack03TracoCurva01),
-                                TracoLinhaTrack(pPerfilTrack03TracoCurva02)
-                            ],
-                            curve_units: [""],
-                            data_type: "curve",
-                            depth_curve_name: "DEPTH",
-                            depth_units_string: [""],
-                            fill: [
-                                {
-                                    curve_name: "PHIN",
-                                    fill: PreenchimentoAreaTrack(pPerfilTrack03PreenchimentoArea01),
-                                    fill_direction: DirecaoPreenchimentoAreaTrack(pPerfilTrack03PreenchimentoArea01),
-                                    cutoffs: [-99999999, pPerfilTrack03Limite01Curva01, pPerfilTrack03Limite02Curva01],
-                                    fill_colors: [
-                                        getColor(CorPreenchimentoAreaTrack(pPerfilTrack03CorArea01), "normal"),
-                                        getColor(CorPreenchimentoAreaTrack(pPerfilTrack03CorArea01), "dark"),
-                                        getColor(CorPreenchimentoAreaTrack(pPerfilTrack03CorArea01), "light")
-                                    ],
-                                    gradient_color_scale: [
-                                        GradientePreenchimentoAreaTrack(pPerfilTrack03CorArea01),
-                                        null,
-                                        null
-                                    ],
-                                    max_scale_x: pPerfilTrack03EscalaMaxCurva01,
-                                    min_scale_x: pPerfilTrack03EscalaMinCurva01,
-                                    curve2: "PHID"
-                                },
-                                {
-                                    curve_name: "PHID",
-                                    fill: PreenchimentoAreaTrack(pPerfilTrack03PreenchimentoArea02),
-                                    fill_direction: DirecaoPreenchimentoAreaTrack(pPerfilTrack03PreenchimentoArea02),
-                                    cutoffs: [-99999999, pPerfilTrack03Limite01Curva02, pPerfilTrack03Limite02Curva02],
-                                    fill_colors: [
-                                        getColor(CorPreenchimentoAreaTrack(pPerfilTrack03CorArea02), "normal"),
-                                        getColor(CorPreenchimentoAreaTrack(pPerfilTrack03CorArea02), "dark"),
-                                        getColor(CorPreenchimentoAreaTrack(pPerfilTrack03CorArea02), "light")
-                                    ],
-                                    gradient_color_scale: [
-                                        GradientePreenchimentoAreaTrack(pPerfilTrack03CorArea02),
-                                        null,
-                                        null
-                                    ],
-                                    max_scale_x: pPerfilTrack03EscalaMaxCurva02,
-                                    min_scale_x: pPerfilTrack03EscalaMinCurva02,
-                                    curve2: "PHIN"
-                                }
-                            ],
-                            scale_linear_log_or_yours: [
-                                pPerfilTrack03TipoEscalaCurva01,
-                                pPerfilTrack03TipoEscalaCurva02
-                            ],
-                            stroke_linecap: ["butt"],
-                            stroke_width: [
-                                EspessuraLinhaTrack(pPerfilTrack03EspessuraCurva01),
-                                EspessuraLinhaTrack(pPerfilTrack03EspessuraCurva02)
-                            ],
-                            well_names: [WELL]
-                        }
-                    ]
-                }
-            ],
-            curve_box: {
-                width: trackWidth,
-                height: scheight,
-                height_multiplier_components: pPerfilHeightMultiplier,
-                div_id: "well_holder_track_02",
-                margin: { top: 20, right: 10, bottom: 20, left: 40 }
-            }
-        }
-    ];
+    plot_templates = buildTemplates(dataRows);
 
-    var plot_template_4 = [
-        {
-            components: [
-                {
-                    curves: [
-                        {
-                            curve_colors: [getColor(CorLinhaTrack(pPerfilTrack04CorCurva01), "normal")],
-                            curve_names: ["RESD"],
-                            curve_stroke_dasharray: [TracoLinhaTrack(pPerfilTrack04TracoCurva01)],
-                            curve_units: [""],
-                            data_type: "curve",
-                            depth_curve_name: "DEPTH",
-                            depth_units_string: [""],
-                            fill: [
-                                {
-                                    curve2: "",
-                                    curve_name: "RESD",
-                                    cutoffs: [-99999999, pPerfilTrack04Limite01Curva01, pPerfilTrack04Limite02Curva01],
-                                    fill: PreenchimentoAreaTrack(pPerfilTrack04PreenchimentoArea01),
-                                    fill_colors: [
-                                        getColor(CorPreenchimentoAreaTrack(pPerfilTrack04CorArea01), "normal"),
-                                        getColor(CorPreenchimentoAreaTrack(pPerfilTrack04CorArea01), "dark"),
-                                        getColor(CorPreenchimentoAreaTrack(pPerfilTrack04CorArea01), "light")
-                                    ],
-                                    // Duplicate?? "gradient_color_scale": [GradientePreenchimentoAreaTrack(pPerfilTrack04CorArea01), null, null],
-                                    fill_direction: DirecaoPreenchimentoAreaTrack(pPerfilTrack04PreenchimentoArea01),
-                                    gradient_color_scale: [
-                                        GradientePreenchimentoAreaTrack(pPerfilTrack04CorArea01),
-                                        null,
-                                        null
-                                    ],
-                                    max_scale_x: pPerfilTrack04EscalaMaxCurva01,
-                                    min_scale_x: pPerfilTrack04EscalaMinCurva01
-                                }
-                            ],
-                            scale_linear_log_or_yours: [pPerfilTrack04TipoEscalaCurva01],
-                            stroke_linecap: ["butt"],
-                            stroke_width: [EspessuraLinhaTrack(pPerfilTrack04EspessuraCurva01)],
-                            well_names: [WELL]
-                        }
-                    ]
-                }
-            ],
-            curve_box: {
-                width: trackWidth,
-                height: scheight,
-                height_multiplier_components: pPerfilHeightMultiplier,
-                div_id: "well_holder_track_02",
-                margin: { top: 20, right: 10, bottom: 20, left: 40 }
-            }
-        }
-    ];
+    Initialize("mod-container", plot_templates, dataRows);
 
-    var plot_template_Zone = [
-        {
-            components: [
-                {
-                    rectangles: ZONAS_RECT,
-                    curves: [
-                        {
-                            curve_colors: [null, null, null],
-                            curve_names: ["ZONE"],
-                            curve_stroke_dasharray: [null],
-                            curve_units: [""],
-                            data_type: "curve",
-                            depth_curve_name: "DEPTH",
-                            depth_units_string: [""],
-                            fill: [
-                                {
-                                    curve2: "",
-                                    curve_name: "",
-                                    cutoffs: [null, null, null],
-                                    fill: "no",
-                                    fill_colors: [null, null, null],
-                                    gradient_color_scale: [null, null, null],
-                                    fill_direction: "",
-                                    max_scale_x: "",
-                                    min_scale_x: ""
-                                }
-                            ],
-                            scale_linear_log_or_yours: [null],
-                            stroke_linecap: ["butt"],
-                            stroke_width: [null],
-                            well_names: [WELL]
-                        }
-                    ]
-                }
-            ],
-            curve_box: {
-                width: zoneLogTrackWidth,
-                height: scheight,
-                height_multiplier_components: pPerfilHeightMultiplier,
-                div_id: "zone_well_holder",
-                margin: { top: 20, right: 10, bottom: 20, left: 40 }
-            }
-        }
-    ];
-
-    var plot_template_Facies = [
-        {
-            components: [
-                {
-                    rectangles: FACIES_RECT,
-                    curves: [
-                        {
-                            curve_colors: [null, null, null],
-                            curve_names: ["FACIES"],
-                            curve_stroke_dasharray: [null],
-                            curve_units: [""],
-                            data_type: "curve",
-                            depth_curve_name: "DEPTH",
-                            depth_units_string: [""],
-                            fill: [
-                                {
-                                    curve2: "",
-                                    curve_name: "",
-                                    cutoffs: [null, null, null],
-                                    fill: "no",
-                                    fill_colors: [null, null, null],
-                                    gradient_color_scale: [null, null, null],
-                                    fill_direction: "",
-                                    max_scale_x: "",
-                                    min_scale_x: ""
-                                }
-                            ],
-                            scale_linear_log_or_yours: [null],
-                            stroke_linecap: ["butt"],
-                            stroke_width: [null],
-                            well_names: [WELL]
-                        }
-                    ]
-                }
-            ],
-            curve_box: {
-                width: zoneLogTrackWidth,
-                height: scheight,
-                height_multiplier_components: pPerfilHeightMultiplier,
-                div_id: "zone_well_holder",
-                margin: { top: 20, right: 10, bottom: 20, left: 40 }
-            }
-        }
-    ];
-
-    let sfData = {};
-    sfData.data = allRows;
-    sfData.columns = ["DEPTH", "GR", "CAL", "PHIN", "PHID", "RESD", "ZONE", "FACIES"];
-
-    var result_1 = multipleLogPlot(
-        "mod-container",
-        [plot_template_1, plot_template_2, plot_template_3, plot_template_4, plot_template_Zone, plot_template_Facies],
-        sfData
-    );
-
-    //displayWelcomeMessage ( document.getElementById ( "js_chart" ), sfdata );
+    multipleLogPlot("mod-container", plot_templates, dataRows);
 }
 
 function curveBox(template_for_plotting, sfData) {
@@ -1956,7 +2309,7 @@ function curveBox(template_for_plotting, sfData) {
             .attr("width", width - margin.right - margin.left)
             .attr("x", getTooltipXCoordinate(curve_x_func, d.continuous(curve_names[1]).value()) + 7)
             .attr("y", y(d.continuous("DEPTH").value()) + 12)
-            .text( d.continuous(curve_names[1]).value() ? d.continuous(curve_names[1]).value() : "")
+            .text(d.continuous(curve_names[1]).value() ? d.continuous(curve_names[1]).value() : "")
             .call(wrapTooltip);
 
         if (second_curve) {
@@ -1976,7 +2329,10 @@ function curveBox(template_for_plotting, sfData) {
 
         focus
             .select(".x")
-            .attr("transform", "translate(" + getTooltipXCoordinate(curve_x_func, d.continuous(curve_names[0]).value()) + "," + 0 + ")")
+            .attr(
+                "transform",
+                "translate(" + getTooltipXCoordinate(curve_x_func, d.continuous(curve_names[0]).value()) + "," + 0 + ")"
+            )
             .attr("y2", height);
 
         //// circle y class part 2
@@ -1995,7 +2351,7 @@ function curveBox(template_for_plotting, sfData) {
         focus
             .select(".yl")
             .attr("transform", "translate(" + 0 + "," + y(d.continuous("DEPTH").value()) + ")")
-            .text(d.continuous(curve_names[0]).value() ? d.continuous(curve_names[0]).value(): "");
+            .text(d.continuous(curve_names[0]).value() ? d.continuous(curve_names[0]).value() : "");
     }
     // append the x line
     focus
@@ -2173,7 +2529,1140 @@ function getBB(selection) {
         d.bbox = this.getBBox();
     });
 }
+function logPlot(template_for_plotting, sfData, headerHeight) {
+    let template_overall = template_for_plotting[0]["trackBox"];
+    let template_components = template_for_plotting[0]["components"];
+    let templateCurves = template_components[0]["curves"][0];
+    let dataType = templateCurves["dataType"];
 
+    let div_id = template_overall["div_id"];
+    d3.select("#" + div_id)
+        .selectAll("*")
+        .remove();
+    let height = template_overall["height"] * verticalZoomHeightMultiplier - 110;
+    let height_components = template_overall["height"];
+    let width = template_overall["width"];
+    let margin = template_overall["margin"];
+    let gridlines_color = "#D3D3D3";
+    let gridlines_strokeWidth = 0.2;
+    let curveNames = templateCurves["curveNames"];
+    let curveColors = templateCurves["curveColors"];
+    let curveStrokeDashArray = templateCurves["curveStrokeDashArray"];
+    let scaleTypeLinearLog = templateCurves["scaleTypeLinearLog"];
+    let depthCurveName = templateCurves["depthCurveName"];
+
+    let curveUnits = "";
+    if (templateCurves["curveUnits"]) {
+        curveUnits = templateCurves["curveUnits"];
+    }
+
+    let depthUnit = "";
+    if (templateCurves["depthUnit"]) {
+        depthUnit = templateCurves["depthUnit"];
+    }
+
+    let depthMin = d3.min(sfData, function (d, i) {
+        return getCurveData(i, depthCurveName, sfData);
+    });
+    let depthMax = d3.max(sfData, function (d, i) {
+        return getCurveData(i, depthCurveName, sfData);
+    });
+
+    //////////////  Initiate DIVs //////////////
+    let svg;
+    let trackHeaderDiv;
+
+    trackHeaderDiv = d3
+        .select("#" + div_id)
+        .append("div")
+        .attr("class", "trackHeaderDiv")
+        .style("overflow-x", "visible")
+        .style("overflow-y", "visible")
+        .style("position", "sticky")
+        .style("top", 0)
+        .style("background-color", "white")
+        .style("z-index", 1)
+        .style("height", headerHeight)
+        .style("display", "inline-flex")
+        .style("flex-direction", "row")
+        .style("align-items", "flex-end")
+        .style("margin-bottom", "10px");
+
+    var trackHeaderDivContent = trackHeaderDiv.append("div").attr("class", "trackHeaderDivContent");
+
+    const trackPlotDiv = d3.select("#" + div_id).append("div");
+    trackPlotDiv
+        .attr("height", height_components + "px")
+        .attr("class", "trackPlotDiv")
+        .style("margin", 0)
+        .style("padding", 0)
+        .style("border", 0)
+        .style("box-sizing", "border-box");
+
+    const logPlot_sub_div = trackPlotDiv.append("div");
+    logPlot_sub_div.attr("class", "component_inner").style("position", "relative");
+
+    svg = logPlot_sub_div.append("svg");
+
+    let x_functions_for_each_curve = {};
+
+    let mins = [];
+    let maxes = [];
+    let curvesDescription = "";
+    let y;
+    let yAxis;
+
+    //////////////////// define Y scale (depth)  ////////////////////
+
+    y = d3
+        .scaleLinear()
+        .domain([depthMax, depthMin])
+        .range([height - margin.bottom - margin.top, margin.top]);
+
+    yAxis = function (g) {
+        return g
+            .attr("transform", "translate(" + margin.left + ",0)")
+            .call(d3.axisLeft(y))
+            .call(function (g) {
+                return g.select(".domain");
+            });
+    };
+
+    y_function = y;
+
+    //////////////  Building curves within tracks //////////////
+    for (let k = 0; k < curveNames.length; k++) {
+        var maxScaleX = null;
+        var minScaleX = null;
+        var colorInterpolatorfills = [];
+
+        if (templateCurves["fill"] && k < templateCurves["fill"].length) {
+            minScaleX = templateCurves["fill"][k]["minScaleX"] ? templateCurves["fill"][k]["minScaleX"] : null;
+            maxScaleX = templateCurves["fill"][k]["maxScaleX"] ? templateCurves["fill"][k]["maxScaleX"] : null;
+            colorInterpolatorfills = templateCurves["fill"][k]["colorInterpolator"];
+        }
+
+        let min_this = d3.min(sfData, function (d, i) {
+            return getCurveData(i, curveNames[k], sfData);
+        });
+        let max_this = d3.max(sfData, function (d, i) {
+            return getCurveData(i, curveNames[k], sfData);
+        });
+
+        mins.push(min_this);
+        maxes.push(max_this);
+
+        //fixed scale:
+        if (minScaleX) {
+            min_this = minScaleX;
+        }
+        if (maxScaleX) {
+            max_this = maxScaleX;
+        }
+
+        let x_func;
+        let x;
+        let xAxis_header;
+        let xAxis;
+
+        x = d3
+            .scaleLinear()
+            .domain([min_this, max_this])
+            .nice()
+            .range([margin.left, width - margin.right]);
+        if (scaleTypeLinearLog[k] == "log") {
+            x = d3
+                .scaleLog()
+                .domain([min_this, max_this])
+                .range([margin.left, width - margin.right]);
+        } else if (dataType == "category") {
+            x = d3
+                .scaleOrdinal()
+                .domain([" ", ""])
+                .range([margin.left, width - margin.right]);
+        } else if (scaleTypeLinearLog[k] == "linear") {
+        }
+        if (k == 0) {
+            x_func == x;
+        }
+
+        x_functions_for_each_curve[curveNames[k]] = x;
+    }
+
+    for (let k = 0; k < curveNames.length; k++) {
+        let min = mins[k];
+        let max = maxes[k];
+
+        let header_text_line = curveNames[k];
+
+        curvesDescription = curvesDescription + "-" + curveNames[k];
+
+        let curveUnit = "";
+        if (curveUnits[k]) {
+            curveUnit = curveUnits[k];
+        }
+
+        if (!isNaN(min) && !isNaN(max)) {
+            header_text_line = min.toFixed(1) + " - " + curveNames[k] + " " + curveUnit + " - " + max.toFixed(1);
+        } else {
+            header_text_line = curveNames[k];
+        }
+
+        //////////////  Building Track Components  //////////////
+        svg.attr("class", "components")
+            .attr("width", width)
+            .attr("height", height)
+            .style("margin", "0 auto")
+            .style("overflow", "scroll");
+
+        svg.append("g").call(yAxis);
+
+        var gridlines_obj = d3
+            .axisTop()
+            .ticks((width - margin.left - margin.right) / 25)
+            .tickFormat("")
+            .tickSize(-height + margin.top + 10)
+            .scale(x_functions_for_each_curve[curveNames[0]]);
+        svg.append("g")
+            .attr("class", "grid")
+            .call(gridlines_obj)
+            .style("stroke", gridlines_color)
+            .style("stroke-width", gridlines_strokeWidth);
+
+        //////////////  Header Text   //////////////
+
+        let distance_from_top = "1em";
+
+        //let svg_header = ""
+        let svg_header = trackHeaderDivContent.append("div").append("svg");
+        svg_header.attr("class", "header");
+        svg_header.attr("width", width).attr("height", "40px");
+        svg_header.append("g");
+        svg_header.style("display", "block");
+
+        svg_header
+            .append("text")
+            .attr("x", (margin.left + width) / 2)
+            .attr("y", 0 + distance_from_top)
+            .attr("text-anchor", "middle")
+            .style("font-size", "11px")
+            .style("cursor", "default")
+            .style("fill", curveColors[k])
+            .text(header_text_line);
+
+        let translate_string = "translate(0,17)";
+
+        xAxis_header = function (g) {
+            return g.attr("transform", translate_string).call(
+                d3
+                    .axisBottom(x_functions_for_each_curve[curveNames[k]])
+                    .ticks((width - margin.left - margin.right) / 25)
+                    .tickSizeOuter(0)
+            );
+        };
+
+        svg_header.append("g").call(xAxis_header).append("text");
+
+        //////////////   define the lines and areas  //////////////
+
+        svg.append("defs")
+            .append("clipPath")
+            .attr("id", "clip")
+            .append("rect")
+            .attr("x", margin.left + 1)
+            .attr("y", margin.top)
+            .attr("width", width - margin.right - margin.left - 1)
+            .attr("height", y(depthMax) - y(depthMin));
+
+        function getOpacity(n, threshold_curve1, threshold_curve2) {
+            if (n == 0) return 1;
+            else if (threshold_curve1) return 1;
+            else if (threshold_curve2) return 1;
+            else return 0;
+        }
+
+        if (dataType == "curve") {
+            for (let i = 0; i < templateCurves["fill"].length; i++) {
+                if (templateCurves["fill"][i]["fill"] == "yes") {
+                    let number_colors = templateCurves["fill"][i]["fillColors"].length;
+                    let curveName1 = templateCurves["fill"][i]["curveName"];
+
+                    for (let j = 0; j < number_colors; j++) {
+                        let area1 = d3.area();
+                        let threshold = -99999999;
+                        let fillColor = "gray";
+                        let colorInterpolation = d3.interpolateSpectral;
+
+                        if (number_colors !== 0) {
+                            threshold = templateCurves["fill"][i]["cutoffs"][j];
+                            fillColor = templateCurves["fill"][i]["fillColors"][j];
+                            colorInterpolation = templateCurves["fill"][i]["colorInterpolator"][j];
+                        }
+
+                        if (fillColor == "interpolator" && colorInterpolation) {
+                            let colorInterpolator_functions_for_each_curve = {};
+
+                            if (scaleTypeLinearLog[k] == "linear") {
+                                colorInterpolator_functions_for_each_curve[curveName1 + "_" + j] = d3
+                                    .scaleSequential(colorInterpolation)
+                                    .domain(x_functions_for_each_curve[curveName1].domain());
+                            } else if (scaleTypeLinearLog[k] == "log") {
+                                colorInterpolator_functions_for_each_curve[
+                                    curveName1 + "_" + j
+                                ] = d3
+                                    .scaleSequentialLog(colorInterpolation)
+                                    .domain(x_functions_for_each_curve[curveName1].domain());
+                            }
+
+                            var grd = svg
+                                .append("defs")
+                                .append("linearGradient")
+                                .attr("id", "linear-gradient-" + curveName1 + "_" + j)
+                                .attr("gradientUnits", "userSpaceOnUse")
+                                .attr("x1", 0)
+                                .attr("x2", 0)
+                                .attr("y1", y(depthMin))
+                                .attr("y2", y(depthMax))
+                                .selectAll("stop")
+                                .data(sfData.data)
+                                .join("stop")
+                                .attr("offset", function (d, i) {
+                                    return (
+                                        ((y(getCurveData(i, depthCurveName, sfData)) - y(depthMin)) /
+                                            (y(depthMax) - y(depthMin))) *
+                                            100.0 +
+                                        "%"
+                                    );
+                                })
+                                .attr("stop-color", function (d, i) {
+                                    return !isNaN(getCurveData(i, curveName1, sfData))
+                                        ? colorInterpolator_functions_for_each_curve[curveName1 + "_" + j](
+                                              getCurveData(i, curveName1, sfData)
+                                          )
+                                        : "rgba(0,0,0,0)";
+                                });
+
+                            if (colorInterpolator_functions_for_each_curve[curveName1 + "_" + j]) {
+                                var svg_legend_color_scale = trackHeaderDivContent.append("div").append("svg");
+                                svg_legend_color_scale.attr("height", 20).attr("width", width);
+
+                                svg_legend_color_scale
+                                    .append("defs")
+                                    .append("linearGradient")
+                                    .attr("id", "linear-gradient-legend-" + curveName1 + "_" + j)
+                                    .attr("gradientUnits", "userSpaceOnUse")
+                                    .attr("x1", margin.left)
+                                    .attr("x2", width - margin.right)
+                                    .attr("y1", 0)
+                                    .attr("y2", 0)
+                                    .selectAll("stop")
+                                    .data(
+                                        d3.range(
+                                            x_functions_for_each_curve[curveName1].domain()[0],
+                                            x_functions_for_each_curve[curveName1].domain()[1]
+                                        )
+                                    )
+                                    .join("stop")
+                                    .attr("offset", function (d) {
+                                        return (
+                                            ((d - x_functions_for_each_curve[curveName1].domain()[0]) /
+                                                (x_functions_for_each_curve[curveName1].domain()[1] -
+                                                    x_functions_for_each_curve[curveName1].domain()[0] -
+                                                    1)) *
+                                                100 +
+                                            "%"
+                                        );
+                                    })
+                                    .attr("stop-color", function (d) {
+                                        return colorInterpolator_functions_for_each_curve[curveName1 + "_" + j](d);
+                                    });
+
+                                svg_legend_color_scale
+                                    .append("rect")
+                                    .attr("x", margin.left)
+                                    .attr("y", 1)
+                                    .attr("width", width - margin.left - margin.right)
+                                    .attr("height", 18)
+                                    .attr("fill", "url(#linear-gradient-legend-" + curveName1 + "_" + j + ")")
+                                    .attr("stroke", "black")
+                                    .attr("stroke-width", 0.5);
+
+                                //d3.select("#"+div_id+" div div.trackHeaderDivContent").append('br')
+                            }
+
+                            fillColor = "url(#linear-gradient-" + curveName1 + "_" + j + ")";
+                        }
+
+                        if (templateCurves["fill"][i]["fillDirection"] == "left") {
+                            let start_from_left = template_overall["margin"]["left"];
+                            area1
+                                .x1(function (d, i) {
+                                    return x_functions_for_each_curve[curveName1](getCurveData(i, curveName1, sfData));
+                                })
+                                .x0(function (d, i) {
+                                    return start_from_left;
+                                })
+                                .defined(function (d, i) {
+                                    return (
+                                        (getCurveData(i, curveName1, sfData) ||
+                                            getCurveData(i, curveName1, sfData) == 0) &&
+                                        getCurveData(i, curveName1, sfData) > threshold
+                                    );
+                                })
+                                .y(function (d, i) {
+                                    return y(getCurveData(i, depthCurveName, sfData));
+                                });
+
+                            svg.append("path")
+                                .datum(sfData.data)
+                                .attr("class", "area")
+                                .attr("clip-path", "url('#clip')")
+                                .attr("d", area1)
+                                .attr("stroke", "none")
+                                .attr("fill", fillColor)
+                                .attr("fill-opacity", getOpacity(j, threshold, null));
+                        }
+                        if (templateCurves["fill"][i]["fillDirection"] == "right") {
+                            let start_from_right = template_overall["margin"]["right"];
+                            let start_from_left = template_overall["margin"]["left"];
+                            area1
+                                .x1(function (d, i) {
+                                    return width - start_from_right;
+                                })
+                                .defined(function (d, i) {
+                                    return (
+                                        (getCurveData(i, curveName1, sfData) ||
+                                            getCurveData(i, curveName1, sfData) == 0) &&
+                                        getCurveData(i, curveName1, sfData) > threshold
+                                    );
+                                })
+                                .x0(function (d, i) {
+                                    return x_functions_for_each_curve[curveName1](getCurveData(i, curveName1, sfData));
+                                })
+                                .y(function (d, i) {
+                                    return y(getCurveData(i, depthCurveName, sfData));
+                                });
+
+                            svg.append("path")
+                                .datum(sfData.data)
+                                .attr("class", "area")
+                                .attr("clip-path", "url('#clip')")
+                                .attr("d", area1)
+                                .attr("stroke", "none")
+                                .attr("fill", fillColor)
+                                .attr("fill-opacity", getOpacity(j, threshold, null));
+                        }
+                        if (templateCurves["fill"][i]["fillDirection"] == "between") {
+                            let between_2_curve = templateCurves["fill"][k]["curve2"];
+
+                            var indexCurve2;
+                            for (let c = 0; c < curveNames.length; c++) {
+                                if (between_2_curve == curveNames[c]) {
+                                    indexCurve2 = c;
+                                    break;
+                                }
+                            }
+
+                            let fillColor2 = templateCurves["fill"][indexCurve2]["fillColors"][j];
+                            let curve2Threshold = templateCurves["fill"][indexCurve2]["cutoffs"][j];
+
+                            if (fillColor2 == "interpolator") {
+                                fillColor2 = "url(#linear-gradient-" + between_2_curve + "_" + j + ")";
+                            }
+
+                            let second_curve_x_func = x_functions_for_each_curve[between_2_curve];
+                            let first_curve_x_func = x_functions_for_each_curve[curveName1];
+
+                            area1
+                                .x1(function (d, i) {
+                                    return first_curve_x_func(getCurveData(i, curveName1, sfData));
+                                })
+                                .x0(function (d, i) {
+                                    return second_curve_x_func(getCurveData(i, between_2_curve, sfData));
+                                })
+                                .defined(function (d, i) {
+                                    return (
+                                        (getCurveData(i, curveName1, sfData) ||
+                                            getCurveData(i, curveName1, sfData) == 0) &&
+                                        getCurveData(i, curveName1, sfData) > threshold &&
+                                        (getCurveData(i, between_2_curve, sfData) ||
+                                            getCurveData(i, between_2_curve, sfData) == 0) &&
+                                        getCurveData(i, between_2_curve, sfData) > curve2Threshold &&
+                                        first_curve_x_func(getCurveData(i, curveName1, sfData)) >
+                                            second_curve_x_func(getCurveData(i, between_2_curve, sfData))
+                                    );
+                                })
+                                .y(function (d, i) {
+                                    return y(getCurveData(i, depthCurveName, sfData));
+                                });
+
+                            svg.append("path")
+                                .datum(sfData.data)
+                                .attr("class", "area")
+                                .attr("clip-path", "url('#clip')")
+                                .attr("d", area1)
+                                .attr("stroke", "none")
+                                .attr("fill", fillColor)
+                                .attr("fill-opacity", getOpacity(j, threshold, curve2Threshold));
+
+                            let area2 = d3.area();
+                            area2
+                                .x1(function (d, i) {
+                                    return first_curve_x_func(getCurveData(i, curveName1, sfData));
+                                })
+                                .x0(function (d, i) {
+                                    return second_curve_x_func(getCurveData(i, between_2_curve, sfData));
+                                })
+                                .defined(function (d, i) {
+                                    return (
+                                        getCurveData(i, curveName1, sfData) > threshold &&
+                                        getCurveData(i, between_2_curve, sfData) > curve2Threshold &&
+                                        first_curve_x_func(getCurveData(i, curveName1, sfData)) <
+                                            second_curve_x_func(getCurveData(i, between_2_curve, sfData))
+                                    );
+                                })
+                                .y(function (d, i) {
+                                    return y(getCurveData(i, depthCurveName, sfData));
+                                });
+
+                            svg.append("path")
+                                .datum(sfData.data)
+                                .attr("class", "area")
+                                .attr("clip-path", "url('#clip')")
+                                .attr("d", area2)
+                                .attr("stroke", "none")
+                                .attr("fill", fillColor2)
+                                .attr("fill-opacity", getOpacity(j, threshold, curve2Threshold));
+                        }
+                    }
+                }
+            }
+            let line = d3
+                .line()
+                .x(function (d, i) {
+                    if (isNaN(x_functions_for_each_curve[curveNames[k]](getCurveData(i, curveNames[k], sfData)))) {
+                        return null;
+                    } else {
+                        return x_functions_for_each_curve[curveNames[k]](getCurveData(i, curveNames[k], sfData));
+                    }
+                })
+                .y(function (d, i) {
+                    return y(getCurveData(i, depthCurveName, sfData));
+                })
+                .defined(function (d, i) {
+                    return getCurveData(i, curveNames[k], sfData) || getCurveData(i, curveNames[k], sfData) == 0
+                        ? true
+                        : false;
+                });
+            svg.append("path")
+                .datum(sfData.data)
+                .attr("fill", "none")
+                .attr("clip-path", "url('#clip')")
+                .attr("stroke", curveColors[k])
+                .attr("stroke-width", templateCurves["strokeWidth"][k])
+                .attr("stroke-linecap", templateCurves["strokeLinecap"][k])
+                .attr("stroke-dasharray", curveStrokeDashArray[k])
+                .attr("d", function (d, i) {
+                    return line(d, i);
+                });
+        }
+    }
+
+    /* Marking Representation */
+
+    function checkPreviousMarked(d, i) {
+        if (i <= 0 || i > sfData.data.lenght) {
+            return false;
+        } else {
+            return sfData.data[i - 1].hints.marked;
+        }
+    }
+
+    var areaMark = d3
+        .area()
+        .x0(margin.left)
+        .x1(width - margin.right)
+
+        .defined(function (d, i) {
+            return d.hints.marked || checkPreviousMarked(d, i);
+        })
+        .y(function (d, i) {
+            return y(getCurveData(i, depthCurveName, sfData));
+        });
+
+    var areaPath = svg
+        .append("path")
+        .datum(sfData.data)
+        .attr("class", "area")
+        .attr("clip-path", "url('#clip')")
+        .attr("d", areaMark)
+        .attr("stroke", "none")
+        .attr("fill", "rgb(0,0,0)")
+        .attr("fill-opacity", 0.2);
+    //.style("stroke-dasharray", ("7,3")) // make the stroke dashed
+    //.style("stroke", "rgba(0,0,0,0.4)")   // set the line colour
+    var areaMarkTagRight = d3
+        .area()
+        .x0(width - margin.right)
+        .x1(width - margin.right + 4)
+        .defined(function (d, i) {
+            return d.hints.marked || checkPreviousMarked(d, i);
+        })
+        .y(function (d, i) {
+            return y(getCurveData(i, depthCurveName, sfData));
+        });
+
+    var areaTagPathRight = svg
+        .append("path")
+        .datum(sfData.data)
+        .attr("class", "area")
+        //.attr("clip-path", "url('#clip')")
+        .attr("d", areaMarkTagRight)
+        .attr("stroke", "none")
+        .attr("fill", "gray")
+        .attr("fill-opacity", 0.7);
+
+    var areaMarkTagLeft = d3
+        .area()
+        .x0(margin.left - 4)
+        .x1(margin.left)
+        .defined(function (d, i) {
+            return d.hints.marked || checkPreviousMarked(d, i);
+        })
+        .y(function (d, i) {
+            return y(getCurveData(i, depthCurveName, sfData));
+        });
+
+    var areaTagPathLeft = svg
+        .append("path")
+        .datum(sfData.data)
+        .attr("class", "area")
+        //.attr("clip-path", "url('#clip')")
+        .attr("d", areaMarkTagLeft)
+        .attr("stroke", "none")
+        .attr("fill", "gray")
+        .attr("fill-opacity", 0.7);
+
+    // append the transparent rectangle to capture mouse movement (tooltip)
+    svg.append("rect")
+        .attr("curveColors", curveColors)
+        .attr("width", width - margin.left)
+        .attr("x", margin.left)
+        .attr("height", height)
+        .style("fill", "none")
+        .style("pointer-events", "all")
+        .on("mouseover", tooltipMouseover)
+        .on("mouseout", tooltipMouseout)
+        .on("mousemove", mousemove);
+
+    function tooltipMouseover(evt) {
+        focus.style("display", null);
+        tooltipDiv.transition().duration(600).style("opacity", 0.9);
+    }
+
+    function tooltipMouseout(evt) {
+        focus.style("display", "none");
+        tooltipDiv.transition().duration(400).style("opacity", 0);
+    }
+
+    //////////////  Rectangles for Categories //////////////
+    try {
+        if (dataType == "category") {
+            var categoryDomain = [];
+            var categoryColorFunc;
+
+            /*			
+			valueIndex    = getCurveIndex(depthCurveName, sfData);
+            categoryIndex = getCurveIndex(curveNames[0], sfData);
+			
+			const groupArraySF = arr => {
+			   return arr.reduce( function(acc, val, ind, array) {
+			      // the accumulated data and lastIndex of accumulated data
+			      const { data, currentIndex } = acc;
+			      // the current object properties
+				  const { value, category, MarkIndex } = {  value: val.items[valueIndex], category: val.items[categoryIndex], MarkIndex: val.hints.index };
+			      // the previous object properties
+			      const v0 = arr[ind-1]?.items[valueIndex];
+			      const g0 = arr[ind-1]?.items[categoryIndex];
+				  const i0 = arr[ind-1]?.hints.index;
+				  // the next object properties
+ 			     const v1 = arr[ind+1]?.items[valueIndex];
+			      const g1 = arr[ind+1]?.items[categoryIndex];
+				  const i1 = arr[ind+1]?.hints.index;
+			      if( (ind === 0 || category !== g0)) {
+					 if (g0 && !categoryDomain.includes(g0)) { categoryDomain.push(g0); }
+ 			         // recording the index of last object and pushing new subarray
+			         const index = data.push([val]) - 1;
+					 if (data[index-1]) { data[index-1].push(val); }
+					 if (data[index-1]) { 
+					     reduxMarkIds = [];
+					     for (var i=0; i < data[index-1].length-1; i++)  {
+						     reduxMarkIds.push( data[index-1][i].hints.index);
+					     }
+						 data[index-1] = [{top: data[index-1][0].items[valueIndex] , bottom: val.items[valueIndex], category: data[index-1][0].items[categoryIndex], markIds: reduxMarkIds }]; 
+					 }
+			         return { data, currentIndex: index };
+			      };
+			      data[currentIndex].push(val);
+				  // if last node:
+				  if (currentIndex == data.length -1  && ind == array.length -1) { 
+					 reduxMarkIds = [];
+					 for (var i=0; i < data[currentIndex].length; i++)  {
+					     reduxMarkIds.push( data[currentIndex][i].hints.index);
+					 }		  
+				      data[currentIndex] = [{top: data[currentIndex][0].items[valueIndex] , bottom: val.items[valueIndex], category: data[currentIndex][0].items[categoryIndex], markIds:reduxMarkIds  }];
+				  };
+			      return { data, currentIndex };
+			   }, {
+			      data: [],
+			      currentIndex: 0
+			   }).data;
+			}
+			
+			
+			var rectangles_array = groupArraySF(sfData.data);
+*/
+
+            var template_rectangles = [];
+            var categoryColumnName = curveNames[0];
+
+            var Depth = null;
+            var categoryDepthFirst = null;
+            var categoryDepthLast = null;
+            var categoryName = null;
+            var categoriesRectangles = [];
+            var categoriesDomain = [];
+            var categoryColorFunc;
+
+            //var index =0;
+            var categoryMarkIds = [];
+
+            for (let index = 0; index < sfData.data.length; index++) {
+                var item = sfData.data[index];
+
+                nextItem = null;
+                if (sfData.data[index + 1]) {
+                    nextItem = sfData.data[index + 1];
+                }
+
+                Depth = item.items[getCurveIndex(depthCurveName, sfData)];
+                nextDepth = null;
+                if (nextItem) {
+                    nextDepth = nextItem.items[getCurveIndex(depthCurveName, sfData)];
+                } else {
+                    nextDepth = Depth;
+                }
+
+                if (!isNaN(Depth) && Depth !== null) {
+                    if (categoryName == item.items[getCurveIndex(categoryColumnName, sfData)]) {
+                        categoryDepthLast = nextDepth;
+                    }
+
+                    if (
+                        categoryName != item.items[getCurveIndex(categoryColumnName, sfData)] ||
+                        index == sfData.data.length - 1
+                    ) {
+                        if (categoryName) {
+                            if (!categoriesDomain.includes(categoryName)) {
+                                categoriesDomain.push(categoryName);
+                            }
+                            categoriesRectangles.push({
+                                top: categoryDepthFirst,
+                                bottom: categoryDepthLast,
+                                category: categoryName,
+                                markIds: categoryMarkIds.slice()
+                            });
+                        }
+                        categoryDepthFirst = Depth;
+                        categoryDepthLast = nextDepth;
+                        categoryMarkIds = [];
+                    }
+                    categoryName = item.items[getCurveIndex(categoryColumnName, sfData)];
+                    categoryMarkIds.push(item.hints.index);
+                }
+            }
+
+            range = [
+                "#1f77b4",
+                "#aec7e8",
+                "#ff7f0e",
+                "#ffbb78",
+                "#2ca02c",
+                "#98df8a",
+                "#d62728",
+                "#ff9896",
+                "#9467bd",
+                "#c5b0d5",
+                "#8c564b",
+                "#c49c94",
+                "#e377c2",
+                "#f7b6d2",
+                "#7f7f7f",
+                "#c7c7c7",
+                "#bcbd22",
+                "#dbdb8d",
+                "#17becf",
+                "#9edae5"
+            ];
+
+            categoriesDomain = categoriesDomain.sort();
+
+            if (parseInt(d3.version.charAt(0)) < 6) {
+                categoryColorFunc = d3.scale.ordinal(range).domain(categoriesDomain);
+            } else {
+                categoryColorFunc = d3.scaleOrdinal(range).domain(categoriesDomain);
+            }
+
+            ////////////////////////////
+
+            if (parseInt(d3.version.charAt(0)) < 6) {
+                categoryColorFunc = d3.scale.ordinal(d3.schemeCategory10).domain(categoryDomain);
+            } else {
+                categoryColorFunc = d3.scaleOrdinal(d3.schemeCategory10).domain(categoryDomain);
+            }
+
+            for (let i = 0; i < categoriesRectangles.length; i++) {
+                let categoryRectangle = categoriesRectangles[i];
+                if (categoryRectangle.category) {
+                    function rectClick(evt, a, b) {
+                        var elem;
+                        if (this.attributes.rectCategoryId) {
+                            elem = d3.select("#" + this.attributes.rectCategoryId.value)._groups[0][0];
+                        } else elem = this;
+
+                        var markMode = "Replace";
+                        if (evt instanceof MouseEvent) {
+                            evt.preventDefault();
+                            evt.stopPropagation();
+                            if (evt.shiftKey) {
+                                markMode = "Add";
+                            } else if (evt.ctrlKey) {
+                                markMode = "Toggle";
+                            }
+                        } else {
+                            d3.event.preventDefault();
+                            d3.event.stopPropagation();
+                        }
+                        // Implementation of logic to call markIndices or markIndices2 goes here
+                        var indicesToMark = [];
+                        if (elem) {
+                            indicesToMark = elem.__data__;
+                        }
+                        var markData = {};
+                        markData.markMode = markMode;
+                        markData.indexSet = indicesToMark;
+                        markIndices(markData);
+                    }
+
+                    function rectMouseOver(evt) {
+                        focus.style("display", null);
+
+                        tooltipDiv.transition().duration(500).style("opacity", 0.9);
+
+                        var elem = this;
+                        if (elem.nodeName == "text") {
+                            elem = elem.previousElementSibling;
+                        }
+
+                        if (this.attributes.rectCategoryId) {
+                            d3.select("#" + this.attributes.rectCategoryId.value).style("stroke", "black");
+                            d3.select("#" + this.attributes.rectCategoryId.value).style("stroke-width", "2");
+                        }
+                    }
+
+                    function rectMouseOut(d) {
+                        focus.style("display", "none");
+
+                        tooltipDiv.transition().duration(500).style("opacity", 0);
+
+                        var elem = this;
+                        if (elem.nodeName == "text") {
+                            elem = elem.previousElementSibling;
+                        }
+                        if (this.attributes.rectCategoryId) {
+                            d3.select("#" + this.attributes.rectCategoryId.value).style("stroke", "black");
+                            d3.select("#" + this.attributes.rectCategoryId.value).style("stroke-width", "0.5");
+                        }
+                    }
+
+                    svg.append("rect")
+                        .datum(categoryRectangle.markIds)
+                        .attr("id", "Rect" + (categoryRectangle.top * 100).toFixed() + "_" + i)
+                        .attr("class", "rectCategory")
+                        .attr("x", margin.left)
+                        .attr("y", y(categoryRectangle.top))
+                        .attr("width", width - margin.right - margin.left)
+                        .attr("height", Math.abs(y(categoryRectangle.top) - y(categoryRectangle.bottom)))
+                        //.style("cursor", "pointer")
+                        .style("stroke-width", 0.5)
+                        .style("stroke", "black")
+                        .style("fill", "none")
+                        .style("fill", categoryColorFunc(categoryRectangle.category))
+                        .style("opacity", 0.7);
+
+                    var fgObj = svg.append("foreignObject");
+                    fgObj
+                        .attr("x", margin.left)
+                        .attr("y", y(categoryRectangle.top))
+                        .attr("width", width - margin.right - margin.left)
+                        .attr("height", Math.abs(y(categoryRectangle.top) - y(categoryRectangle.bottom)))
+                        //.style("cursor", "pointer")
+                        .on("mousedown", rectClick)
+                        .on("mousemove", mousemove);
+
+                    var fgDiv = fgObj.append("xhtml:div");
+
+                    fgDiv
+                        .attr("id", "fgObj" + categoryRectangle.top + "_" + i)
+                        .attr("rectCategoryId", "Rect" + (categoryRectangle.top * 100).toFixed() + "_" + i)
+                        .style("height", "100%")
+                        .style("text-align", "center")
+                        .style("overflow", "hidden")
+                        .style("word-wrap", "break-word")
+                        .style("position", "relative")
+                        .style("display", "flex")
+                        .style("justify-content", "center")
+                        //.style("cursor", "pointer")
+                        .style("background-color", "transparent")
+                        .style("align-items", "center")
+                        .style("padding-left", "2px")
+                        .style("padding-right", "2px")
+                        .on("mouseout", rectMouseOut)
+                        .on("mouseover", rectMouseOver)
+                        .on("mousedown", rectClick);
+
+                    fgDiv
+                        .append("span")
+                        .style("display", "inline-block")
+                        .style("overflow", "hidden")
+                        .style("font-size", "11px")
+                        .style("color", "black")
+                        .style("font-family", "sans-serif, Roboto")
+                        .style("background-color", "transparent")
+                        .style("pointer-events", "none")
+                        //.style("cursor", "pointer")
+                        //.on('mouseout', rectMouseOut )
+                        //.on("mouseover", rectMouseOver )
+                        //.on("mousedown", rectClick )
+                        .text(function (d) {
+                            if (Math.abs(y(categoryRectangle.top) - y(categoryRectangle.bottom)) >= 11) {
+                                return categoryRectangle.category;
+                            } else {
+                                return "";
+                            }
+                        });
+                }
+            }
+        }
+    } catch (err) {
+        console.log("Could not draw rectangle in logPlot function. error= ", err);
+    }
+
+    ////////////////   Prepare Tooltips   ///////////////////
+
+    function getTooltipPositionX(xFunction, xArgument) {
+        if (xFunction && xArgument && xFunction(xArgument) && typeof xArgument != "string") {
+            var xVal = xFunction(xArgument);
+            if (xVal < margin.left) {
+                xVal = margin.left;
+            } else if (xVal > width - margin.right) {
+                xVal = width - margin.right;
+            }
+            return xVal;
+        } else if (margin.left) {
+            return margin.left;
+        } else {
+            return 1;
+        }
+    }
+
+    let curve_x_func = x_functions_for_each_curve[curveNames[0]];
+
+    var second_curve = null;
+    var second_curve_x_func = null;
+
+    if (templateCurves["fill"][0]["curve2"]) {
+        second_curve = templateCurves["fill"][0]["curve2"];
+        second_curve_x_func = x_functions_for_each_curve[second_curve];
+    }
+
+    var filter = svg
+        .append("defs")
+        .append("filter")
+        .attr("id", "tooltipBackground")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", 1)
+        .attr("height", 1);
+
+    filter.append("feFlood").attr("flood-color", "rgba(255, 255, 255, 0.85)").attr("result", "bg");
+
+    var feMerge = filter.append("feMerge").attr("flood-color", "black").attr("result", "bg");
+
+    feMerge.append("feMergeNode").attr("in", "bg");
+
+    feMerge.append("feMergeNode").attr("in", "SourceGraphic");
+
+    var focus = svg.append("g").style("display", "none");
+
+    function mousemove(evt) {
+        depthIndex = getCurveIndex(depthCurveName, sfData);
+        curve1Index = getCurveIndex(curveNames[0], sfData);
+        curve2Index = getCurveIndex(curveNames[1], sfData);
+
+        if (!tooltipDiv) {
+            tooltipDiv = d3.select("#js_chart" + "_tooltip");
+        }
+        if (tooltipDiv) {
+            tooltipDiv.transition().duration(400).style("opacity", 0);
+        }
+
+        var rectColor = null;
+        var target = evt.target || evt.srcElement;
+
+        if (target.attributes.rectcategoryid) {
+            target = d3.select("#" + target.attributes.rectcategoryid.value)._groups[0][0];
+            rectColor = target.style["fill"];
+        }
+
+        var curveColor0 = "black";
+        var curveColor1 = "black";
+        if (target.attributes.curveColors) {
+            var curveColorsArray = target.attributes.curveColors.value.split(",");
+            if (curveColorsArray[0]) {
+                curveColor0 = curveColorsArray[0];
+            }
+            if (curveColorsArray[1]) {
+                curveColor1 = curveColorsArray[1];
+            }
+        } else if (rectColor) {
+            curveColor0 = rectColor;
+        }
+
+        var bisectData = d3.bisector(function (d) {
+            return d.items[depthIndex];
+        }).left;
+
+        var y0;
+
+        if (parseInt(d3.version.charAt(0)) >= 6) {
+            y0 = y.invert(d3.pointer(evt)[1]);
+        } else {
+            y0 = y.invert(d3.event.y);
+        }
+
+        var i = bisectData(sfData.data, y0);
+
+        var d1 = sfData.data[i];
+        var d0 = sfData.data[i - 1];
+
+        var d = null;
+
+        if (d0 && d1) {
+            if (d0[depthIndex] && d1[depthIndex]) {
+                d = y0 - d0[depthIndex] > d1[depthIndex] - y0 ? d1 : d0;
+            }
+        }
+        if (d == null) {
+            d = d1;
+        }
+        if (d == null) {
+            d = d0;
+        }
+
+        if (tooltipDiv) {
+            js_chart = d3.select("#js_chart")._groups[0][0];
+
+            tooltipDiv.html(
+                (d.items[depthIndex] ? depthCurveName + ": " + d.items[depthIndex].toFixed(2) + "<br>" : "") +
+                    (curveNames[0] && d.items[curve1Index]
+                        ? "<span style='border:1px solid gray; background-color:" +
+                          curveColor0 +
+                          "';>&nbsp;&nbsp;</span>&nbsp;" +
+                          curveNames[0] +
+                          ": " +
+                          d.items[curve1Index] +
+                          "<br>"
+                        : "") +
+                    (curveNames[1] && d.items[curve2Index]
+                        ? "<span style='border:1px solid gray; background-color:" +
+                          curveColor1 +
+                          "';>&nbsp;&nbsp;</span>&nbsp;" +
+                          curveNames[1] +
+                          ": " +
+                          d.items[curve2Index] +
+                          "<br>"
+                        : "")
+            );
+
+            tooltipX =
+                target.parentNode.parentNode.offsetLeft + getTooltipPositionX(curve_x_func, d.items[curve1Index]) + 10;
+
+            tooltipY = evt.pageY + js_chart.scrollTop + 24;
+
+            tooltipDiv.style("left", tooltipX + "px");
+            tooltipDiv.style("top", tooltipY + "px");
+
+            tooltipDiv.transition().duration(600).style("opacity", 0.9);
+        }
+
+        focus
+            .select(".x")
+            .attr("transform", "translate(" + getTooltipPositionX(curve_x_func, d.items[curve1Index]) + "," + 0 + ")")
+            .attr("y2", height);
+
+        //// circle and lines
+        focus
+            .select(".y")
+            .attr(
+                "transform",
+                "translate(" +
+                    getTooltipPositionX(curve_x_func, d.items[curve1Index]) +
+                    "," +
+                    y(d.items[depthIndex]) +
+                    ")"
+            )
+            .text(d.items[curve1Index] ? d.items[curve1Index] : "")
+            .style("cursor", "default");
+
+        focus
+            .select(".yl")
+            .attr("transform", "translate(" + 0 + "," + y(d.items[depthIndex]) + ")")
+            .text(d.items[curve1Index] ? d.items[curve1Index] : "")
+            .style("cursor", "default");
+    }
+    // x line
+    focus
+        .append("line")
+        .attr("class", "x")
+        .style("stroke", "red")
+        .style("stroke-dasharray", "3,3")
+        .style("cursor", "default")
+        .style("opacity", 0.6)
+        .attr("y1", 0)
+        .attr("y2", width);
+
+    // y line
+    focus
+        .append("line")
+        .attr("class", "yl")
+        .style("stroke", "blue")
+        .style("stroke-dasharray", "3,3")
+        .style("cursor", "default")
+        .style("opacity", 0.6)
+        .attr("x1", 0)
+        .attr("x2", height);
+
+    // circle
+    focus
+        .append("circle")
+        .attr("class", "y")
+        .style("fill", curveColors[0] ? curveColors[0] : "black")
+        .style("cursor", "default")
+        .style("stroke", curveColors[0] ? curveColors[0] : "black")
+        .attr("r", 3);
+}
+/*
 function multipleLogPlot(div_id, templates, sfData) {
     d3.select("#" + div_id)
         .style("margin", "0")
@@ -2197,13 +3686,12 @@ function multipleLogPlot(div_id, templates, sfData) {
         if (templates[i]) {
             let curvebox_holder = d3.select("#" + div_id).append("div");
 
-            curvebox_holder                
-                .style("vertical-align", "middle")               
+            curvebox_holder
+                .style("vertical-align", "middle")
                 .attr("id", div_id + "curvebox_holder" + i)
                 .style("display", "inline-block");
-                //.style("height", "600px") 
-                //.style("overflow-y", "auto");
-                
+            //.style("height", "600px")
+            //.style("overflow-y", "auto");
 
             templates[i][0]["curve_box"]["div_id"] = div_id + "curvebox_holder" + i;
             new_templates.push(templates[i]);
@@ -2211,5 +3699,233 @@ function multipleLogPlot(div_id, templates, sfData) {
             let check = curveBox(template, sfData);
         }
     }
+    return new_templates;
+}
+*/
+
+function multipleLogPlot(div_id, templates, sfData) {
+    function checkWell(item, i) {
+        let wellColumnName = "WELL"; // todo - tidy this!
+        return getCurveData(i, wellColumnName, sfData) == selectedWell;
+    }
+
+    sfData = sfData.filter(checkWell);
+
+    var maxHeaderHeight = 42;
+
+    for (let i = 0; i < templates.length; i++) {
+        if (templates[i]) {
+            let template = templates[i];
+            let template_components = template[0]["components"];
+            let templateCurves = template_components[0]["curves"][0];
+            let template_rectangles = template_components[0]["rectangles"];
+            let curveNames = templateCurves["curveNames"];
+            let curveColors = templateCurves["curveColors"];
+            var NumberOfGradientScales = 0;
+            for (let j = 0; j < templateCurves.fill.length; j++) {
+                let fillColor = templateCurves.fill[j];
+                if (fillColor.fill == "yes" && fillColor.fillColors.includes("interpolator")) {
+                    NumberOfGradientScales = NumberOfGradientScales + 1;
+                }
+            }
+
+            var height = curveNames.length * 42 + NumberOfGradientScales * 20;
+            if (height > maxHeaderHeight) {
+                maxHeaderHeight = height;
+            }
+        }
+    }
+
+    for (let i = 0; i < templates.length; i++) {
+        d3.select("#" + div_id + "TrackHolder" + i)
+            .selectAll("div")
+            .remove();
+        d3.select("#" + div_id + "TrackHolder" + i)
+            .selectAll("svg")
+            .remove();
+        d3.select("#" + div_id + "TrackHolder" + i).remove();
+    }
+
+    if (!d3.select("#TracksDepthLabel")._groups[0][0]) {
+        var TracksDepthLabel = d3.select("#" + div_id).append("div");
+
+        TracksDepthLabel.style("vertical-align", "middle")
+            .attr("id", "TracksDepthLabel")
+            .style("display", "inline-block")
+            .style("position", "relative")
+            .style("width", depthLabelPanelWidth + "px")
+            .on("mousedown", function (evt) {
+                if (evt instanceof MouseEvent) {
+                    evt.stopPropagation();
+                } else {
+                    d3.event.stopPropagation();
+                }
+            });
+
+        TracksDepthLabel = TracksDepthLabel.append("div")
+            .style("position", "fixed")
+            .style("top", window.innerHeight * 0.5 + "px")
+            .style("left", "5px")
+            .attr("height", window.innerHeight);
+
+        var depth_label_svg = TracksDepthLabel.append("svg").attr("height", 300).attr("width", 20);
+
+        depth_label_svg
+            .append("text")
+            .style("fill", "black")
+            .style("text-anchor", "end")
+            .attr("transform", "rotate(-90) translate(0,10)")
+            .text(depthCurveName + (depthUnit != "" ? " (" + depthUnit + ")" : ""))
+            .style("fill", "#2b2929");
+    }
+
+    if (!d3.select("#TracksToolDiv")._groups[0][0]) {
+        var TracksToolDiv = d3.select("#" + div_id).append("div");
+
+        TracksToolDiv.style("vertical-align", "middle")
+            .attr("id", "TracksToolDiv")
+            .style("display", "inline-flex")
+            .style("flex-direction", "column")
+            .style("justify-content", "center")
+            .style("align-items", "center")
+            .style("position", "fixed")
+            .style("bottom", "0px")
+            .style("right", "20px")
+            .style("width", ZoomPanelWidth + "px")
+            .on("mousedown", function (evt) {
+                if (evt instanceof MouseEvent) {
+                    evt.stopPropagation();
+                } else {
+                    d3.event.stopPropagation();
+                }
+            });
+
+        var divPlusBtn = TracksToolDiv.append("div").style("height", "26px");
+
+        var plusBtn = divPlusBtn
+            .append("input")
+            .attr("id", "plusBtn")
+            .attr("type", "image")
+            .attr(
+                "src",
+                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABoAAAAaCAYAAACpSkzOAAAABmJLR0QAxwDHAMczllhiAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH5QMZDTQOtKYP9wAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAACO0lEQVRIx8VWy07jQBCsHgfsyH1wOCQ2lkDigjgn35WP4bvIB3CJBAg8yYHMoUexjezew26yCwkQkcDWcdSjmpqufhB2hIjcNE0zVFUAABEhCIIJM492uU+fBVhr1TmHsiyhqqiqCgAQhiGICFEUIUkSpGlKXyKazWb6/PyMuq7BzGBmxHGMMAwBAFVVwXsPEYGI4Pj4GCcnJxgMBrQz0XQ61dlshizLkOc5giAA0fY3qSqapsHj4yOKosBgMMDFxQV9SnR7e6svLy84PT1FkiTvEmwjdM7h6ekJR0dHuLy8pHeJptOpLpdLnJ+fI45jfAXee9zd3aHb7b5SZv5N+nw+R5ZlXyYBgDiOkWUZ5vM5rLW6QbRYLJCmKZIkwb7440IsFgu8IrLWal3XyPP805yMx2OMx+OPa4YIeZ6jruu1KgMAzjkwM4IgwKEQBAGYGc6534pE5KYsSzDzzg7bqRMQgZlRliVE5Ma0bTtU1b0M8JExVBVt2w47bduiqqp1xW/LyS7n19fXGzFhGKKqKrRt+9d1342OMWbN3Ol0NgLevnSlZJuCt1j9lDEGxhgzISJ47w+uwnsPIoIxZmKYeRRFEUQEq1lzCKgqRARRFIGZR2ZVySKCpmkORtQ0DURk3WloNT0fHh6G3W4XZ2dne9eTquL+/h7L5RJXV1e07gzMPOr1erDWrit5HzjnYK1Fr9fDRlNN05T6/T6KotjLGN57FEWBfr//arz/n8H3o6P8R5eTH123Dr1A/gKIkV0mr/zcuQAAAABJRU5ErkJggg=="
+            )
+            .on("click", function (evt) {
+                if (verticalZoomHeightMultiplier + 0.25 <= 15) {
+                    sliderZoom.value(verticalZoomHeightMultiplier + 0.25);
+                }
+            });
+
+        var divGVertical = TracksToolDiv.append("div").attr("id", "slider-zoom").style("margin", "0px");
+
+        sliderZoom = sliderRight()
+            .min(1)
+            .max(15)
+            .step(0.25)
+            .height(window.innerHeight * 0.35)
+            .ticks(0)
+            .default(verticalZoomHeightMultiplier)
+            .handle(d3.symbol().type(d3.symbolCircle).size(120)())
+            //.fill('#2196f3')
+            .on("onchange", function (val) {
+                verticalZoomHeightMultiplier = val;
+                multipleLogPlot("js_chart", plot_templates, sfData);
+            });
+
+        var gZoom = d3
+            .select("div#slider-zoom")
+            .append("svg")
+            .attr("width", "20px")
+            .attr("height", ~~(window.innerHeight * 0.35) + 17)
+            .append("g")
+            .attr("transform", "translate(10,5)");
+
+        gZoom.call(sliderZoom);
+
+        var divMinusBtnRelPos = TracksToolDiv.append("div").style("position", "relative").style("height", "26px");
+
+        var divMinusBtn = divMinusBtnRelPos
+            .append("div")
+            .style("position", "absolute")
+            .style("top", "-10px")
+            .style("left", "-13px")
+            .style("height", "26px");
+
+        var minusBtn = divMinusBtn
+            .append("input")
+            .attr("id", "minusBtn")
+            .attr("type", "image")
+            .style("height", "26px")
+            .attr(
+                "src",
+                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABoAAAAaCAYAAACpSkzOAAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH5QMZDTQ366OH/wAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAACJUlEQVRIx8WWzVKjQBSFv24iYHEXxEUCsrDKjQ9gnsuH8bnMA7hJlQuEZGF60V0CFvQsZpLR8S9lonOWFPD16T6371XsKGvtTd/3l957AJRSBEEwF5HZLt+rz16o69obY2iaBu89bdsCEEURSiniOCZNU7IsU18CLZdL//DwQNd1iAgiQpIkRFEEQNu2OOew1mKtJQxDTk5OmE6namfQYrHwy+WSPM8pioIgCFDq7TV57+n7nrIsqaqK6XTK+fm5+hR0e3vrn56eOD09JU3TdwFvAY0x3N/fc3R0xMXFhXoXtFgs/OPjI2dnZyRJwlfknOPu7o7j4+MXzvTzQ1+tVuR5/mUIQJIk5HnOarWirmv/CrRer8myjDRN2Vd/Ush6veYFqK5r33UdRVHsfCYfRlkpiqKg67qtKw1gjEFECIKAQykIAkQEY8xvR9bam6ZpEJGDuHnuSkRomgZr7Y0ehuHSe79XAD4KhveeYRguR8Mw0LbttuL/1dXV1U4/vb6+fvUsiiLatmUYhr+p+26NtNZb8mg02mmlu2qzU1prtNZ6rpTCOXdwF845lFJoredaRGZxHGOtZdNrDiHvPdZa4jhGRGZ6U8nWWvq+Pxio73ustdubRgOIyDwMQ8qyPIgr7z1lWRKG4bYhbkCz8XhMXdfbSt5HxhjqumY8HvPqUs2yTE0mE6qq2isYzjmqqmIymbxo7/+n8f1oK//R4eRHx61DD5C/APInUv+2tAsfAAAAAElFTkSuQmCC"
+            )
+            .on("click", function (evt) {
+                if (verticalZoomHeightMultiplier - 0.25 >= 1) {
+                    sliderZoom.value(verticalZoomHeightMultiplier - 0.25);
+                }
+            });
+
+        var confBtn = TracksToolDiv.append("div")
+            .attr("id", "confBtnDiv")
+            .style("margin-top", "20px")
+            .append("input")
+            .attr("id", "confBtn")
+            .attr("type", "image")
+            .attr(
+                "src",
+                " data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABoAAAAaCAYAAACpSkzOAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH5QMeFywep2yZ1QAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAGNUlEQVRIx61WXWxUWxX+9s+cc6at58DMXIb+RTo18UKDTWjDgxgu5cbEGH3QNHrvgz4YSdtrTKSE8ELCC0p6iYS3oUUIGsPVRIlRch+EF4mQEEtMbit1dIQBbDvTH4b5PXPm7L2XL7djy08gxp2ch7Mevm+v9a31rc3wBmdmZiZaKpW+LYRISik9zjkFQVBWShX6+/t/PTo66r8OQ74JUbFYHNm2bdtBznkr5jhOp1Lq87lcbg3A9f+J6OzZs19kjH2fc/77ycnJ3zHG3iIiJBIJtLe3g4hQr9exsrICpVQcAM6cOfNV27ZHGWM/P3r06J+ex2TPB6ampr5j2/aIbdsIwxCVSuVvkUikx3Vdr7e3F7ZtAwDCMMTDhw9Rq9VKWut/t7W1DViWBd/3oZS6efz48aubccXmn9OnT78fjUbftSwLyWQSQRDAsqwdUkrHGINkMvnfUkiJtbU1SCkd27Z3CCGwc+dO1Go1AEgdPnz4Mzdv3vzkhYympqa+JKX8nmVZSKVSsCwLjDEsLS2hvb0d27dvh9YajG0tQqlUQrVaRXd3N4gISilks1k0Gg0YY3524sSJO1s0CoLgW9FoFMlkEpZlAQCICF1dXQAA3/dRKBRQrVZBROjo6EAymYTneXBdF0TUyjSZTCKfz6NUKr0HYCuR4zjX6vX6dxcXF+G6LoQQLbL79+8jl8tBSgnGWAt0bm4Ou3btwsDAQCtDIsLy8jJ834eU8toLGt24cSM3MjLyWc75ziAI4HkeGGO4ffs21tfXwTlHs9lEo9EohmFY01q3SSlRrVZRKBTQ09MDAHj8+DHq9TrK5fLdU6dO/bal0cmTJ61IJPIOEXUppb7guu723t5exGIxZDIZPHnyBFpr+L7/TwA/TafTTQCYmJiwAPzIsqy3LctCd3c3BgYGsL6+vkFWJqK/EtETxtifJWNs1LKsdxljjIigtUYsFoPWGrlcDpxz+L7/93Q6/eHmJviU8MPx8fFjkUhk4NGjR+jv70csFsODBw/gOI5LRO8AQL1e75SMsR1ExDo7O+F5HqLRKJRSWFlZAeccYRiCiC6+auIZY1fCMDwbiUSQz+fR09OD4eFhVKtVVCoVLC4ugoje4kEQ2EopuK4Ly7KgtQYAVCoVMMZgjGleuHCh+CqidDq9rrVucs5Rq9VgjEEYhrBtG57nQSmFZrNpcyKCMeYFACLa6DB6nY8RkdnA2TxnxpjWxwH4xhg8e/YMtVoNSikYY9DW1gZjDKSU9tjYWMerSMbGxjqEEA4Rob29HcYYKKVQq9VQLBahtYYQoikBFMIwRDabbd3iwIEDSCQSWFhYgJSShBA/ADD1MiIhxA8jkQhprVkikQAR4e7duxv6bWSUF+fOncvMz8/LMAwbSqmolNKWUrZuV6lUGOc8sW/fvs8NDQ1lZmdnfQAYHx+P7d+//wPbtt8WQrCuri4kEgkUCgUUi0X4vl82xvxDKTU7MjLymy3GNTk5+YEQYjgWi2H37t1gjOHevXvwfR9EhCAIWjpwziGlBOcc0WgUw8PDMMYgm80in89Da/2X8+fPp19whmPHjh3WWn+FMYbBwUFsiNvd3Q3f9+H7PoQQiEQikFJCCAHGGOLxOPbu3dvqVs/zsLS0BKVU98GDB/07d+78a4vX+b7/Dcuy0NfX19Jqo/v6+/uRSqWwvLyMcrkMIoLrui3H1lq3uhQAUqkUMpkMyuXy1wH8cQuRlPJqGIZHMpkMXNeFbdswxiCXyyEWi8HzPCSTyS07KQxDVKtVrK6uoq+vD4wxNJtNLCwsIAxDOI7zq5du2ImJifeJ6MuccwwODmJ+fr6VmdYahw4dajk3Ywy3bt2CEAJEBM459uzZg7m5OWitYYy5MTMz89FLN+zs7Oz80NCQZ4zZtbq6CqUUlFJZrbXDOY/E4/HWrqrValhcXESz2WwQ0aMwDGOrq6vQWiMIgpuXLl36aDM2f34upqenfxGNRq/6vl8TQvzh4sWLPwFwT2uNp0+fol6vw/f91jBqrWenp6d/HI1GrwdBUHcc55dXrly5+trHycvOkSNHvkZE33w+/mlZr12+fPn6/+VdF4/HP15bWxtsNBptUkpHKWWEECFjrOq67sdvgvEfBu05dDtxgGIAAAAASUVORK5CYII="
+            )
+            .on("click", function (evt) {
+                if (evt instanceof MouseEvent) {
+                    evt.preventDefault();
+                    evt.stopPropagation();
+                } else {
+                    d3.event.preventDefault();
+                    d3.event.stopPropagation();
+                }
+                vanilla_drawer.drawer_menu_open();
+            });
+    }
+
+    let new_templates = [];
+    for (let i = 0; i < templates.length; i++) {
+        if (templates[i]) {
+            let TrackHolder = d3.select("#" + div_id).append("div");
+
+            TrackHolder.style("vertical-align", "middle")
+                .attr("id", div_id + "TrackHolder" + i)
+                .style("display", "inline-block");
+
+            templates[i][0]["trackBox"]["div_id"] = div_id + "TrackHolder" + i;
+            new_templates.push(templates[i]);
+            let template = templates[i];
+            let check = logPlot(template, sfData, maxHeaderHeight + "px");
+        }
+
+        if (updateAccordionTools) {
+            for (let i = 0; i < templates.length; i++) {
+                if (templates[i]) {
+                    accordionTemplate(templates, i);
+                }
+            }
+            updateAccordionTools = false;
+        }
+    }
+
+    $("#accordionConf").accordion({ collapsible: true });
+
+    // add the tooltip area to the webpage
+
+    d3.select("#" + "js_chart" + "_tooltip").remove();
+    tooltipDiv = d3
+        .select("#" + div_id)
+        .append("div")
+        .attr("class", "tooltip")
+        .attr("id", "js_chart" + "_tooltip")
+        .style("opacity", 0);
+
+    initialized = true;
+
     return new_templates;
 }
