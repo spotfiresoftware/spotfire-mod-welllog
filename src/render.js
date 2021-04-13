@@ -52,134 +52,6 @@ var initialized = false;
 var updateAccordionTools = true;
 var vanilla_drawer;
 
-const config = {
-    pPerfilIndicadorCurvasBR: "Sim",
-    pPerfilEixoY: "Profundidade",
-    pPerfilHeightMultiplier: 2,
-    pPerfilTrack01EspessuraCurva01: "MEDIA",
-    pPerfilTrack01TracoCurva01: "SOLIDO",
-    pPerfilTrack01CorCurva01: "VERDE",
-    pPerfilTrack01PreenchimentoArea01: "ESQUERDA",
-    pPerfilTrack01CorArea01: "GRADIENTE ESPECTRO",
-    pPerfilTrack01EscalaMinCurva01: "",
-    pPerfilTrack01EscalaMaxCurva01: "",
-    pPerfilTrack01Limite01Curva01: "",
-    pPerfilTrack01Limite02Curva01: "",
-    pPerfilTrack01EspessuraCurva02: "MEDIA",
-    pPerfilTrack01TracoCurva02: "SOLIDO",
-    pPerfilTrack01CorCurva02: "PRETO",
-    pPerfilTrack01PreenchimentoArea02: "",
-    pPerfilTrack01CorArea02: "PRETO",
-    pPerfilTrack01EscalaMinCurva02: "",
-    pPerfilTrack01EscalaMaxCurva02: "",
-    pPerfilTrack01Limite01Curva02: "",
-    pPerfilTrack01Limite02Curva02: "",
-    pPerfilTrack02EspessuraCurva01: "MEDIA",
-    pPerfilTrack02TracoCurva01: "SOLIDO",
-    pPerfilTrack02CorCurva01: "PRETO",
-    pPerfilTrack02PreenchimentoArea01: "ESQUERDA",
-    pPerfilTrack02CorArea01: "AZUL",
-    pPerfilTrack02EscalaMinCurva01: "",
-    pPerfilTrack02EscalaMaxCurva01: "",
-    pPerfilTrack02Limite01Curva01: "175",
-    pPerfilTrack02Limite02Curva01: "",
-    pPerfilTrack02EspessuraCurva02: "MEDIA",
-    pPerfilTrack02TracoCurva02: "SOLIDO",
-    pPerfilTrack02CorCurva02: "VERMELHO",
-    pPerfilTrack02PreenchimentoArea02: "",
-    pPerfilTrack02CorArea02: "VERMELHO",
-    pPerfilTrack02EscalaMinCurva02: "",
-    pPerfilTrack02EscalaMaxCurva02: "",
-    pPerfilTrack02Limite01Curva02: "",
-    pPerfilTrack02Limite02Curva02: "",
-    pPerfilTrack03EspessuraCurva01: "MEDIA",
-    pPerfilTrack03TracoCurva01: "SOLIDO",
-    pPerfilTrack03CorCurva01: "AZUL",
-    pPerfilTrack03PreenchimentoArea01: "ENTRE",
-    pPerfilTrack03CorArea01: "AZUL",
-    pPerfilTrack03EscalaMinCurva01: "",
-    pPerfilTrack03EscalaMaxCurva01: "",
-    pPerfilTrack03Limite01Curva01: "",
-    pPerfilTrack03Limite02Curva01: "",
-    pPerfilTrack03EspessuraCurva02: "MEDIA",
-    pPerfilTrack03TracoCurva02: "SOLIDO",
-    pPerfilTrack03CorCurva02: "VERMELHO",
-    pPerfilTrack03PreenchimentoArea02: "",
-    pPerfilTrack03CorArea02: "VERMELHO",
-    pPerfilTrack03EscalaMinCurva02: "",
-    pPerfilTrack03EscalaMaxCurva02: "",
-    pPerfilTrack03Limite01Curva02: "",
-    pPerfilTrack03Limite02Curva02: "",
-    pPerfilTrack04EspessuraCurva01: "MEDIA",
-    pPerfilTrack04TracoCurva01: "TRACEJADO",
-    pPerfilTrack04CorCurva01: "VERMELHO",
-    pPerfilTrack04PreenchimentoArea01: "ESQUERDA",
-    pPerfilTrack04CorArea01: "GRADIENTE VERMELHO",
-    pPerfilTrack04EscalaMinCurva01: "",
-    pPerfilTrack04EscalaMaxCurva01: "",
-    pPerfilTrack04Limite01Curva01: "",
-    pPerfilTrack04Limite02Curva01: "",
-    pPerfilTrack04EspessuraCurva02: "PEQUENA",
-    pPerfilTrack04TracoCurva02: "SOLIDO",
-    pPerfilTrack04CorCurva02: "VERMELHO",
-    pPerfilTrack04PreenchimentoArea02: "",
-    pPerfilTrack04CorArea02: "VERMELHO",
-    pPerfilTrack04EscalaMinCurva02: "",
-    pPerfilTrack04EscalaMaxCurva02: "",
-    pPerfilTrack04Limite01Curva02: "",
-    pPerfilTrack04Limite02Curva02: "",
-    pPerfilTrack05EspessuraCurva01: "PEQUENA",
-    pPerfilTrack05TracoCurva01: "SOLIDO",
-    pPerfilTrack05CorCurva01: "PRETO",
-    pPerfilTrack05PreenchimentoArea01: "",
-    pPerfilTrack05CorArea01: "PRETO",
-    pPerfilTrack05EscalaMinCurva01: "",
-    pPerfilTrack05EscalaMaxCurva01: "",
-    pPerfilTrack05Limite01Curva01: "",
-    pPerfilTrack05Limite02Curva01: "",
-    pPerfilTrack05EspessuraCurva02: "MEDIA",
-    pPerfilTrack05TracoCurva02: "SOLIDO",
-    pPerfilTrack05CorCurva02: "PRETO",
-    pPerfilTrack05PreenchimentoArea02: "",
-    pPerfilTrack05CorArea02: "PRETO",
-    pPerfilTrack05EscalaMinCurva02: "",
-    pPerfilTrack05EscalaMaxCurva02: "",
-    pPerfilTrack05Limite01Curva02: "",
-    pPerfilTrack05Limite02Curva02: "",
-    pPerfilTrack06Curva01: "",
-    pPerfilTrack06EspessuraCurva01: "MEDIA",
-    pPerfilTrack06TracoCurva01: "SOLIDO",
-    pPerfilTrack06CorCurva01: "PRETO",
-    pPerfilTrack06PreenchimentoArea01: "",
-    pPerfilTrack06CorArea01: "PRETO",
-    pPerfilTrack06EscalaMinCurva01: "",
-    pPerfilTrack06EscalaMaxCurva01: "",
-    pPerfilTrack06Limite01Curva01: "",
-    pPerfilTrack06Limite02Curva01: "",
-    pPerfilTrack06Curva02: "",
-    pPerfilTrack06EspessuraCurva02: "MEDIA",
-    pPerfilTrack06TracoCurva02: "SOLIDO",
-    pPerfilTrack06CorCurva02: "PRETO",
-    pPerfilTrack06PreenchimentoArea02: "",
-    pPerfilTrack06CorArea02: "PRETO",
-    pPerfilTrack06EscalaMinCurva02: "",
-    pPerfilTrack06EscalaMaxCurva02: "",
-    pPerfilTrack06Limite01Curva02: "",
-    pPerfilTrack06Limite02Curva02: "",
-    pPerfilTrack01TipoEscalaCurva01: "linear",
-    pPerfilTrack01TipoEscalaCurva02: "linear",
-    pPerfilTrack02TipoEscalaCurva01: "linear",
-    pPerfilTrack02TipoEscalaCurva02: "log",
-    pPerfilTrack03TipoEscalaCurva01: "linear",
-    pPerfilTrack03TipoEscalaCurva02: "linear",
-    pPerfilTrack04TipoEscalaCurva01: "linear",
-    pPerfilTrack04TipoEscalaCurva02: "log",
-    pPerfilTrack05TipoEscalaCurva01: "linear",
-    pPerfilTrack05TipoEscalaCurva02: "linear",
-    pPerfilTrack06TipoEscalaCurva01: "linear",
-    pPerfilTrack06TipoEscalaCurva02: "linear"
-};
-
 /*--------------------------------------------------
 
 	VanillaDrawer Ver.1.0 2017-05-16
@@ -353,8 +225,7 @@ function VanillaDrawer() {
     );
 }
 
-var pPerfilEixoY;
-var zoneLogTrackWidth = 120;
+
 //var pPerfilHeightMultiplier;
 
 var y_function;
@@ -380,12 +251,6 @@ function getCurveData(lineIndex, curveName, sfData) {
     return item;
 }
 
-/**
- * A container for X axis labels.
- * Instead of figuring out the layout in special cases when labels don't fit, we delegate
- * this job to the DOM layout engine.
- */
-const xLabelsContainer = modContainer.append("div").attr("class", "x-axis-label-container");
 
 /**
  * Renders the chart.
@@ -486,14 +351,8 @@ export async function render(state, mod, dataView, windowSize, example) {
 
     // Now render here!
 
-    //Propriedades do gráfico:
-    pPerfilEixoY = config["pPerfilEixoY"]; //'Profundidade' ou 'Cora'
 
     var zoneLogTrackWidth = 120;
-    var numberOfTracks = 4;
-
-
-    console.log(JSON.stringify(config));
     
     function getFillColor(name, type) {
         if (name == "black") {
@@ -2046,9 +1905,6 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
     var focus = svg.append("g").style("display", "none");
 
     function mousemove(evt) {
-        depthIndex = getCurveIndex(depthCurveName, sfData);
-        curve1Index = getCurveIndex(curveNames[0], sfData);
-        curve2Index = getCurveIndex(curveNames[1], sfData);
 
         if (!tooltipDiv) {
             tooltipDiv = d3.select("#mod-container" + "_tooltip");
@@ -2056,6 +1912,8 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
         if (tooltipDiv) {
             tooltipDiv.transition().duration(400).style("opacity", 0);
         }
+
+        // tooltipDiv does exist here and seems to be valid but doesn't show - @Rodrigo???
 
         var rectColor = null;
         var target = evt.target || evt.srcElement;
@@ -2080,7 +1938,7 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
         }
 
         var bisectData = d3.bisector(function (d) {
-            return d.items[depthIndex];
+            return d.continuous(depthCurveName).value();
         }).left;
 
         var y0;
@@ -2099,8 +1957,8 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
         var d = null;
 
         if (d0 && d1) {
-            if (d0[depthIndex] && d1[depthIndex]) {
-                d = y0 - d0[depthIndex] > d1[depthIndex] - y0 ? d1 : d0;
+            if (d0.continuous(depthCurveName).value() && d1.continuous(depthCurveName).value()) {
+                d = y0 - d0.continuous(depthCurveName).value() > d1.continuous(depthCurveName).value() - y0 ? d1 : d0;
             }
         }
         if (d == null) {
@@ -2111,34 +1969,34 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
         }
 
         if (tooltipDiv) {
-            js_chart = d3.select("#mod-container")._groups[0][0];
+            let modContainer = d3.select("#mod-container")._groups[0][0];
 
             tooltipDiv.html(
-                (d.items[depthIndex] ? depthCurveName + ": " + d.items[depthIndex].toFixed(2) + "<br>" : "") +
-                    (curveNames[0] && d.items[curve1Index]
+                (d.continuous(depthCurveName).value()? depthCurveName + ": " + d.continuous(depthCurveName).value().toFixed(2) + "<br>" : "") +
+                    (curveNames[0] &&  d.continuous(curveNames[0]).value()
                         ? "<span style='border:1px solid gray; background-color:" +
                           curveColor0 +
                           "';>&nbsp;&nbsp;</span>&nbsp;" +
                           curveNames[0] +
                           ": " +
-                          d.items[curve1Index] +
+                          d.continuous(curveNames[0]).value() +
                           "<br>"
                         : "") +
-                    (curveNames[1] && d.items[curve2Index]
+                    (curveNames[1] &&  d.continuous(curveNames[1]).value()
                         ? "<span style='border:1px solid gray; background-color:" +
                           curveColor1 +
                           "';>&nbsp;&nbsp;</span>&nbsp;" +
                           curveNames[1] +
                           ": " +
-                          d.items[curve2Index] +
+                          d.continuous(curveNames[1]).value() +
                           "<br>"
                         : "")
             );
 
-            tooltipX =
-                target.parentNode.parentNode.offsetLeft + getTooltipPositionX(curve_x_func, d.items[curve1Index]) + 10;
+            let tooltipX =
+                target.parentNode.parentNode.offsetLeft + getTooltipPositionX(curve_x_func, d.continuous(curveNames[0]).value()) + 10;
 
-            tooltipY = evt.pageY + js_chart.scrollTop + 24;
+            let tooltipY = evt.pageY + modContainer.scrollTop + 24;
 
             tooltipDiv.style("left", tooltipX + "px");
             tooltipDiv.style("top", tooltipY + "px");
@@ -2148,7 +2006,7 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
 
         focus
             .select(".x")
-            .attr("transform", "translate(" + getTooltipPositionX(curve_x_func, d.items[curve1Index]) + "," + 0 + ")")
+            .attr("transform", "translate(" + getTooltipPositionX(curve_x_func, d.continuous(curveNames[0]).value()) + "," + 0 + ")")
             .attr("y2", height);
 
         //// circle and lines
@@ -2157,18 +2015,18 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
             .attr(
                 "transform",
                 "translate(" +
-                    getTooltipPositionX(curve_x_func, d.items[curve1Index]) +
+                    getTooltipPositionX(curve_x_func, d.continuous(curveNames[0]).value()) +
                     "," +
-                    y(d.items[depthIndex]) +
+                    y(d.continuous(depthCurveName).value()) +
                     ")"
             )
-            .text(d.items[curve1Index] ? d.items[curve1Index] : "")
+            .text(d.continuous(curveNames[0]).value() ? d.continuous(curveNames[0]).value() : "")
             .style("cursor", "default");
 
         focus
             .select(".yl")
-            .attr("transform", "translate(" + 0 + "," + y(d.items[depthIndex]) + ")")
-            .text(d.items[curve1Index] ? d.items[curve1Index] : "")
+            .attr("transform", "translate(" + 0 + "," + y(d.continuous(depthCurveName).value()) + ")")
+            .text(d.continuous(curveNames[0]).value() ? d.continuous(curveNames[0]).value() : "")
             .style("cursor", "default");
     }
     // x line
