@@ -231,14 +231,123 @@ function VanillaDrawer() {
 var y_function;
 var sfData;
 
-function getCurveIndex(curveName, sfData) {
-    for (var nCol = 0; nCol < sfData.columns.length; nCol++) {
-        if (curveName == sfData.columns[nCol]) {
-            return nCol;
+
+
+
+function getColorInterpolator(value) {
+    if (value == "interpolateBlues") {
+        return d3.interpolateBlues;
+    } else if (value == "interpolateReds") {
+        return d3.interpolateReds;
+    } else if (value == "interpolateRdBu") {
+        return d3.interpolateRdBu;
+    } else if (value == "interpolateViridis") {
+        return d3.interpolateViridis;
+    } else if (value == "interpolatePlasma") {
+        return d3.interpolatePlasma;
+    } else if (value == "interpolateCool") {
+        return d3.interpolateCool;
+    } else if (value == "interpolateWarm") {
+        return d3.interpolateWarm;
+    } else if (value == "interpolateSpectral") {
+        return d3.interpolateSpectral;
+    } else {
+        return null;
+    }
+}
+
+function getFillColor(name, type) {
+    if (name == "black") {
+        if (type == "light") {
+            return "#484848";
+        } else if (type == "dark") {
+            return "#000000";
+        } else {
+            return "#212121";
+        }
+    } else if (name == "green") {
+        if (type == "light") {
+            return "#80e27e";
+        } else if (type == "dark") {
+            return "#087f23";
+        } else {
+            return "#4caf50";
+        }
+    } else if (name == "blue") {
+        if (type == "light") {
+            return "#757de8";
+        } else if (type == "dark") {
+            return "#002984";
+        } else {
+            return "#3f51b5";
+        }
+    } else if (name == "red") {
+        if (type == "light") {
+            return "#ff7961";
+        } else if (type == "dark") {
+            return "#ba000d";
+        } else {
+            return "#f44336";
+        }
+    } else if (name == "fuchsia") {
+        if (type == "light") {
+            return "#e35183";
+        } else if (type == "dark") {
+            return "#78002e";
+        } else {
+            return "#ad1457";
+        }
+    } else if (name == "yellow") {
+        if (type == "light") {
+            return "#ffff72";
+        } else if (type == "dark") {
+            return "#c8b900";
+        } else {
+            return "#ffeb3b";
+        }
+    } else if (name == "cyan") {
+        if (type == "light") {
+            return "#00FFFF";
+        } else if (type == "dark") {
+            return "#008B8B";
+        } else {
+            return "#40E0D0";
+        }
+    } else if (name == "brown") {
+        if (type == "light") {
+            return "#CD853F";
+        } else if (type == "dark") {
+            return "#8B4513";
+        } else {
+            return "#A0522D";
+        }
+    } else if (name == "darkgreen") {
+        if (type == "light") {
+            return "#556B2F";
+        } else if (type == "dark") {
+            return "#004d00";
+        } else {
+            return "#006400";
+        }
+    } else if (name == "purple") {
+        if (type == "light") {
+            return "#d05ce3";
+        } else if (type == "dark") {
+            return "#6a0080";
+        } else {
+            return "#9c27b0";
+        }
+    } else if (name.search("interpolate") >= 0) {
+        if (type == "light") {
+            return "RGBA(255,255,255, 0.55)";
+        } else if (type == "dark") {
+            return "RGBA(0,0,0, 0.25)";
+        } else {
+            return "interpolator";
         }
     }
-    return null;
 }
+
 
 function getCurveData(lineIndex, curveName, sfData) {
     var item;
@@ -354,119 +463,8 @@ export async function render(state, mod, dataView, windowSize, example) {
 
     var zoneLogTrackWidth = 120;
     
-    function getFillColor(name, type) {
-        if (name == "black") {
-            if (type == "light") {
-                return "#484848";
-            } else if (type == "dark") {
-                return "#000000";
-            } else {
-                return "#212121";
-            }
-        } else if (name == "green") {
-            if (type == "light") {
-                return "#80e27e";
-            } else if (type == "dark") {
-                return "#087f23";
-            } else {
-                return "#4caf50";
-            }
-        } else if (name == "blue") {
-            if (type == "light") {
-                return "#757de8";
-            } else if (type == "dark") {
-                return "#002984";
-            } else {
-                return "#3f51b5";
-            }
-        } else if (name == "red") {
-            if (type == "light") {
-                return "#ff7961";
-            } else if (type == "dark") {
-                return "#ba000d";
-            } else {
-                return "#f44336";
-            }
-        } else if (name == "fuchsia") {
-            if (type == "light") {
-                return "#e35183";
-            } else if (type == "dark") {
-                return "#78002e";
-            } else {
-                return "#ad1457";
-            }
-        } else if (name == "yellow") {
-            if (type == "light") {
-                return "#ffff72";
-            } else if (type == "dark") {
-                return "#c8b900";
-            } else {
-                return "#ffeb3b";
-            }
-        } else if (name == "cyan") {
-            if (type == "light") {
-                return "#00FFFF";
-            } else if (type == "dark") {
-                return "#008B8B";
-            } else {
-                return "#40E0D0";
-            }
-        } else if (name == "brown") {
-            if (type == "light") {
-                return "#CD853F";
-            } else if (type == "dark") {
-                return "#8B4513";
-            } else {
-                return "#A0522D";
-            }
-        } else if (name == "darkgreen") {
-            if (type == "light") {
-                return "#556B2F";
-            } else if (type == "dark") {
-                return "#004d00";
-            } else {
-                return "#006400";
-            }
-        } else if (name == "purple") {
-            if (type == "light") {
-                return "#d05ce3";
-            } else if (type == "dark") {
-                return "#6a0080";
-            } else {
-                return "#9c27b0";
-            }
-        } else if (name.search("interpolate") >= 0) {
-            if (type == "light") {
-                return "RGBA(255,255,255, 0.55)";
-            } else if (type == "dark") {
-                return "RGBA(0,0,0, 0.25)";
-            } else {
-                return "interpolator";
-            }
-        }
-    }
+    
 
-    function getColorInterpolator(value) {
-        if (value == "interpolateBlues") {
-            return d3.interpolateBlues;
-        } else if (value == "interpolateReds") {
-            return d3.interpolateReds;
-        } else if (value == "interpolateRdBu") {
-            return d3.interpolateRdBu;
-        } else if (value == "interpolateViridis") {
-            return d3.interpolateViridis;
-        } else if (value == "interpolatePlasma") {
-            return d3.interpolatePlasma;
-        } else if (value == "interpolateCool") {
-            return d3.interpolateCool;
-        } else if (value == "interpolateWarm") {
-            return d3.interpolateWarm;
-        } else if (value == "interpolateSpectral") {
-            return d3.interpolateSpectral;
-        } else {
-            return null;
-        }
-    }
 
     var plot_templates;
 
