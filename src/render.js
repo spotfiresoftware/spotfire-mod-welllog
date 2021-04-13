@@ -35,13 +35,14 @@ const modContainer = d3.select("#mod-container");
 /**
  * Main svg container
  */
-const svg = modContainer.append("svg").attr("xmlns", "http://www.w3.org/2000/svg");
+//const svg = modContainer.append("svg").attr("xmlns", "http://www.w3.org/2000/svg");
 
 var depthCurveName;
 var depthUnit;
 var selectedWell;
 var wellColumnName;
 var tooltipDiv;
+var plot_templates;
 var zoneLogTrackWidth = 140;
 var ZoomPanelWidth = 32;
 var depthLabelPanelWidth = 15;
@@ -459,11 +460,11 @@ export async function render(state, mod, dataView, windowSize, example) {
 
 
     var zoneLogTrackWidth = 120;
-    var plot_templates;
+    
 
     function buildTemplates(sfdata) {
         depthCurveName = "DEPTH";
-        depthUnit = "km";
+        depthUnit = "m";
 
         wellColumnName = "WELL";
 
@@ -1850,7 +1851,7 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
 
     ////////////////   Prepare Tooltips   ///////////////////
 
-    function getTooltipPositionX(xFunction, xArgument) {
+    function getTooltipPositionX(xFunction, xArgument) {        
         if (xFunction && xArgument && xFunction(xArgument) && typeof xArgument != "string") {
             var xVal = xFunction(xArgument);
             if (xVal < margin.left) {
@@ -1958,34 +1959,48 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
         if (d == null) {
             d = d0;
         }
+        let value0;
+        let value1;
+         
+        if (curveNames[0] == "ZONE" || curveNames[0] == "FACIES") {
+            value0 = d.categorical(curveNames[0]).formattedValue();
+        } else {
+            value0 = d.continuous(curveNames[0]).value();
+        }
+        if (curveNames[1] == "ZONE" || curveNames[1] == "FACIES") {
+            value0 = d.categorical(curveNames[1]).formattedValue();
+        } else {
+            value0 = curveNames[1] ? d.continuous(curveNames[1]).value() : "";
+        }
 
         if (tooltipDiv) {
             let modContainer = d3.select("#mod-container")._groups[0][0];
-
+           
             tooltipDiv.html(
+
                 (d.continuous(depthCurveName).value()? depthCurveName + ": " + d.continuous(depthCurveName).value().toFixed(2) + "<br>" : "") +
-                    (curveNames[0] &&  d.continuous(curveNames[0]).value()
+                    (curveNames[0] &&  value0
                         ? "<span style='border:1px solid gray; background-color:" +
                           curveColor0 +
                           "';>&nbsp;&nbsp;</span>&nbsp;" +
                           curveNames[0] +
                           ": " +
-                          d.continuous(curveNames[0]).value() +
+                          value0 +
                           "<br>"
                         : "") +
-                    (curveNames[1] &&  d.continuous(curveNames[1]).value()
+                    (curveNames[1] &&  value1
                         ? "<span style='border:1px solid gray; background-color:" +
                           curveColor1 +
                           "';>&nbsp;&nbsp;</span>&nbsp;" +
                           curveNames[1] +
                           ": " +
-                          d.continuous(curveNames[1]).value() +
+                          value1 +
                           "<br>"
                         : "")
             );
 
             let tooltipX =
-                target.parentNode.parentNode.offsetLeft + getTooltipPositionX(curve_x_func, d.continuous(curveNames[0]).value()) + 10;
+                target.parentNode.parentNode.offsetLeft + getTooltipPositionX(curve_x_func, value0) + 10;
 
             let tooltipY = evt.pageY + modContainer.scrollTop + 24;
 
@@ -1997,7 +2012,7 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
 
         focus
             .select(".x")
-            .attr("transform", "translate(" + getTooltipPositionX(curve_x_func, d.continuous(curveNames[0]).value()) + "," + 0 + ")")
+            .attr("transform", "translate(" + getTooltipPositionX(curve_x_func, value0) + "," + 0 + ")")
             .attr("y2", height);
 
         //// circle and lines
@@ -2006,18 +2021,18 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
             .attr(
                 "transform",
                 "translate(" +
-                    getTooltipPositionX(curve_x_func, d.continuous(curveNames[0]).value()) +
+                    getTooltipPositionX(curve_x_func, value0) +
                     "," +
                     y(d.continuous(depthCurveName).value()) +
                     ")"
             )
-            .text(d.continuous(curveNames[0]).value() ? d.continuous(curveNames[0]).value() : "")
+            .text(value0 ? value0: "")
             .style("cursor", "default");
 
         focus
             .select(".yl")
             .attr("transform", "translate(" + 0 + "," + y(d.continuous(depthCurveName).value()) + ")")
-            .text(d.continuous(curveNames[0]).value() ? d.continuous(curveNames[0]).value() : "")
+            .text(value0 ? value0 : "")
             .style("cursor", "default");
     }
     // x line
