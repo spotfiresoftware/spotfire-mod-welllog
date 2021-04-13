@@ -231,9 +231,6 @@ function VanillaDrawer() {
 var y_function;
 var sfData;
 
-
-
-
 function getColorInterpolator(value) {
     if (value == "interpolateBlues") {
         return d3.interpolateBlues;
@@ -462,10 +459,6 @@ export async function render(state, mod, dataView, windowSize, example) {
 
 
     var zoneLogTrackWidth = 120;
-    
-    
-
-
     var plot_templates;
 
     function buildTemplates(sfdata) {
