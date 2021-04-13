@@ -103,6 +103,60 @@ body,
 }
 
 /* CSS from JSViz */
+
+  
+  .tooltip {   
+    position: absolute;     
+    text-align: left; 
+    min-width: 50px;                
+    min-height: 10px;                 
+    padding: 4px;             
+    font: 10px sans-serif;        
+    background: black;
+    color: white;
+    border: 0px;      
+    border-radius: 0px;           
+    pointer-events: none;         
+  }
+  
+  #dropdownWell {
+    padding-left:5px;
+  }
+  
+  
+  /* fallback */
+  @font-face {
+    font-family: 'Material Icons';
+    font-style: normal;
+    font-weight: 400;
+    src: url(https://fonts.gstatic.com/s/materialicons/v50/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2) format('woff2');
+  }
+  
+  .material-icons {
+    font-family: 'Material Icons';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 22px;
+    line-height: 0.8;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+  }
+  
+  #TracksToolDiv {
+   height: 100%;
+   //background-color: red;
+   //border: 1px solid blue;
+  }
+  
+  #slider-zoom path.handle:hover, 
+  #slider-zoom path.handle:focus,
+  #plusBtn, #minusBtn, #confBtn {
 outline: -webkit-focus-ring-color auto 0px;
 }
 
