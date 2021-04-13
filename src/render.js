@@ -49,6 +49,7 @@ var sliderZoom;
 var initialized = false;
 
 var updateAccordionTools = true;
+var vanilla_drawer;
 
 const config = {
     pPerfilIndicadorCurvasBR: "Sim",
@@ -468,52 +469,9 @@ export async function render(state, mod, dataView, windowSize, example) {
      */
     const yScaleTickNumber = windowSize.height / (styling.scales.font.fontSize * 2 + 6);
 
-    /**
-     * Sets the viewBox to match windowSize
-     */
-    svg.attr("viewBox", [0, 0, windowSize.width, windowSize.height]);
-    svg.selectAll("*").remove();
-
-    /**
-     * Creates a clipping region that will be used to mask out everything outside of it.
-     */
-    svg.append("defs")
-        .append("clipPath")
-        .attr("id", "clipPath")
-        .append("rect")
-        .attr("x", margin.left)
-        .attr("y", margin.top)
-        .attr("width", windowSize.width - margin.left)
-        .attr("height", windowSize.height - (margin.bottom + margin.top));
-
-    /**
-     * Background rectangle - used to catch click events and clear marking.
-     */
-    svg.append("rect")
-        .attr("fill", "#000")
-        .attr("fill-opacity", 0)
-        .attr("x", 0)
-        .attr("y", 0)
-        .attr("width", windowSize.width)
-        .attr("height", windowSize.height)
-        .on("click", () => dataView.clearMarking());
-
-    /**
-     * Prepare groups that will hold all elements of an area chart.
-     * The groups are drawn in a specific order for the best user experience:
-     * - 'unmarked-area', 'unmarked line' - contains all areas and lines drawn with their respective 'unmarked' color
-     * - 'marked-area', 'marked-line' - contains areas and lines that we consider 'marked' (consecutive marked points)
-     * - 'unmarked-circles' - contains circles that represent unmarked points; only appear in a special case when 'X axis expression' == 'Color axis expression'
-     * - 'marked-circles' - contains circles that represent marked points; will show only edge points if the whole group is marked;
-     * - 'hover-line' - contains all lines; lines are hidden by default but show up with an outline when hovered
-     */
-    svg.append("g").attr("class", "unmarked-area").attr("clip-path", "url(#clipPath)");
-    svg.append("g").attr("class", "unmarked-line").attr("clip-path", "url(#clipPath)");
-    svg.append("g").attr("class", "marked-area").attr("clip-path", "url(#clipPath)");
-    svg.append("g").attr("class", "marked-line").attr("clip-path", "url(#clipPath)");
-
-    svg.append("g").attr("class", "hover-line").attr("clip-path", "url(#clipPath)");
-
+    /** We might need the SVG/viewbox to clear marking but the chart wasn't designed for it, so remove it for now */
+   
+    
     for (const row of allRows) {
         console.log(row.categorical("X").value());
     }
@@ -1047,7 +1005,7 @@ export async function render(state, mod, dataView, windowSize, example) {
 
     var plot_templates;
 
-    var vanilla_drawer;
+
 
     var y_function;
     var sfRawData;
@@ -2124,7 +2082,7 @@ function curveBox(template_for_plotting, sfData) {
                 let this_rectangle = template_rectangles[i];
 
                 svg.append("rect")
-                    .datum(sfData.data)
+                    .datum(sfData)
                     .attr("x", margin.left)
                     .attr("y", y(this_rectangle.depth_top))
                     .attr("width", width - margin.right - margin.left)
@@ -2186,7 +2144,7 @@ function curveBox(template_for_plotting, sfData) {
 
     var areaPath = svg
         .append("path")
-        .datum(sfData.data)
+        .datum(sfData)
         .attr("class", "area")
         .attr("clip-path", "url('#clip')")
         .attr("d", areaMark)
@@ -2239,10 +2197,10 @@ function curveBox(template_for_plotting, sfData) {
         }).left;
 
         var y0 = y.invert(d3.pointer(evt)[1]);
-        var i = bisectData(sfData.data, y0);
+        var i = bisectData(sfData, y0);
 
-        var d1 = sfData.data[i];
-        var d0 = sfData.data[i - 1];
+        var d1 = sfData[i];
+        var d0 = sfData[i - 1];
 
         var d = null;
 
@@ -3210,29 +3168,29 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
             for (let index = 0; index < sfData.length; index++) {
                 var item = sfData[index];
 
-                nextItem = null;
+                let nextItem = null;
                 if (sfData[index + 1]) {
                     nextItem = sfData[index + 1];
                 }
 
-                Depth = item.items[getCurveIndex(depthCurveName, sfData)];
-                nextDepth = null;
+                Depth = item.continuous(depthCurveName).value();
+                let nextDepth = null;
                 if (nextItem) {
-                    nextDepth = nextItem.items[getCurveIndex(depthCurveName, sfData)];
+                    nextDepth = nextItem.continuous(depthCurveName).value();
                 } else {
                     nextDepth = Depth;
                 }
 
                 if (!isNaN(Depth) && Depth !== null) {
-                    if (categoryName == item.items[getCurveIndex(categoryColumnName, sfData)]) {
+                    if (categoryName == item.categorical(categoryColumnName).formattedValue()) {
                         categoryDepthLast = nextDepth;
                     }
 
                     if (
-                        categoryName != item.items[getCurveIndex(categoryColumnName, sfData)] ||
+                        categoryName != item.categorical(categoryColumnName).formattedValue() ||
                         index == sfData.length - 1
                     ) {
-                        if (categoryName) {
+                        if (categoryName && categoryName != "(Empty)") {
                             if (!categoriesDomain.includes(categoryName)) {
                                 categoriesDomain.push(categoryName);
                             }
@@ -3247,8 +3205,8 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
                         categoryDepthLast = nextDepth;
                         categoryMarkIds = [];
                     }
-                    categoryName = item.items[getCurveIndex(categoryColumnName, sfData)];
-                    categoryMarkIds.push(item.hints.index);
+                    categoryName = item.categorical(categoryColumnName).formattedValue();
+                    categoryMarkIds.push(index);
                 }
             }
 
@@ -3481,7 +3439,7 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
         curve2Index = getCurveIndex(curveNames[1], sfData);
 
         if (!tooltipDiv) {
-            tooltipDiv = d3.select("#js_chart" + "_tooltip");
+            tooltipDiv = d3.select("#mod-container" + "_tooltip");
         }
         if (tooltipDiv) {
             tooltipDiv.transition().duration(400).style("opacity", 0);
@@ -3521,10 +3479,10 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
             y0 = y.invert(d3.event.y);
         }
 
-        var i = bisectData(sfData.data, y0);
+        var i = bisectData(sfData, y0);
 
-        var d1 = sfData.data[i];
-        var d0 = sfData.data[i - 1];
+        var d1 = sfData[i];
+        var d0 = sfData[i - 1];
 
         var d = null;
 
@@ -3541,7 +3499,7 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
         }
 
         if (tooltipDiv) {
-            js_chart = d3.select("#js_chart")._groups[0][0];
+            js_chart = d3.select("#mod-container")._groups[0][0];
 
             tooltipDiv.html(
                 (d.items[depthIndex] ? depthCurveName + ": " + d.items[depthIndex].toFixed(2) + "<br>" : "") +
@@ -3673,7 +3631,7 @@ function multipleLogPlot(div_id, templates, sfData) {
 }
 */
 
-function insertDropdown(divContent, i, k, templates, name) {
+function insertDropdown(divContent, i, k, templates, name, sfData) {
     var blackImgSrc =
         "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHgAAAAWCAYAAAALmlj4AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH5QMcFisWTT0lnAAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAAQElEQVRo3u3RQREAMAgEsVIn518kWODNJBJ2K0k/zvoSGIzBGIzBGIzBGGwwBmMwBmMwBmOwwRiMwRiMwRjMzgDeaAGOTpcEwwAAAABJRU5ErkJggg==";
     var blueImgSrc =
@@ -3907,12 +3865,12 @@ function insertDropdown(divContent, i, k, templates, name) {
         selectText: "Select an item",
         onSelected: function (data) {
             var selData = data.selectedData;
-            PropertyOnChange("js_chart", i, k, templates, sfData, selData, name);
+            PropertyOnChange("mod-container", i, k, templates, sfData, selData, name);
         }
     });
 }
 
-function insertTextInput(divContent, i, k, templates, propName) {
+function insertTextInput(divContent, i, k, templates, propName, sfData) {
     var selectedData = "";
 
     if (templates[i]) {
@@ -3961,7 +3919,7 @@ function InputOnChange(div_id, i, k, templates, sfData, selectedData, propName) 
             templateCurves[0]["fill"][k]["cutoffs"][2] = selectedData;
         }
 
-        result_1 = multipleLogPlot("js_chart", templates, sfData);
+        result_1 = multipleLogPlot("mod-container", templates, sfData);
     }
 }
 
@@ -4001,7 +3959,7 @@ function PropertyOnChange(div_id, i, k, templates, sfData, selectedData, propNam
     }
 }
 
-function accordionTemplate(templates, i) {
+function accordionTemplate(templates, i, sfData) {
     let template = templates[i];
     let template_components = template[0]["components"];
     let templateCurves = template_components[0]["curves"][0];
@@ -4052,7 +4010,7 @@ function accordionTemplate(templates, i) {
                     });
 
                 divItem.text("Thickness:").append("br");
-                insertDropdown(divItem, i, k, templates, "Thickness");
+                insertDropdown(divItem, i, k, templates, "Thickness", sfData);
 
                 divItem = controlgroup
                     .append("div")
@@ -4061,7 +4019,7 @@ function accordionTemplate(templates, i) {
                         evt.stopPropagation();
                     });
                 divItem.text("Decoration:").append("br");
-                insertDropdown(divItem, i, k, templates, "LineStyle");
+                insertDropdown(divItem, i, k, templates, "LineStyle", sfData);
 
                 divItem = controlgroup
                     .append("div")
@@ -4070,7 +4028,7 @@ function accordionTemplate(templates, i) {
                         evt.stopPropagation();
                     });
                 divItem.text("Color:").append("br");
-                insertDropdown(divItem, i, k, templates, "LineColor");
+                insertDropdown(divItem, i, k, templates, "LineColor", sfData);
 
                 fieldset = tab.append("fieldset");
                 fieldset.append("legend").text("Area");
@@ -4084,7 +4042,7 @@ function accordionTemplate(templates, i) {
                         evt.stopPropagation();
                     });
                 divItem.text("Fill:").append("br");
-                insertDropdown(divItem, i, k, templates, "AreaFill");
+                insertDropdown(divItem, i, k, templates, "AreaFill", sfData);
 
                 divItem = controlgroup
                     .append("div")
@@ -4093,7 +4051,7 @@ function accordionTemplate(templates, i) {
                         evt.stopPropagation();
                     });
                 divItem.text("Color:").append("br");
-                insertDropdown(divItem, i, k, templates, "AreaColor");
+                insertDropdown(divItem, i, k, templates, "AreaColor", sfData);
 
                 fieldset = tab.append("fieldset");
                 fieldset.append("legend").text("Scale");
@@ -4105,7 +4063,7 @@ function accordionTemplate(templates, i) {
                         evt.stopPropagation();
                     });
                 divItem.text("Type:").append("br");
-                insertDropdown(divItem, i, k, templates, "ScaleType");
+                insertDropdown(divItem, i, k, templates, "ScaleType", sfData);
 
                 controlgroup = fieldset.append("div").attr("class", "controlgroup");
 
@@ -4116,7 +4074,7 @@ function accordionTemplate(templates, i) {
                         evt.stopPropagation();
                     });
                 divItem.text("Min:").append("br");
-                insertTextInput(divItem, i, k, templates, "ScaleMin");
+                insertTextInput(divItem, i, k, templates, "ScaleMin", sfData);
 
                 divItem = controlgroup
                     .append("div")
@@ -4125,7 +4083,7 @@ function accordionTemplate(templates, i) {
                         evt.stopPropagation();
                     });
                 divItem.text("Max:").append("br");
-                insertTextInput(divItem, i, k, templates, "ScaleMax");
+                insertTextInput(divItem, i, k, templates, "ScaleMax", sfData);
 
                 fieldset = tab.append("fieldset");
 
@@ -4140,7 +4098,7 @@ function accordionTemplate(templates, i) {
                         evt.stopPropagation();
                     });
                 divItem.text("Shale/Silt:").append("br");
-                insertTextInput(divItem, i, k, templates, "CutoffShaleSilt");
+                insertTextInput(divItem, i, k, templates, "CutoffShaleSilt", sfData);
 
                 divItem = controlgroup
                     .append("div")
@@ -4149,7 +4107,7 @@ function accordionTemplate(templates, i) {
                         evt.stopPropagation();
                     });
                 divItem.text("Silt/Sand:").append("br");
-                insertTextInput(divItem, i, k, templates, "CutoffSiltSand");
+                insertTextInput(divItem, i, k, templates, "CutoffSiltSand", sfData);
             }
         }
 
@@ -4283,7 +4241,7 @@ function multipleLogPlot(div_id, templates, sfData) {
             //.fill('#2196f3')
             .on("onchange", function (val) {
                 verticalZoomHeightMultiplier = val;
-                multipleLogPlot("js_chart", plot_templates, sfData);
+                multipleLogPlot("mod-container", plot_templates, sfData);
             });
 
         var gZoom = d3
@@ -4348,7 +4306,7 @@ function multipleLogPlot(div_id, templates, sfData) {
             let TrackHolder = d3.select("#" + div_id).append("div");
 
             TrackHolder.style("vertical-align", "middle")
-                .attr("id", div_id + "TrackHolder" + i)
+                .attr("id", div_id + "TrackHolder" + i)                
                 .style("display", "inline-block");
 
             templates[i][0]["trackBox"]["div_id"] = div_id + "TrackHolder" + i;
@@ -4360,7 +4318,7 @@ function multipleLogPlot(div_id, templates, sfData) {
         if (updateAccordionTools) {
             for (let i = 0; i < templates.length; i++) {
                 if (templates[i]) {
-                    accordionTemplate(templates, i);
+                    accordionTemplate(templates, i, sfData);
                 }
             }
             updateAccordionTools = false;
@@ -4371,12 +4329,12 @@ function multipleLogPlot(div_id, templates, sfData) {
 
     // add the tooltip area to the webpage
 
-    d3.select("#" + "js_chart" + "_tooltip").remove();
+    d3.select("#" + "mod-container" + "_tooltip").remove();
     let tooltipDiv = d3
         .select("#" + div_id)
         .append("div")
         .attr("class", "tooltip")
-        .attr("id", "js_chart" + "_tooltip")
+        .attr("id", "mod-container" + "_tooltip")
         .style("opacity", 0);
 
     initialized = true;
