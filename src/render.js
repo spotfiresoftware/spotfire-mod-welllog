@@ -1963,15 +1963,16 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
         let value1;
          
         if (curveNames[0] == "ZONE" || curveNames[0] == "FACIES") {
-            value0 = d.categorical(curveNames[0]).formattedValue();
+            value0 = d0.categorical(curveNames[0]).formattedValue();
         } else {
-            value0 = d.continuous(curveNames[0]).value();
+            value0 = d0.continuous(curveNames[0]).value();
         }
         if (curveNames[1] == "ZONE" || curveNames[1] == "FACIES") {
-            value0 = d.categorical(curveNames[1]).formattedValue();
+            value1 = d1.categorical(curveNames[1]).formattedValue();
         } else {
-            value0 = curveNames[1] ? d.continuous(curveNames[1]).value() : "";
+            value1 = curveNames[1] ? d1.continuous(curveNames[1]).value() : "";
         }
+        console.log(value0, value1);
 
         if (tooltipDiv) {
             let modContainer = d3.select("#mod-container")._groups[0][0];
