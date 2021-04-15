@@ -150,8 +150,8 @@ body,
   
   #TracksToolDiv {
    height: 100%;
-   //background-color: red;
-   //border: 1px solid blue;
+   /*background-color: red;
+   border: 1px solid blue;*/
   }
   
   #slider-zoom path.handle:hover, 

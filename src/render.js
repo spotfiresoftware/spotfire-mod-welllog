@@ -37,6 +37,8 @@ const modContainer = d3.select("#mod-container");
  */
 //const svg = modContainer.append("svg").attr("xmlns", "http://www.w3.org/2000/svg");
 
+
+// @todo - remove as many global vars as we can!
 var depthCurveName;
 var depthUnit;
 var selectedWell;
@@ -52,6 +54,7 @@ var initialized = false;
 
 var updateAccordionTools = true;
 var vanilla_drawer;
+var _dataView; 
 
 /*--------------------------------------------------
 
@@ -368,6 +371,7 @@ function getCurveData(lineIndex, curveName, sfData) {
  * @param {Spotfire.ModProperty<string>} example - an example property
  */
 export async function render(state, mod, dataView, windowSize, example) {
+    _dataView = dataView;
     if (state.preventRender) {
         // Early return if the state currently disallows rendering.
         return;
@@ -1626,31 +1630,31 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
             var categoryColorFunc;
 
             //var index =0;
-            var categoryMarkIds = [];
+            var categoryRows = [];
 
             for (let index = 0; index < sfData.length; index++) {
-                var item = sfData[index];
+                let dataviewRow = sfData[index];
 
-                let nextItem = null;
+                let nextDataViewRow = null;
                 if (sfData[index + 1]) {
-                    nextItem = sfData[index + 1];
+                    nextDataViewRow = sfData[index + 1];
                 }
 
-                Depth = item.continuous(depthCurveName).value();
+                Depth = dataviewRow.continuous(depthCurveName).value();
                 let nextDepth = null;
-                if (nextItem) {
-                    nextDepth = nextItem.continuous(depthCurveName).value();
+                if (nextDataViewRow) {
+                    nextDepth = nextDataViewRow.continuous(depthCurveName).value();
                 } else {
                     nextDepth = Depth;
                 }
 
                 if (!isNaN(Depth) && Depth !== null) {
-                    if (categoryName == item.categorical(categoryColumnName).formattedValue()) {
+                    if (categoryName == dataviewRow.categorical(categoryColumnName).formattedValue()) {
                         categoryDepthLast = nextDepth;
                     }
 
                     if (
-                        categoryName != item.categorical(categoryColumnName).formattedValue() ||
+                        categoryName != dataviewRow.categorical(categoryColumnName).formattedValue() ||
                         index == sfData.length - 1
                     ) {
                         if (categoryName && categoryName != "(Empty)") {
@@ -1661,15 +1665,15 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
                                 top: categoryDepthFirst,
                                 bottom: categoryDepthLast,
                                 category: categoryName,
-                                markIds: categoryMarkIds.slice()
+                                categoryRows: categoryRows
                             });
                         }
                         categoryDepthFirst = Depth;
                         categoryDepthLast = nextDepth;
-                        categoryMarkIds = [];
+                        categoryRows = [];
                     }
-                    categoryName = item.categorical(categoryColumnName).formattedValue();
-                    categoryMarkIds.push(index);
+                    categoryName = dataviewRow.categorical(categoryColumnName).formattedValue();
+                    categoryRows.push(dataviewRow);
                 }
             }
 
@@ -1716,12 +1720,7 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
                 let categoryRectangle = categoriesRectangles[i];
                 if (categoryRectangle.category) {
                     function rectClick(evt, a, b) {
-                        var elem;
-                        if (this.attributes.rectCategoryId) {
-                            elem = d3.select("#" + this.attributes.rectCategoryId.value)._groups[0][0];
-                        } else elem = this;
-
-                        var markMode = "Replace";
+                          var markMode = "Replace";
                         if (evt instanceof MouseEvent) {
                             evt.preventDefault();
                             evt.stopPropagation();
@@ -1733,16 +1732,8 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
                         } else {
                             d3.event.preventDefault();
                             d3.event.stopPropagation();
-                        }
-                        // Implementation of logic to call markIndices or markIndices2 goes here
-                        var indicesToMark = [];
-                        if (elem) {
-                            indicesToMark = elem.__data__;
-                        }
-                        var markData = {};
-                        markData.markMode = markMode;
-                        markData.indexSet = indicesToMark;
-                        markIndices(markData);
+                        }                    
+                        _dataView.mark(categoryRectangle.categoryRows, markMode);
                     }
 
                     function rectMouseOver(evt) {
@@ -1905,8 +1896,6 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
             tooltipDiv.transition().duration(400).style("opacity", 0);
         }
 
-        // tooltipDiv does exist here and seems to be valid but doesn't show - @Rodrigo???
-
         var rectColor = null;
         var target = evt.target || evt.srcElement;
 
@@ -1972,7 +1961,6 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
         } else {
             value1 = curveNames[1] ? d1.continuous(curveNames[1]).value() : "";
         }
-        console.log(value0, value1);
 
         if (tooltipDiv) {
             let modContainer = d3.select("#mod-container")._groups[0][0];
@@ -2003,7 +1991,6 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
             let tooltipX =
                 target.parentNode.parentNode.offsetLeft + getTooltipPositionX(curve_x_func, value0) + 10;
 
-            console.log(modContainer, evt.pageY);
             let tooltipY = evt.pageY > modContainer.clientHeight - 40 ? evt.pageY - 40 : evt.pageY + 10;
 
             tooltipDiv.style("left", tooltipX + "px");
