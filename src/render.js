@@ -1629,7 +1629,6 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
             var categoriesDomain = [];
             var categoryColorFunc;
 
-            //var index =0;
             var categoryRows = [];
 
             for (let index = 0; index < sfData.length; index++) {
