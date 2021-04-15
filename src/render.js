@@ -32,11 +32,6 @@ import { addHandlersSelection } from "./ui-input.js";
  */
 const modContainer = d3.select("#mod-container");
 
-/**
- * Main svg container
- */
-//const svg = modContainer.append("svg").attr("xmlns", "http://www.w3.org/2000/svg");
-
 
 // @todo - remove as many global vars as we can!
 var depthCurveName;
