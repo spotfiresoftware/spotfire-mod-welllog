@@ -2003,7 +2003,8 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
             let tooltipX =
                 target.parentNode.parentNode.offsetLeft + getTooltipPositionX(curve_x_func, value0) + 10;
 
-            let tooltipY = evt.pageY + modContainer.scrollTop + 24;
+            console.log(modContainer, evt.pageY);
+            let tooltipY = evt.pageY > modContainer.clientHeight - 40 ? evt.pageY - 40 : evt.pageY + 10;
 
             tooltipDiv.style("left", tooltipX + "px");
             tooltipDiv.style("top", tooltipY + "px");
