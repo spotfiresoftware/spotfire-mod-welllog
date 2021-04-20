@@ -1,9 +1,10 @@
 {
     "apiVersion": "1.0",
-    "version": "1.1.0",
-    "name": "Webpack-starter",
-    "id": "spotfire-webpack-starter-mod",
+    "version": "2.0.0",
+    "name": "Well Log v2.0",
+    "id": "spotfire-well-log-mod",
     "icon": "icon.svg",
+    "externalResources": ["https://fonts.gstatic.com/s/materialicons/v50/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2"],    
     "properties": [
         {
             "name": "example",
@@ -167,6 +168,7 @@
     "files": [
         "index.html",
         "main.css",
+        "jquery-ui.css",
         "bundle.js"
     ]
 }

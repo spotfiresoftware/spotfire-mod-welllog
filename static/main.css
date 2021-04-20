@@ -103,9 +103,15 @@ body,
 }
 
 /* CSS from JSViz */
-
+svg {
+    font-weight: 300;
+    font-size: 12px;
+    background-color: inherit;
+  }
   
-  .tooltip {   
+  
+
+.tooltip {   
     position: absolute;     
     text-align: left; 
     min-width: 50px;                
@@ -150,182 +156,184 @@ body,
   
   #TracksToolDiv {
    height: 100%;
-   /*background-color: red;
-   border: 1px solid blue;*/
+   //background-color: red;
+   //border: 1px solid blue;
   }
   
   #slider-zoom path.handle:hover, 
   #slider-zoom path.handle:focus,
   #plusBtn, #minusBtn, #confBtn {
-outline: -webkit-focus-ring-color auto 0px;
-}
-
-.ui-selectmenu-open {
- z-index:99999;
- position: fixed;
-}
-
-fieldset {
-  display: block;
-  margin-left: 2px;
-  margin-right: 2px;
-  margin-bottom: 5px;
-  border: 1px solid lightgray;
-} 
-
-.controlgroup {
-  display:flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-}
-
-
-.controlGroupDiv {
-  /*margin-bottom: 5px;*/
-  margin: 2px;
-}
-
-
-.dd-select {
-    height:18px;
-    border-bottom-right-radius: 3px !important;
-    border-bottom-left-radius: 3px !important;
-    border-top-right-radius: 3px !important;
-    border-top-left-radius: 3px !important;
-}  
-
-.dd-pointer {
-    width: 0;
-    height: 0;
-    position: absolute;
-    right: 7px !important;
-    top: 50%;
-    margin-top: -3px;
-}
-
-
-.dd-selected {
-    height:15px;
-    overflow: hidden;
+    outline: -webkit-focus-ring-color auto 0px;
+  }
+  
+  .ui-selectmenu-open {
+   z-index:99999;
+   position: fixed;
+  }
+  
+  fieldset {
     display: block;
-    padding-top: 2px !important;
-    padding-bottom: 2px !important;
-    padding-left: 5px !important;
-    padding-right: 5px !important;
-    background: #dcdcdc !important;
-    font-weight: normal !important;
-}
-
-
-.dd-selected:hover {
-  background: #cdcdcd !important;
-  cursor: pointer;
-}
-
-.dd-option {
-    padding-top: 2px !important;
-    padding-bottom: 2px !important;
-    padding-left: 5px !important;
-    padding-right: 5px !important;
-
-    background: #f6f6f6 !important;
-    display: block;
-    border-bottom: solid 1px #ddd;
-    overflow: hidden;
-    text-decoration: none;
-    color: #333;
+    margin-left: 2px;
+    margin-right: 2px;
+    margin-bottom: 5px;
+    border: 1px solid lightgray;
+  } 
+  
+  .controlgroup {
+    display:flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+  
+  
+  .controlGroupDiv {
+    /*margin-bottom: 5px;*/
+    margin: 2px;
+  }
+  
+  
+  .dd-select {
+      height:18px;
+      border-bottom-right-radius: 3px !important;
+      border-bottom-left-radius: 3px !important;
+      border-top-right-radius: 3px !important;
+      border-top-left-radius: 3px !important;
+  }  
+  
+  .dd-pointer {
+      width: 0;
+      height: 0;
+      position: absolute;
+      right: 7px !important;
+      top: 50%;
+      margin-top: -3px;
+  }
+  
+  
+  .dd-selected {
+      height:15px;
+      overflow: hidden;
+      display: block;
+      padding-top: 2px !important;
+      padding-bottom: 2px !important;
+      padding-left: 5px !important;
+      padding-right: 5px !important;
+      background: #dcdcdc !important;
+      font-weight: normal !important;
+      border: none;
+  }
+  
+  
+  .dd-selected:hover {
+    background: #cdcdcd !important;
     cursor: pointer;
-    -webkit-transition: all 0.25s ease-in-out;
-    -moz-transition: all 0.25s ease-in-out;
-    -o-transition: all 0.25s ease-in-out;
-    -ms-transition: all 0.25s ease-in-out;
-}
-
-.dd-option-selected {
-    background: #bcbcbc !important;
-}
-
-.dd-selected-text {
-  cursor: pointer;
-}
-
-.dd-option-text {
-  cursor: pointer;
-}
-
-.dd-option:hover {
-    background: #eaeaea !important;
-}
-
-.dd-options {
-    z-index: 99999 !important;
-    position: fixed !important;
-}
-
-
-
-.dd-option-image, .dd-selected-image {
-    max-width: 72px !important;;
-}
-
-
-
-#accordionConf {
-padding-left: 6px;
-padding-right: 6px;
-}
-
-#selectedWellDiv {
-padding-left: 10px;
-padding-right: 2px;
-padding-bottom: 5px;
-}
-
-.ui-accordion .ui-accordion-content {
-    padding: 0px 2px 0px 2px !important;
-    border-top: 0;
-    overflow: auto;
-    line-height: 1.2 !important;
-}
-
-
-
-
-.ui-accordion .ui-accordion-header {
-    display: block;
+  }
+  
+  .dd-option {
+      padding-top: 2px !important;
+      padding-bottom: 2px !important;
+      padding-left: 5px !important;
+      padding-right: 5px !important;
+  
+      background: #f6f6f6 !important;
+      display: block;
+      border-bottom: solid 1px #ddd;
+      overflow: hidden;
+      text-decoration: none;
+      color: #333;
+      cursor: pointer;
+      -webkit-transition: all 0.25s ease-in-out;
+      -moz-transition: all 0.25s ease-in-out;
+      -o-transition: all 0.25s ease-in-out;
+      -ms-transition: all 0.25s ease-in-out;
+  }
+  
+  .dd-option-selected {
+      background: #bcbcbc !important;
+  }
+  
+  .dd-selected-text {
     cursor: pointer;
-    position: relative;
-    margin: 2px 0 0 0;
-    padding: .3em .3em .3em .3em !important;
-    font-size: 100%;
-}
-
-.ui-tabs .ui-tabs-panel {
-    display: block;
-    border-width: 0;
-    padding: 0.5em 0.5em !important;
-    background: none;
-}
-
-
-.ui-tabs .ui-tabs-nav .ui-tabs-anchor {
-    float: left;
-    padding: 0.25em 1em 0.08em 1em !important;
-    text-decoration: none;
-}
-
-
-
-html { overflow-y: auto; }
-#drawer_wall { display: none; position: fixed; left: 0; top: 0; z-index: 99995; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); }
-#drawer_btn { position: absolute; right: 0; top: 0; }
-#drawer_btn a { display: block; width: 26px; height: 26px; text-align:center; line-height:1px;color: #fff; text-decoration: none; background: #333; }
-#drawer_menu { overflow-y: auto; position: fixed; left: -220px; top: 0; z-index: 99998; width: 220px; height: 100%; color: #fff; background: #333; }
-#drawer_menu_inner { padding: 5px; }
-#drawer_menu_inner ul { margin: 0; padding: 0; list-style-type: none; }
-#drawer_menu_inner li { margin: 0; padding: 0; }
-#drawer_menu_inner a { display: block; margin: -1px 0 0 0; padding: 7px; font-size: 14px; text-decoration: none; color: #fff; border-top: 1px solid #444; border-bottom: 1px solid #444; }
-#drawer_menu_inner a:hover { text-decoration: none; background: #444; }
-#drawer_content { width: 100%; max-width: 728px; margin: 0 auto; padding:10px; background: #eee; }
-#drawer_content p { margin-top: 0; }
-.disabled {pointer-events: none; cursor: default; opacity: 0.5;}
+  }
+  
+  .dd-option-text {
+    cursor: pointer;
+  }
+  
+  .dd-option:hover {
+      background: #eaeaea !important;
+  }
+  
+  .dd-options {
+      z-index: 99999 !important;
+      position: fixed !important;
+  }
+  
+  
+  
+  .dd-option-image, .dd-selected-image {
+      max-width: 72px !important;;
+  }
+  
+  
+  
+  #accordionConf {
+  padding-left: 6px;
+  padding-right: 6px;
+  }
+  
+  #selectedWellDiv {
+  padding-left: 10px;
+  padding-right: 2px;
+  padding-bottom: 5px;
+  }
+  
+  .ui-accordion .ui-accordion-content {
+      padding: 0px 2px 0px 2px !important;
+      border-top: 0;
+      overflow: auto;
+      line-height: 1.2 !important;
+  }
+  
+  
+  
+  
+  .ui-accordion .ui-accordion-header {
+      display: block;
+      cursor: pointer;
+      position: relative;
+      margin: 2px 0 0 0;
+      padding: .3em .3em .3em .3em !important;
+      font-size: 100%;
+  }
+  
+  .ui-tabs .ui-tabs-panel {
+      display: block;
+      border-width: 0;
+      padding: 0.5em 0.5em !important;
+      background: none;
+  }
+  
+  
+  .ui-tabs .ui-tabs-nav .ui-tabs-anchor {
+      float: left;
+      padding: 0.25em 1em 0.08em 1em !important;
+      text-decoration: none;
+  }
+  
+  
+  
+  html { overflow-y: auto; }
+  #drawer_wall { display: none; position: fixed; left: 0; top: 0; z-index: 99995; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); }
+  #drawer_btn { position: absolute; right: 0; top: 0; }
+  #drawer_btn a { display: block; width: 26px; height: 26px; text-align:center; line-height:1px;color: #fff; text-decoration: none; background: #333; }
+  #drawer_menu { overflow-y: auto; position: fixed; left: -220px; top: 0; z-index: 99998; width: 220px; height: 100%; color: #fff; background: #333; }
+  #drawer_menu_inner { padding: 5px; }
+  #drawer_menu_inner ul { margin: 0; padding: 0; list-style-type: none; }
+  #drawer_menu_inner li { margin: 0; padding: 0; }
+  #drawer_menu_inner a { display: block; margin: -1px 0 0 0; padding: 7px; font-size: 14px; text-decoration: none; color: #fff; border-top: 1px solid #444; border-bottom: 1px solid #444; }
+  #drawer_menu_inner a:hover { text-decoration: none; background: #444; }
+  #drawer_content { width: 100%; max-width: 728px; margin: 0 auto; padding:10px; background: #eee; }
+  #drawer_content p { margin-top: 0; }
+  .disabled {pointer-events: none; cursor: default; opacity: 0.5;}
+  

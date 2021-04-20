@@ -1543,7 +1543,8 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
         .style("pointer-events", "all")
         .on("mouseover", tooltipMouseover)
         .on("mouseout", tooltipMouseout)
-        .on("mousemove", mousemove);
+        .on("mousemove", mousemove)
+        .on("mousedown", mousedown);
 
     function tooltipMouseover(evt) {
         focus.style("display", null);
@@ -1880,6 +1881,10 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
     feMerge.append("feMergeNode").attr("in", "SourceGraphic");
 
     var focus = svg.append("g").style("display", "none");
+
+    function mousedown(evt) {
+        console.log(evt);
+    }
 
     function mousemove(evt) {
 
@@ -2378,7 +2383,7 @@ function InputOnChange(div_id, i, k, templates, sfData, selectedData, propName) 
             templateCurves[0]["fill"][k]["cutoffs"][2] = selectedData;
         }
 
-        result_1 = multipleLogPlot("mod-container", templates, sfData);
+        let result_1 = multipleLogPlot("mod-container", templates, sfData);
     }
 }
 
