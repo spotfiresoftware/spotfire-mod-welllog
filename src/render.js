@@ -32,6 +32,129 @@ import { addHandlersSelection } from "./ui-input.js";
  */
 const modContainer = d3.select("#mod-container");
 
+async function markModel(markMode, rectangle) {
+	// Implementation of logic to call markIndices or markIndices2 goes here
+    var indicesToMark = [];
+    var markData = {};
+
+	var js_chart = d3.select('#mod-container')._groups[0][0];
+	var header = d3.select('.trackHeaderDiv')._groups[0][0]; 
+	var headerHeight = parseFloat(header.style.height.replace(/\D/g,''))   + parseFloat(header.style.marginBottom.replace(/\D/g,''));
+	console.dir( headerHeight  );
+	
+	
+    markData.markMode = markMode;
+
+	
+	var y0 = y_function.invert(rectangle.y - headerHeight + js_chart.scrollTop);
+	var y1 = y_function.invert(rectangle.y - headerHeight + rectangle.height + js_chart.scrollTop);
+
+
+    var bisectData = d3.bisector( function(d) { return d.continuous("DEPTH").value()} ).left; 
+    let allRows = await _dataView.allRows();
+	var i = bisectData(allRows, y0);
+	
+    var d1 = allRows[i];
+    var d0 = allRows[i - 1];                              
+
+	var d = null;
+		
+	if (d0 && d1) {
+	    if (d0.continuous("DEPTH").value() && d1.continuous("DEPTH").value()) {		
+             d = (y0 - d0.continuous("DEPTH").value() > d1.continuous("DEPTH").value() - y0) ? d1 : d0;
+	    }
+	}
+	if (d == null) { d = d1; }
+	if (d == null) { d = d0; }
+
+    console.log(d);
+
+    var j = i;
+	let rowsToMark = [];
+	while (allRows[j].continuous("DEPTH").value() <= y1) {
+        rowsToMark.push(allRows[j]);
+        
+		j = j+1;
+    }
+    _dataView.mark(rowsToMark, "Replace");
+    
+}
+
+
+$( "body" ).on ( "mousedown", function ( mouseDownEvent )
+{		
+    var getMarkMode = function ( e )
+    {
+        // shift: add rows
+        // control: toggle rows
+        // none: replace rows
+        if ( e.shiftKey )
+        {
+            return "Add";
+        }
+        else if ( e.ctrlKey )
+        {
+            return "Toggle";
+        }
+
+        return "Replace";
+    };
+
+    mouseDownEvent.preventDefault ();
+
+    var markMode = getMarkMode ( mouseDownEvent );
+    //
+    // Create initial marking rectangle, will be used if the user only clicks.
+    //
+    var x = mouseDownEvent.pageX,
+    y = mouseDownEvent.pageY,
+    width = 1,
+    height = 1;
+
+    var $selection = $("<div/>").css ( {
+        'position': 'absolute',
+        'border': '1px solid #0a1530',
+        'background-color': '#8daddf',
+        'opacity': '0.5'
+    } ).hide ().appendTo ( this );
+
+    $( this ).on ( "mousemove", function ( mouseMoveEvent )
+    {
+        x      = Math.min ( mouseDownEvent.pageX, mouseMoveEvent.pageX );
+        y      = Math.min ( mouseDownEvent.pageY, mouseMoveEvent.pageY );
+        width  = Math.abs ( mouseDownEvent.pageX - mouseMoveEvent.pageX );
+        height = Math.abs ( mouseDownEvent.pageY - mouseMoveEvent.pageY );
+
+        $selection.css ( {
+            'left': x + 'px',
+            'top': y + 'px',
+            'width': width + 'px',
+            'height': height + 'px'
+        } );
+
+        $selection.show ();
+    } );
+
+    $ ( this ).on ( "mouseup", function ()
+    {
+        var rectangle =  {
+            'x': x,
+            'y': y,
+            'width': width,
+            'height': height
+        };
+        //
+        // markModel is (optionally) implemented in the visualization js code
+        //
+        if ( typeof ( markModel ) != 'undefined' )
+        {
+            markModel ( markMode, rectangle );
+        }
+
+        $selection.remove ();
+        $ ( this ).off ( "mouseup mousemove" );
+    });
+});
 
 // @todo - remove as many global vars as we can!
 var depthCurveName;
@@ -50,6 +173,7 @@ var initialized = false;
 var updateAccordionTools = true;
 var vanilla_drawer;
 var _dataView; 
+var yAxis;
 
 /*--------------------------------------------------
 
@@ -1000,7 +1124,7 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
     let maxes = [];
     let curvesDescription = "";
     let y;
-    let yAxis;
+    
 
     //////////////////// define Y scale (depth)  ////////////////////
 
@@ -1543,8 +1667,8 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
         .style("pointer-events", "all")
         .on("mouseover", tooltipMouseover)
         .on("mouseout", tooltipMouseout)
-        .on("mousemove", mousemove)
-        .on("mousedown", mousedown);
+        .on("mousemove", mousemove);
+
 
     function tooltipMouseover(evt) {
         focus.style("display", null);
@@ -1882,9 +2006,54 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
 
     var focus = svg.append("g").style("display", "none");
 
-    function mousedown(evt) {
-        console.log(evt);
-    }
+    //JSViz marking code ////////////////////////////
+    /*
+    function markModel(markMode, rectangle) {
+        // Implementation of logic to call markIndices or markIndices2 goes here
+        var indicesToMark = [];
+        var markData = {};
+    
+        var js_chart = d3.select('#js_chart')._groups[0][0];
+        var header = d3.select('.trackHeaderDiv')._groups[0][0]; 
+        var headerHeight = parseFloat(header.style.height.replace(/\D/g,''))   + parseFloat(header.style.marginBottom.replace(/\D/g,''));
+        console.dir( headerHeight  );
+        
+        
+        markData.markMode = markMode;
+    
+        
+        var y0 = y_function.invert(rectangle.y - headerHeight + js_chart.scrollTop);
+        var y1 = y_function.invert(rectangle.y - headerHeight + rectangle.height + js_chart.scrollTop);
+    
+        var depthIndex = getCurveIndex(depthCurveName, sfData);	
+        
+        var bisectData = d3.bisector( function(d) { return d.items[depthIndex]; } ).left; 
+    
+        var i = bisectData(sfData.data, y0);
+        
+        var d1 = sfData.data[i];
+        var d0 = sfData.data[i - 1];                              
+    
+        var d = null;
+            
+        if (d0 && d1) {
+            if (d0[depthIndex] && d1[depthIndex]) {		
+                 d = (y0 - d0[depthIndex] > d1[depthIndex] - y0) ? d1 : d0;
+            }
+        }
+        if (d == null) { d = d1; }
+        if (d == null) { d = d0; }
+    
+        var j = d.hints.index;
+        
+        while (sfData.data[j].items[depthIndex] <= y1) {
+            indicesToMark.push(sfData.data[j].hints.index);
+            j = j+1;
+        }
+    
+    */
+
+
 
     function mousemove(evt) {
 
