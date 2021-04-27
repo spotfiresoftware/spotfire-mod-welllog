@@ -166,7 +166,8 @@ var plot_templates;
 var zoneLogTrackWidth = 140;
 var ZoomPanelWidth = 32;
 var depthLabelPanelWidth = 15;
-var verticalZoomHeightMultiplier = 5;
+var _verticalZoomHeightMultiplier = 5.0;
+var _verticalZoomHeightProperty;
 var sliderZoom;
 var initialized = false;
 
@@ -489,8 +490,11 @@ function getCurveData(lineIndex, curveName, sfData) {
  * @param {Spotfire.Size} windowSize - windowSize
  * @param {Spotfire.ModProperty<string>} example - an example property
  */
-export async function render(state, mod, dataView, windowSize, example) {
+export async function render(state, mod, dataView, windowSize, verticalZoomHeightProperty) {
     _dataView = dataView;
+    _verticalZoomHeightProperty = verticalZoomHeightProperty;
+    _verticalZoomHeightMultiplier = _verticalZoomHeightProperty.value();
+    console.log("Render called");
     if (state.preventRender) {
         // Early return if the state currently disallows rendering.
         return;
@@ -568,17 +572,6 @@ export async function render(state, mod, dataView, windowSize, example) {
     /** We might need the SVG/viewbox to clear marking but the chart wasn't designed for it, so remove it for now */
    
     
-    for (const row of allRows) {
-        console.log(row.categorical("X").value());
-    }
-
-    for (const colorLeaf of colorLeaves) {
-        console.log(colorLeaf.formattedPath());
-    }
-    for (const xLeaf of xLeaves) {
-        console.log(xLeaf.formattedPath());
-    }
-
     // Now render here!
 
 
@@ -1053,7 +1046,7 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
     d3.select("#" + div_id)
         .selectAll("*")
         .remove();
-    let height = template_overall["height"] * verticalZoomHeightMultiplier - 110;
+    let height = template_overall["height"] * _verticalZoomHeightMultiplier - 110;
     let height_components = template_overall["height"];
     let width = template_overall["width"];
     let margin = template_overall["margin"];
@@ -2856,8 +2849,8 @@ function multipleLogPlot(div_id, templates, sfData) {
                 "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABoAAAAaCAYAAACpSkzOAAAABmJLR0QAxwDHAMczllhiAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH5QMZDTQOtKYP9wAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAACO0lEQVRIx8VWy07jQBCsHgfsyH1wOCQ2lkDigjgn35WP4bvIB3CJBAg8yYHMoUexjezew26yCwkQkcDWcdSjmpqufhB2hIjcNE0zVFUAABEhCIIJM492uU+fBVhr1TmHsiyhqqiqCgAQhiGICFEUIUkSpGlKXyKazWb6/PyMuq7BzGBmxHGMMAwBAFVVwXsPEYGI4Pj4GCcnJxgMBrQz0XQ61dlshizLkOc5giAA0fY3qSqapsHj4yOKosBgMMDFxQV9SnR7e6svLy84PT1FkiTvEmwjdM7h6ekJR0dHuLy8pHeJptOpLpdLnJ+fI45jfAXee9zd3aHb7b5SZv5N+nw+R5ZlXyYBgDiOkWUZ5vM5rLW6QbRYLJCmKZIkwb7440IsFgu8IrLWal3XyPP805yMx2OMx+OPa4YIeZ6jruu1KgMAzjkwM4IgwKEQBAGYGc6534pE5KYsSzDzzg7bqRMQgZlRliVE5Ma0bTtU1b0M8JExVBVt2w47bduiqqp1xW/LyS7n19fXGzFhGKKqKrRt+9d1342OMWbN3Ol0NgLevnSlZJuCt1j9lDEGxhgzISJ47w+uwnsPIoIxZmKYeRRFEUQEq1lzCKgqRARRFIGZR2ZVySKCpmkORtQ0DURk3WloNT0fHh6G3W4XZ2dne9eTquL+/h7L5RJXV1e07gzMPOr1erDWrit5HzjnYK1Fr9fDRlNN05T6/T6KotjLGN57FEWBfr//arz/n8H3o6P8R5eTH123Dr1A/gKIkV0mr/zcuQAAAABJRU5ErkJggg=="
             )
             .on("click", function (evt) {
-                if (verticalZoomHeightMultiplier + 0.25 <= 15) {
-                    sliderZoom.value(verticalZoomHeightMultiplier + 0.25);
+                if (_verticalZoomHeightMultiplier + 0.25 <= 15) {
+                    sliderZoom.value(_verticalZoomHeightMultiplier + 0.25);
                 }
             });
 
@@ -2869,12 +2862,13 @@ function multipleLogPlot(div_id, templates, sfData) {
             .step(0.25)
             .height(window.innerHeight * 0.35)
             .ticks(0)
-            .default(verticalZoomHeightMultiplier)
+            .default(_verticalZoomHeightMultiplier)
             .handle(d3.symbol().type(d3.symbolCircle).size(120)())
             //.fill('#2196f3')
             .on("onchange", function (val) {
-                verticalZoomHeightMultiplier = val;
-                multipleLogPlot("mod-container", plot_templates, sfData);
+                //_verticalZoomHeightMultiplier = val;
+                //multipleLogPlot("mod-container", plot_templates, sfData);
+                _verticalZoomHeightProperty.set(val);
             });
 
         var gZoom = d3
@@ -2906,8 +2900,8 @@ function multipleLogPlot(div_id, templates, sfData) {
                 "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABoAAAAaCAYAAACpSkzOAAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH5QMZDTQ366OH/wAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAACJUlEQVRIx8WWzVKjQBSFv24iYHEXxEUCsrDKjQ9gnsuH8bnMA7hJlQuEZGF60V0CFvQsZpLR8S9lonOWFPD16T6371XsKGvtTd/3l957AJRSBEEwF5HZLt+rz16o69obY2iaBu89bdsCEEURSiniOCZNU7IsU18CLZdL//DwQNd1iAgiQpIkRFEEQNu2OOew1mKtJQxDTk5OmE6namfQYrHwy+WSPM8pioIgCFDq7TV57+n7nrIsqaqK6XTK+fm5+hR0e3vrn56eOD09JU3TdwFvAY0x3N/fc3R0xMXFhXoXtFgs/OPjI2dnZyRJwlfknOPu7o7j4+MXzvTzQ1+tVuR5/mUIQJIk5HnOarWirmv/CrRer8myjDRN2Vd/Ush6veYFqK5r33UdRVHsfCYfRlkpiqKg67qtKw1gjEFECIKAQykIAkQEY8xvR9bam6ZpEJGDuHnuSkRomgZr7Y0ehuHSe79XAD4KhveeYRguR8Mw0LbttuL/1dXV1U4/vb6+fvUsiiLatmUYhr+p+26NtNZb8mg02mmlu2qzU1prtNZ6rpTCOXdwF845lFJoredaRGZxHGOtZdNrDiHvPdZa4jhGRGZ6U8nWWvq+Pxio73ustdubRgOIyDwMQ8qyPIgr7z1lWRKG4bYhbkCz8XhMXdfbSt5HxhjqumY8HvPqUs2yTE0mE6qq2isYzjmqqmIymbxo7/+n8f1oK//R4eRHx61DD5C/APInUv+2tAsfAAAAAElFTkSuQmCC"
             )
             .on("click", function (evt) {
-                if (verticalZoomHeightMultiplier - 0.25 >= 1) {
-                    sliderZoom.value(verticalZoomHeightMultiplier - 0.25);
+                if (_verticalZoomHeightMultiplier - 0.25 >= 1) {
+                    sliderZoom.value(_verticalZoomHeightMultiplier - 0.25);
                 }
             });
 

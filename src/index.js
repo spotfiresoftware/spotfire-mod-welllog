@@ -33,7 +33,7 @@ Spotfire.initialize(async (mod) => {
     const reader = mod.createReader(
         mod.visualization.data(),
         mod.windowSize(),
-        mod.property("example")
+        mod.property("verticalZoomHeightMultiplier")
     );
 
     /**
@@ -56,14 +56,14 @@ Spotfire.initialize(async (mod) => {
      * @param {Spotfire.AnalysisProperty<boolean>} roundedCurves
      * @param {Spotfire.AnalysisProperty<boolean>} gapfill
      */
-    async function onChange(dataView, windowSize, example) {
+    async function onChange(dataView, windowSize, verticalZoomHeightMultiplier) {
         try {
             await render(
                 state,
                 mod,
                 dataView,
                 windowSize,
-                example
+                verticalZoomHeightMultiplier
             );
             
             context.signalRenderComplete();

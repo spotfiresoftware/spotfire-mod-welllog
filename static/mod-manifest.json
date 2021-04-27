@@ -7,9 +7,9 @@
     "externalResources": ["https://fonts.gstatic.com/s/materialicons/v50/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2"],    
     "properties": [
         {
-            "name": "example",
-            "type": "string",
-            "defaultValue": "something"
+            "name": "verticalZoomHeightMultiplier",
+            "type": "double",
+            "defaultValue": 2.0
         }
     ],
     "dataViewDefinition": {
