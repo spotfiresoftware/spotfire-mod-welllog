@@ -17,6 +17,7 @@ import { nodeFormattedPathAsArray } from "./extended-api.js";
 import { addHandlersSelection } from "./ui-input.js";
 
 import * as vanillaDrawer from "./vanillaDrawer.js";
+import * as colorHelpers from "./color-helpers.js";
 
 /**
  * @typedef {{
@@ -178,126 +179,11 @@ var updateAccordionTools = true;
 var _dataView; 
 var yAxis;
 
-
-
 //var pPerfilHeightMultiplier;
 
 var y_function;
 var sfData;
 
-function getColorInterpolator(value) {
-    if (value == "interpolateBlues") {
-        return d3.interpolateBlues;
-    } else if (value == "interpolateReds") {
-        return d3.interpolateReds;
-    } else if (value == "interpolateRdBu") {
-        return d3.interpolateRdBu;
-    } else if (value == "interpolateViridis") {
-        return d3.interpolateViridis;
-    } else if (value == "interpolatePlasma") {
-        return d3.interpolatePlasma;
-    } else if (value == "interpolateCool") {
-        return d3.interpolateCool;
-    } else if (value == "interpolateWarm") {
-        return d3.interpolateWarm;
-    } else if (value == "interpolateSpectral") {
-        return d3.interpolateSpectral;
-    } else {
-        return null;
-    }
-}
-
-function getFillColor(name, type) {
-    if (name == "black") {
-        if (type == "light") {
-            return "#484848";
-        } else if (type == "dark") {
-            return "#000000";
-        } else {
-            return "#212121";
-        }
-    } else if (name == "green") {
-        if (type == "light") {
-            return "#80e27e";
-        } else if (type == "dark") {
-            return "#087f23";
-        } else {
-            return "#4caf50";
-        }
-    } else if (name == "blue") {
-        if (type == "light") {
-            return "#757de8";
-        } else if (type == "dark") {
-            return "#002984";
-        } else {
-            return "#3f51b5";
-        }
-    } else if (name == "red") {
-        if (type == "light") {
-            return "#ff7961";
-        } else if (type == "dark") {
-            return "#ba000d";
-        } else {
-            return "#f44336";
-        }
-    } else if (name == "fuchsia") {
-        if (type == "light") {
-            return "#e35183";
-        } else if (type == "dark") {
-            return "#78002e";
-        } else {
-            return "#ad1457";
-        }
-    } else if (name == "yellow") {
-        if (type == "light") {
-            return "#ffff72";
-        } else if (type == "dark") {
-            return "#c8b900";
-        } else {
-            return "#ffeb3b";
-        }
-    } else if (name == "cyan") {
-        if (type == "light") {
-            return "#00FFFF";
-        } else if (type == "dark") {
-            return "#008B8B";
-        } else {
-            return "#40E0D0";
-        }
-    } else if (name == "brown") {
-        if (type == "light") {
-            return "#CD853F";
-        } else if (type == "dark") {
-            return "#8B4513";
-        } else {
-            return "#A0522D";
-        }
-    } else if (name == "darkgreen") {
-        if (type == "light") {
-            return "#556B2F";
-        } else if (type == "dark") {
-            return "#004d00";
-        } else {
-            return "#006400";
-        }
-    } else if (name == "purple") {
-        if (type == "light") {
-            return "#d05ce3";
-        } else if (type == "dark") {
-            return "#6a0080";
-        } else {
-            return "#9c27b0";
-        }
-    } else if (name.search("interpolate") >= 0) {
-        if (type == "light") {
-            return "RGBA(255,255,255, 0.55)";
-        } else if (type == "dark") {
-            return "RGBA(0,0,0, 0.25)";
-        } else {
-            return "interpolator";
-        }
-    }
-}
 
 
 function getCurveData(lineIndex, curveName, sfData) {
@@ -491,7 +377,7 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
                     {
                         curves: [
                             {
-                                curveColors: [getFillColor(pPerfilTrack01CorCurva01, "normal")],
+                                curveColors: [colorHelpers.getFillColor(pPerfilTrack01CorCurva01, "normal")],
                                 curveNames: ["GR"],
                                 curveStrokeDashArray: [pPerfilTrack01TracoCurva01],
                                 curveUnits: [""],
@@ -509,12 +395,12 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
                                         ],
                                         fill: "yes",
                                         fillColors: [
-                                            getFillColor(pPerfilTrack01CorArea01, "normal"),
-                                            getFillColor(pPerfilTrack01CorArea01, "dark"),
-                                            getFillColor(pPerfilTrack01CorArea01, "light")
+                                            colorHelpers.getFillColor(pPerfilTrack01CorArea01, "normal"),
+                                            colorHelpers.getFillColor(pPerfilTrack01CorArea01, "dark"),
+                                            colorHelpers.getFillColor(pPerfilTrack01CorArea01, "light")
                                         ],
                                         fillDirection: pPerfilTrack01PreenchimentoArea01,
-                                        colorInterpolator: [getColorInterpolator(pPerfilTrack01CorArea01), null, null],
+                                        colorInterpolator: [colorHelpers.getColorInterpolator(pPerfilTrack01CorArea01), null, null],
                                         maxScaleX: pPerfilTrack01EscalaMaxCurva01,
                                         minScaleX: pPerfilTrack01EscalaMinCurva01
                                     }
@@ -542,7 +428,7 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
                     {
                         curves: [
                             {
-                                curveColors: [getFillColor(pPerfilTrack02CorCurva01, "normal")],
+                                curveColors: [colorHelpers.getFillColor(pPerfilTrack02CorCurva01, "normal")],
                                 curveNames: ["CAL"],
                                 curveStrokeDashArray: [pPerfilTrack02TracoCurva01],
                                 curveUnits: [""],
@@ -560,11 +446,11 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
                                         ],
                                         fill: "yes",
                                         fillColors: [
-                                            getFillColor(pPerfilTrack02CorArea01, "normal"),
-                                            getFillColor(pPerfilTrack02CorArea01, "dark"),
-                                            getFillColor(pPerfilTrack02CorArea01, "light")
+                                            colorHelpers.getFillColor(pPerfilTrack02CorArea01, "normal"),
+                                            colorHelpers.getFillColor(pPerfilTrack02CorArea01, "dark"),
+                                            colorHelpers.getFillColor(pPerfilTrack02CorArea01, "light")
                                         ],
-                                        colorInterpolator: [getColorInterpolator(pPerfilTrack02CorArea01), null, null],
+                                        colorInterpolator: [colorHelpers.getColorInterpolator(pPerfilTrack02CorArea01), null, null],
                                         fillDirection: pPerfilTrack02PreenchimentoArea01,                                       
                                         maxScaleX: pPerfilTrack02EscalaMaxCurva01,
                                         minScaleX: pPerfilTrack02EscalaMinCurva01
@@ -594,8 +480,8 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
                         curves: [
                             {
                                 curveColors: [
-                                    getFillColor(pPerfilTrack03CorCurva01, "normal"),
-                                    getFillColor(pPerfilTrack03CorCurva02, "normal")
+                                    colorHelpers.getFillColor(pPerfilTrack03CorCurva01, "normal"),
+                                    colorHelpers.getFillColor(pPerfilTrack03CorCurva02, "normal")
                                 ],
                                 curveNames: ["PHIN", "PHID"],
                                 curveStrokeDashArray: [pPerfilTrack03TracoCurva01, pPerfilTrack03TracoCurva02],
@@ -614,11 +500,11 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
                                             pPerfilTrack03Limite02Curva01
                                         ],
                                         fillColors: [
-                                            getFillColor(pPerfilTrack03CorArea01, "normal"),
-                                            getFillColor(pPerfilTrack03CorArea01, "dark"),
-                                            getFillColor(pPerfilTrack03CorArea01, "light")
+                                            colorHelpers.getFillColor(pPerfilTrack03CorArea01, "normal"),
+                                            colorHelpers.getFillColor(pPerfilTrack03CorArea01, "dark"),
+                                            colorHelpers.getFillColor(pPerfilTrack03CorArea01, "light")
                                         ],
-                                        colorInterpolator: [getColorInterpolator(pPerfilTrack03CorArea01), null, null],
+                                        colorInterpolator: [colorHelpers.getColorInterpolator(pPerfilTrack03CorArea01), null, null],
                                         maxScaleX: pPerfilTrack03EscalaMaxCurva01,
                                         minScaleX: pPerfilTrack03EscalaMinCurva01,
                                         curve2: "PHID"
@@ -633,11 +519,11 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
                                             pPerfilTrack03Limite02Curva02
                                         ],
                                         fillColors: [
-                                            getFillColor(pPerfilTrack03CorArea02, "normal"),
-                                            getFillColor(pPerfilTrack03CorArea02, "dark"),
-                                            getFillColor(pPerfilTrack03CorArea02, "light")
+                                            colorHelpers.getFillColor(pPerfilTrack03CorArea02, "normal"),
+                                            colorHelpers.getFillColor(pPerfilTrack03CorArea02, "dark"),
+                                            colorHelpers.getFillColor(pPerfilTrack03CorArea02, "light")
                                         ],
-                                        colorInterpolator: [getColorInterpolator(pPerfilTrack03CorArea02), null, null],
+                                        colorInterpolator: [colorHelpers.getColorInterpolator(pPerfilTrack03CorArea02), null, null],
                                         maxScaleX: pPerfilTrack03EscalaMaxCurva02,
                                         minScaleX: pPerfilTrack03EscalaMinCurva02,
                                         curve2: "PHIN"
@@ -666,7 +552,7 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
                     {
                         curves: [
                             {
-                                curveColors: [getFillColor(pPerfilTrack04CorCurva01, "normal")],
+                                curveColors: [colorHelpers.getFillColor(pPerfilTrack04CorCurva01, "normal")],
                                 curveNames: ["RESD"],
                                 curveStrokeDashArray: [pPerfilTrack04TracoCurva01],
                                 curveUnits: [""],
@@ -684,11 +570,11 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
                                         ],
                                         fill: "yes",
                                         fillColors: [
-                                            getFillColor(pPerfilTrack04CorArea01, "normal"),
-                                            getFillColor(pPerfilTrack04CorArea01, "dark"),
-                                            getFillColor(pPerfilTrack04CorArea01, "light")
+                                            colorHelpers.getFillColor(pPerfilTrack04CorArea01, "normal"),
+                                            colorHelpers.getFillColor(pPerfilTrack04CorArea01, "dark"),
+                                            colorHelpers.getFillColor(pPerfilTrack04CorArea01, "light")
                                         ],
-                                        colorInterpolator: [getColorInterpolator(pPerfilTrack04CorArea01), null, null],
+                                        colorInterpolator: [colorHelpers.getColorInterpolator(pPerfilTrack04CorArea01), null, null],
                                         fillDirection: pPerfilTrack04PreenchimentoArea01,
                                         maxScaleX: pPerfilTrack04EscalaMaxCurva01,
                                         minScaleX: pPerfilTrack04EscalaMinCurva01
@@ -2127,38 +2013,7 @@ function insertDropdown(divContent, i, k, templates, name, sfData) {
     var interpolateSpectralImgSrc =
         "data:image/png;base64,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";
 
-    function getFillColorName(value) {
-        if (value == "#212121") {
-            return "black";
-        }
-        if (value == "#4caf50") {
-            return "green";
-        }
-        if (value == "#3f51b5") {
-            return "blue";
-        }
-        if (value == "#f44336") {
-            return "red";
-        }
-        if (value == "#ad1457") {
-            return "fuchsia";
-        }
-        if (value == "#ffeb3b") {
-            return "yellow";
-        }
-        if (value == "#40E0D0") {
-            return "cyan";
-        }
-        if (value == "#A0522D") {
-            return "brown";
-        }
-        if (value == "#006400") {
-            return "darkgreen";
-        }
-        if (value == "#9c27b0") {
-            return "purple";
-        } else return "";
-    }
+    
     var selectedValue;
 
     if (templates[i]) {
@@ -2172,7 +2027,7 @@ function insertDropdown(divContent, i, k, templates, name, sfData) {
         } else if (name == "LineStyle") {
             selectedValue = templateCurves[0]["curveStrokeDashArray"][k];
         } else if (name == "LineColor") {
-            selectedValue = getFillColorName(templateCurves[0]["curveColors"][k]);
+            selectedValue = colorHelpers.getFillColorName(templateCurves[0]["curveColors"][k]);
         } else if (name == "AreaFill") {
             if (templateCurves[0]["fill"][k]["fill"] == "no") {
                 selectedValue = "none";
@@ -2188,7 +2043,7 @@ function insertDropdown(divContent, i, k, templates, name, sfData) {
         } else if (name == "ScaleType") {
             selectedValue = templateCurves[0]["scaleTypeLinearLog"][k];
         } else if (name == "AreaColor") {
-            selectedValue = getFillColorName(templateCurves[0]["fill"][k]["fillColors"][0]);
+            selectedValue = colorHelpers.getFillColorName(templateCurves[0]["fill"][k]["fillColors"][0]);
             if (selectedValue == "") {
                 selectedValue = templateCurves[0]["fill"][k]["colorInterpolator"][0];
             }
@@ -2392,7 +2247,7 @@ function PropertyOnChange(div_id, i, k, templates, sfData, selectedData, propNam
         } else if (propName == "LineStyle") {
             templateCurves[0]["curveStrokeDashArray"][k] = selectedData.value;
         } else if (propName == "LineColor") {
-            templateCurves[0]["curveColors"][k] = getFillColor(selectedData.value, "normal");
+            templateCurves[0]["curveColors"][k] = colorHelpers.getFillColor(selectedData.value, "normal");
         } else if (propName == "AreaFill") {
             if (selectedData.value == "none") {
                 templateCurves[0]["fill"][k]["fill"] = "no";
@@ -2402,12 +2257,12 @@ function PropertyOnChange(div_id, i, k, templates, sfData, selectedData, propNam
             }
         } else if (propName == "AreaColor") {
             templateCurves[0]["fill"][k]["fillColors"] = [
-                getFillColor(selectedData.value, "normal"),
-                getFillColor(selectedData.value, "dark"),
-                getFillColor(selectedData.value, "light")
+                colorHelpers.getFillColor(selectedData.value, "normal"),
+                colorHelpers.getFillColor(selectedData.value, "dark"),
+                colorHelpers.getFillColor(selectedData.value, "light")
             ];
 
-            templateCurves[0]["fill"][k]["colorInterpolator"] = [getColorInterpolator(selectedData.value), null, null];
+            templateCurves[0]["fill"][k]["colorInterpolator"] = [colorHelpers.getColorInterpolator(selectedData.value), null, null];
         } else if (propName == "ScaleType") {
             templateCurves[0]["scaleTypeLinearLog"][k] = selectedData.value;
         }
