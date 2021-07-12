@@ -36,126 +36,123 @@ import * as colorHelpers from "./color-helpers.js";
 const modContainer = d3.select("#mod-container");
 
 async function markModel(markMode, rectangle) {
-	// Implementation of logic to call markIndices or markIndices2 goes here
+    // Implementation of logic to call markIndices or markIndices2 goes here
     var indicesToMark = [];
     var markData = {};
 
-	var js_chart = d3.select('#mod-container')._groups[0][0];
-	var header = d3.select('.trackHeaderDiv')._groups[0][0]; 
-	var headerHeight = parseFloat(header.style.height.replace(/\D/g,''))   + parseFloat(header.style.marginBottom.replace(/\D/g,''));
-	console.dir( headerHeight  );
-	
-	
+    var js_chart = d3.select("#mod-container")._groups[0][0];
+    var header = d3.select(".trackHeaderDiv")._groups[0][0];
+    var headerHeight =
+        parseFloat(header.style.height.replace(/\D/g, "")) + parseFloat(header.style.marginBottom.replace(/\D/g, ""));
+    console.dir(headerHeight);
+
     markData.markMode = markMode;
 
-	
-	var y0 = y_function.invert(rectangle.y - headerHeight + js_chart.scrollTop);
-	var y1 = y_function.invert(rectangle.y - headerHeight + rectangle.height + js_chart.scrollTop);
+    var y0 = y_function.invert(rectangle.y - headerHeight + js_chart.scrollTop);
+    var y1 = y_function.invert(rectangle.y - headerHeight + rectangle.height + js_chart.scrollTop);
 
-
-    var bisectData = d3.bisector( function(d) { return d.continuous("DEPTH").value()} ).left; 
+    var bisectData = d3.bisector(function (d) {
+        return d.continuous("DEPTH").value();
+    }).left;
     let allRows = await _dataView.allRows();
-	var i = bisectData(allRows, y0);
-	
-    var d1 = allRows[i];
-    var d0 = allRows[i - 1];                              
+    var i = bisectData(allRows, y0);
 
-	var d = null;
-		
-	if (d0 && d1) {
-	    if (d0.continuous("DEPTH").value() && d1.continuous("DEPTH").value()) {		
-             d = (y0 - d0.continuous("DEPTH").value() > d1.continuous("DEPTH").value() - y0) ? d1 : d0;
-	    }
-	}
-	if (d == null) { d = d1; }
-	if (d == null) { d = d0; }
+    var d1 = allRows[i];
+    var d0 = allRows[i - 1];
+
+    var d = null;
+
+    if (d0 && d1) {
+        if (d0.continuous("DEPTH").value() && d1.continuous("DEPTH").value()) {
+            d = y0 - d0.continuous("DEPTH").value() > d1.continuous("DEPTH").value() - y0 ? d1 : d0;
+        }
+    }
+    if (d == null) {
+        d = d1;
+    }
+    if (d == null) {
+        d = d0;
+    }
 
     console.log(d);
 
     var j = i;
-	let rowsToMark = [];
-	while (allRows[j].continuous("DEPTH").value() <= y1) {
+    let rowsToMark = [];
+    while (allRows[j].continuous("DEPTH").value() <= y1) {
         rowsToMark.push(allRows[j]);
-        
-		j = j+1;
+
+        j = j + 1;
     }
     _dataView.mark(rowsToMark, "Replace");
-    
 }
 
-
-$( "body" ).on ( "mousedown", function ( mouseDownEvent )
-{		
-    var getMarkMode = function ( e )
-    {
+$("body").on("mousedown", function (mouseDownEvent) {
+    var getMarkMode = function (e) {
         // shift: add rows
         // control: toggle rows
         // none: replace rows
-        if ( e.shiftKey )
-        {
+        if (e.shiftKey) {
             return "Add";
-        }
-        else if ( e.ctrlKey )
-        {
+        } else if (e.ctrlKey) {
             return "Toggle";
         }
 
         return "Replace";
     };
 
-    mouseDownEvent.preventDefault ();
+    mouseDownEvent.preventDefault();
 
-    var markMode = getMarkMode ( mouseDownEvent );
+    var markMode = getMarkMode(mouseDownEvent);
     //
     // Create initial marking rectangle, will be used if the user only clicks.
     //
     var x = mouseDownEvent.pageX,
-    y = mouseDownEvent.pageY,
-    width = 1,
-    height = 1;
+        y = mouseDownEvent.pageY,
+        width = 1,
+        height = 1;
 
-    var $selection = $("<div/>").css ( {
-        'position': 'absolute',
-        'border': '1px solid #0a1530',
-        'background-color': '#8daddf',
-        'opacity': '0.5'
-    } ).hide ().appendTo ( this );
+    var $selection = $("<div/>")
+        .css({
+            position: "absolute",
+            border: "1px solid #0a1530",
+            "background-color": "#8daddf",
+            opacity: "0.5"
+        })
+        .hide()
+        .appendTo(this);
 
-    $( this ).on ( "mousemove", function ( mouseMoveEvent )
-    {
-        x      = Math.min ( mouseDownEvent.pageX, mouseMoveEvent.pageX );
-        y      = Math.min ( mouseDownEvent.pageY, mouseMoveEvent.pageY );
-        width  = Math.abs ( mouseDownEvent.pageX - mouseMoveEvent.pageX );
-        height = Math.abs ( mouseDownEvent.pageY - mouseMoveEvent.pageY );
+    $(this).on("mousemove", function (mouseMoveEvent) {
+        x = Math.min(mouseDownEvent.pageX, mouseMoveEvent.pageX);
+        y = Math.min(mouseDownEvent.pageY, mouseMoveEvent.pageY);
+        width = Math.abs(mouseDownEvent.pageX - mouseMoveEvent.pageX);
+        height = Math.abs(mouseDownEvent.pageY - mouseMoveEvent.pageY);
 
-        $selection.css ( {
-            'left': x + 'px',
-            'top': y + 'px',
-            'width': width + 'px',
-            'height': height + 'px'
-        } );
+        $selection.css({
+            left: x + "px",
+            top: y + "px",
+            width: width + "px",
+            height: height + "px"
+        });
 
-        $selection.show ();
-    } );
+        $selection.show();
+    });
 
-    $ ( this ).on ( "mouseup", function ()
-    {
-        var rectangle =  {
-            'x': x,
-            'y': y,
-            'width': width,
-            'height': height
+    $(this).on("mouseup", function () {
+        var rectangle = {
+            x: x,
+            y: y,
+            width: width,
+            height: height
         };
         //
         // markModel is (optionally) implemented in the visualization js code
         //
-        if ( typeof ( markModel ) != 'undefined' )
-        {
-            markModel ( markMode, rectangle );
+        if (typeof markModel != "undefined") {
+            markModel(markMode, rectangle);
         }
 
-        $selection.remove ();
-        $ ( this ).off ( "mouseup mousemove" );
+        $selection.remove();
+        $(this).off("mouseup mousemove");
     });
 });
 
@@ -176,15 +173,13 @@ var initialized = false;
 var vanilla_drawer;
 var updateAccordionTools = true;
 
-var _dataView; 
+var _dataView;
 var yAxis;
 
 //var pPerfilHeightMultiplier;
 
 var y_function;
 var sfData;
-
-
 
 function getCurveData(lineIndex, curveName, sfData) {
     var item;
@@ -196,7 +191,6 @@ function getCurveData(lineIndex, curveName, sfData) {
 
     return item;
 }
-
 
 /**
  * Renders the chart.
@@ -245,15 +239,15 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
     // Hard abort if row count exceeds an arbitrary selected limit
     const xLimit = 1250;
     const colorLimit = 100;
-    const colorCount = (await dataView.hierarchy("Color")).leafCount;
-    const xCount = (await dataView.hierarchy("X")).leafCount;
-    if (colorCount > colorLimit || xCount > xLimit) {
+    //const colorCount = (await dataView.hierarchy("Color")).leafCount;
+    //const xCount = (await dataView.hierarchy("X")).leafCount;
+    /*if (colorCount > colorLimit || xCount > xLimit) {
         svg.selectAll("*").remove();
         mod.controls.errorOverlay.show(`Exceeded data size limit (colors: ${colorLimit}, x: ${xLimit})`, "rowCount");
         return;
     } else {
         mod.controls.errorOverlay.hide("rowCount");
-    }
+    }*/
 
     const allRows = await dataView.allRows();
     console.log(allRows);
@@ -266,16 +260,6 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
         return;
     }
 
-    const colorHierarchy = await dataView.hierarchy("Color");
-    const xHierarchy = await dataView.hierarchy("X");
-
-    const xLeaves = (await xHierarchy.root()).leaves();
-    const colorLeaves = (await colorHierarchy.root()).leaves();
-
-    //const xAxisMeta = await mod.visualization.axis("X");
-    //const yAxisMeta = await mod.visualization.axis("Y");
-    const colorAxisMeta = await mod.visualization.axis("Color");
-
     const margin = { top: 20, right: 40, bottom: 40, left: 80 };
     modContainer.style("height", windowSize.height - margin.bottom - margin.top).style("overflow-y", "scroll");
 
@@ -286,13 +270,10 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
     const yScaleTickNumber = windowSize.height / (styling.scales.font.fontSize * 2 + 6);
 
     /** We might need the SVG/viewbox to clear marking but the chart wasn't designed for it, so remove it for now */
-   
-    
+
     // Now render here!
 
-
     var zoneLogTrackWidth = 120;
-    
 
     function buildTemplates(sfdata) {
         depthCurveName = "DEPTH";
@@ -400,7 +381,11 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
                                             colorHelpers.getFillColor(pPerfilTrack01CorArea01, "light")
                                         ],
                                         fillDirection: pPerfilTrack01PreenchimentoArea01,
-                                        colorInterpolator: [colorHelpers.getColorInterpolator(pPerfilTrack01CorArea01), null, null],
+                                        colorInterpolator: [
+                                            colorHelpers.getColorInterpolator(pPerfilTrack01CorArea01),
+                                            null,
+                                            null
+                                        ],
                                         maxScaleX: pPerfilTrack01EscalaMaxCurva01,
                                         minScaleX: pPerfilTrack01EscalaMinCurva01
                                     }
@@ -450,8 +435,12 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
                                             colorHelpers.getFillColor(pPerfilTrack02CorArea01, "dark"),
                                             colorHelpers.getFillColor(pPerfilTrack02CorArea01, "light")
                                         ],
-                                        colorInterpolator: [colorHelpers.getColorInterpolator(pPerfilTrack02CorArea01), null, null],
-                                        fillDirection: pPerfilTrack02PreenchimentoArea01,                                       
+                                        colorInterpolator: [
+                                            colorHelpers.getColorInterpolator(pPerfilTrack02CorArea01),
+                                            null,
+                                            null
+                                        ],
+                                        fillDirection: pPerfilTrack02PreenchimentoArea01,
                                         maxScaleX: pPerfilTrack02EscalaMaxCurva01,
                                         minScaleX: pPerfilTrack02EscalaMinCurva01
                                     }
@@ -504,7 +493,11 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
                                             colorHelpers.getFillColor(pPerfilTrack03CorArea01, "dark"),
                                             colorHelpers.getFillColor(pPerfilTrack03CorArea01, "light")
                                         ],
-                                        colorInterpolator: [colorHelpers.getColorInterpolator(pPerfilTrack03CorArea01), null, null],
+                                        colorInterpolator: [
+                                            colorHelpers.getColorInterpolator(pPerfilTrack03CorArea01),
+                                            null,
+                                            null
+                                        ],
                                         maxScaleX: pPerfilTrack03EscalaMaxCurva01,
                                         minScaleX: pPerfilTrack03EscalaMinCurva01,
                                         curve2: "PHID"
@@ -523,7 +516,11 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
                                             colorHelpers.getFillColor(pPerfilTrack03CorArea02, "dark"),
                                             colorHelpers.getFillColor(pPerfilTrack03CorArea02, "light")
                                         ],
-                                        colorInterpolator: [colorHelpers.getColorInterpolator(pPerfilTrack03CorArea02), null, null],
+                                        colorInterpolator: [
+                                            colorHelpers.getColorInterpolator(pPerfilTrack03CorArea02),
+                                            null,
+                                            null
+                                        ],
                                         maxScaleX: pPerfilTrack03EscalaMaxCurva02,
                                         minScaleX: pPerfilTrack03EscalaMinCurva02,
                                         curve2: "PHIN"
@@ -574,7 +571,11 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
                                             colorHelpers.getFillColor(pPerfilTrack04CorArea01, "dark"),
                                             colorHelpers.getFillColor(pPerfilTrack04CorArea01, "light")
                                         ],
-                                        colorInterpolator: [colorHelpers.getColorInterpolator(pPerfilTrack04CorArea01), null, null],
+                                        colorInterpolator: [
+                                            colorHelpers.getColorInterpolator(pPerfilTrack04CorArea01),
+                                            null,
+                                            null
+                                        ],
                                         fillDirection: pPerfilTrack04PreenchimentoArea01,
                                         maxScaleX: pPerfilTrack04EscalaMaxCurva01,
                                         minScaleX: pPerfilTrack04EscalaMinCurva01
@@ -689,9 +690,10 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
             plot_template_1,
             plot_template_2,
             plot_template_3,
-            plot_template_4,
-            plot_template_Zone,
-            plot_template_Facies
+            plot_template_4 
+            // AJB removed zome and facies templates for now,
+            //plot_template_Zone,
+            //plot_template_Facies
         ];
     }
 
@@ -712,7 +714,6 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
                 "</DIV>" +
                 "</DIV>"
         );
-
 
         vanilla_drawer = vanillaDrawer.initialize();
 
@@ -753,7 +754,7 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
     multipleLogPlot("mod-container", plot_templates, dataRows);
 }
 
-function logPlot(template_for_plotting, sfData, headerHeight) {
+async function logPlot(template_for_plotting, sfData, headerHeight) {
     let template_overall = template_for_plotting[0]["trackBox"];
     let template_components = template_for_plotting[0]["components"];
     let templateCurves = template_components[0]["curves"][0];
@@ -785,12 +786,6 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
         depthUnit = templateCurves["depthUnit"];
     }
 
-    let depthMin = d3.min(sfData, function (d, i) {
-        return getCurveData(i, depthCurveName, sfData);
-    });
-    let depthMax = d3.max(sfData, function (d, i) {
-        return getCurveData(i, depthCurveName, sfData);
-    });
 
     //////////////  Initiate DIVs //////////////
     let svg;
@@ -833,11 +828,53 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
     let mins = [];
     let maxes = [];
     let curvesDescription = "";
+   
+    /* For now, let's filter the data and pivot it based on the curve names */
+    let categoryLeaves = (await (await _dataView.hierarchy("Category")).root()).leaves();
+    console.log(categoryLeaves);
+    console.log(curveNames);
+    let measureData = {};
+    let depthData = [];
+    // The template contains the curve names that this data is intended for, so we need to find out which data is required
+    // to populate the template
+    let isFirstLeaf = true;
+    for (const leaf of categoryLeaves.filter((d) => {
+        //console.log(d.key);
+        return curveNames.includes(d.key);
+    })) {
+        console.log(leaf);
+        console.log(leaf.rows());
+        let valueRows = [];
+        for (const row of leaf.rows()) {
+            //console.log(row.categorical("Category").formattedValue(), row.categorical("Value").formattedValue());
+            //valueRows.push(parseFloat(row.categorical("Value").formattedValue()));
+            // Just record the depth value for the first leaf in this group of measures. Todo - consider moving this out of the loop so we only do it once!
+            if (isFirstLeaf) {
+                depthData.push(row.continuous("DEPTH").value());
+            }
+            let valueRow = {"depth": row.continuous("DEPTH").value(), "value":parseFloat(row.categorical("Value").formattedValue())};
+            valueRows.push(valueRow);
+
+        }
+        isFirstLeaf = false;
+        valueRows.sort((a, b) => a["depth"] - b["depth"]);
+        console.log(valueRows);
+        measureData[leaf.key] = (valueRows);
+    }
+    console.log(measureData);
+
+    let plotData = {};
+    plotData.measureData = measureData;
+    plotData.depthData = depthData;
+
     let y;
-    
+
+    // use the first leaf to get the min/max depth
+    let firstKey = categoryLeaves.filter((d) => {return curveNames.includes(d.key)})[0].key;
 
     //////////////////// define Y scale (depth)  ////////////////////
-
+    let depthMin = d3.min(measureData[firstKey], d => d.depth);
+    let depthMax = d3.max(measureData[firstKey], d => d.depth);
     y = d3
         .scaleLinear()
         .domain([depthMax, depthMin])
@@ -854,6 +891,7 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
 
     y_function = y;
 
+
     //////////////  Building curves within tracks //////////////
     for (let k = 0; k < curveNames.length; k++) {
         var maxScaleX = null;
@@ -866,12 +904,10 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
             colorInterpolatorfills = templateCurves["fill"][k]["colorInterpolator"];
         }
 
-        let min_this = d3.min(sfData, function (d, i) {
-            return getCurveData(i, curveNames[k], sfData);
-        });
-        let max_this = d3.max(sfData, function (d, i) {
-            return getCurveData(i, curveNames[k], sfData);
-        });
+        let min_this = d3.min(measureData[curveNames[k]], d => d.value);
+        let max_this = d3.max(measureData[curveNames[k]], d => d.value);
+
+        console.log(min_this, max_this);
 
         mins.push(min_this);
         maxes.push(max_this);
@@ -912,6 +948,9 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
 
         x_functions_for_each_curve[curveNames[k]] = x;
     }
+
+    console.log(x_functions_for_each_curve);
+    console.log(x_functions_for_each_curve[curveNames[0]](1.0));
 
     for (let k = 0; k < curveNames.length; k++) {
         let min = mins[k];
@@ -1037,7 +1076,7 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
                                     .scaleSequentialLog(colorInterpolation)
                                     .domain(x_functions_for_each_curve[curveName1].domain());
                             }
-
+                            
                             var grd = svg
                                 .append("defs")
                                 .append("linearGradient")
@@ -1048,20 +1087,26 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
                                 .attr("y1", y(depthMin))
                                 .attr("y2", y(depthMax))
                                 .selectAll("stop")
-                                .data(sfData)
+                                .data(measureData)
                                 .join("stop")
                                 .attr("offset", function (d, i) {
-                                    return (
-                                        ((y(getCurveData(i, depthCurveName, sfData)) - y(depthMin)) /
+                                    console.log(depthMin, depthMax, depthData[i], 
+                                        (y(depthData[i] - y(depthMin)) /
+                                            (y(depthMax) - y(depthMin))) *
+                                            100.0 +
+                                        "%"
+                                        );
+                                        // this seems to work
+                                    return ( (y(depthData[i] - y(depthMin)) /
                                             (y(depthMax) - y(depthMin))) *
                                             100.0 +
                                         "%"
                                     );
                                 })
                                 .attr("stop-color", function (d, i) {
-                                    return !isNaN(getCurveData(i, curveName1, sfData))
+                                    return !isNaN(d[curveName1][i].value)
                                         ? colorInterpolator_functions_for_each_curve[curveName1 + "_" + j](
-                                              getCurveData(i, curveName1, sfData)
+                                            d[curveName1][i].value
                                           )
                                         : "rgba(0,0,0,0)";
                                 });
@@ -1121,24 +1166,25 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
                             let start_from_left = template_overall["margin"]["left"];
                             area1
                                 .x1(function (d, i) {
-                                    return x_functions_for_each_curve[curveName1](getCurveData(i, curveName1, sfData));
+                                    //console.log(x_functions_for_each_curve[curveName1](measureData[curveName1][i].value));
+                                    return x_functions_for_each_curve[curveName1](d[curveName1][i].value);                                  
                                 })
                                 .x0(function (d, i) {
                                     return start_from_left;
                                 })
                                 .defined(function (d, i) {
                                     return (
-                                        (getCurveData(i, curveName1, sfData) ||
-                                            getCurveData(i, curveName1, sfData) == 0) &&
-                                        getCurveData(i, curveName1, sfData) > threshold
+                                        (d[curveName1][i].value ||
+                                            d[curveName1][i].value == 0) &&
+                                            d[curveName1][i].value > threshold
                                     );
                                 })
                                 .y(function (d, i) {
-                                    return y(getCurveData(i, depthCurveName, sfData));
+                                    return y(depthData[i]);
                                 });
 
                             svg.append("path")
-                                .datum(sfData)
+                                .datum(measureData)
                                 .attr("class", "area")
                                 .attr("clip-path", "url('#clip')")
                                 .attr("d", area1)
@@ -1155,20 +1201,19 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
                                 })
                                 .defined(function (d, i) {
                                     return (
-                                        (getCurveData(i, curveName1, sfData) ||
-                                            getCurveData(i, curveName1, sfData) == 0) &&
-                                        getCurveData(i, curveName1, sfData) > threshold
-                                    );
+                                        (d[curveName1][i].value ||
+                                            d[curveName1][i].value == 0) &&
+                                            d[curveName1][i].value > threshold);
                                 })
                                 .x0(function (d, i) {
-                                    return x_functions_for_each_curve[curveName1](getCurveData(i, curveName1, sfData));
+                                    return x_functions_for_each_curve[curveName1](measureData[curveName1][i].value);
                                 })
                                 .y(function (d, i) {
-                                    return y(getCurveData(i, depthCurveName, sfData));
+                                    return y(d[curveName1][i].value);
                                 });
 
                             svg.append("path")
-                                .datum(sfData)
+                                .datum(measureData)
                                 .attr("class", "area")
                                 .attr("clip-path", "url('#clip')")
                                 .attr("d", area1)
@@ -1199,29 +1244,29 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
 
                             area1
                                 .x1(function (d, i) {
-                                    return first_curve_x_func(getCurveData(i, curveName1, sfData));
+                                    return first_curve_x_func(d[curveName1][i].value);
                                 })
                                 .x0(function (d, i) {
-                                    return second_curve_x_func(getCurveData(i, between_2_curve, sfData));
+                                    return second_curve_x_func(d[between_2_curve][i]);
                                 })
                                 .defined(function (d, i) {
                                     return (
-                                        (getCurveData(i, curveName1, sfData) ||
-                                            getCurveData(i, curveName1, sfData) == 0) &&
-                                        getCurveData(i, curveName1, sfData) > threshold &&
-                                        (getCurveData(i, between_2_curve, sfData) ||
-                                            getCurveData(i, between_2_curve, sfData) == 0) &&
-                                        getCurveData(i, between_2_curve, sfData) > curve2Threshold &&
-                                        first_curve_x_func(getCurveData(i, curveName1, sfData)) >
-                                            second_curve_x_func(getCurveData(i, between_2_curve, sfData))
+                                        (d[curveName1][i].value ||
+                                            d[curveName1][i].value == 0) &&
+                                            d[curveName1][i].value > threshold &&
+                                        (d[between_2_curve][i] ||
+                                        d[between_2_curve][i] == 0) &&
+                                        d[between_2_curve][i] > curve2Threshold &&
+                                        first_curve_x_func(d[curveName1][i].value) >
+                                            second_curve_x_func(d[between_2_curve][i])
                                     );
                                 })
                                 .y(function (d, i) {
-                                    return y(getCurveData(i, depthCurveName, sfData));
+                                    return y(depthData[i]);
                                 });
 
                             svg.append("path")
-                                .datum(sfData)
+                                .datum(measureData)
                                 .attr("class", "area")
                                 .attr("clip-path", "url('#clip')")
                                 .attr("d", area1)
@@ -1232,25 +1277,25 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
                             let area2 = d3.area();
                             area2
                                 .x1(function (d, i) {
-                                    return first_curve_x_func(getCurveData(i, curveName1, sfData));
+                                    return first_curve_x_func(d[curveName1][i].value);
                                 })
                                 .x0(function (d, i) {
-                                    return second_curve_x_func(getCurveData(i, between_2_curve, sfData));
+                                    return second_curve_x_func(d[between_2_curve][i]);
                                 })
                                 .defined(function (d, i) {
                                     return (
-                                        getCurveData(i, curveName1, sfData) > threshold &&
-                                        getCurveData(i, between_2_curve, sfData) > curve2Threshold &&
-                                        first_curve_x_func(getCurveData(i, curveName1, sfData)) <
-                                            second_curve_x_func(getCurveData(i, between_2_curve, sfData))
+                                        d[curveName1][i].value > threshold &&
+                                        d[between_2_curve][i] > curve2Threshold &&
+                                        first_curve_x_func(d[curveName1][i].value) <
+                                            second_curve_x_func(d[between_2_curve][i])
                                     );
                                 })
                                 .y(function (d, i) {
-                                    return y(getCurveData(i, depthCurveName, sfData));
+                                    return y(depthData[i]);
                                 });
 
                             svg.append("path")
-                                .datum(sfData)
+                                .datum(measureData)
                                 .attr("class", "area")
                                 .attr("clip-path", "url('#clip')")
                                 .attr("d", area2)
@@ -1263,32 +1308,32 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
             }
             let line = d3
                 .line()
-                .x(function (d, i) {
-                    if (isNaN(x_functions_for_each_curve[curveNames[k]](getCurveData(i, curveNames[k], sfData)))) {
+                .x(function (d) {
+                    if (isNaN(x_functions_for_each_curve[curveNames[k]](d.value))) {
                         return null;
                     } else {
-                        return x_functions_for_each_curve[curveNames[k]](getCurveData(i, curveNames[k], sfData));
+                        return x_functions_for_each_curve[curveNames[k]](d.value);
                     }
                 })
-                .y(function (d, i) {
-                    return y(getCurveData(i, depthCurveName, sfData));
+                .y(function (d) {
+                    return y(d.depth);
                 })
                 .defined(function (d, i) {
-                    return getCurveData(i, curveNames[k], sfData) || getCurveData(i, curveNames[k], sfData) == 0
+                    return measureData[curveNames[k]][i] || measureData[curveNames[k]][i] == 0
                         ? true
                         : false;
                 });
+
+            console.log(measureData[curveNames[k]]);
             svg.append("path")
-                .datum(sfData)
+                //.data(measureData[curveNames[k]])
                 .attr("fill", "none")
                 .attr("clip-path", "url('#clip')")
                 .attr("stroke", curveColors[k])
                 .attr("stroke-width", templateCurves["strokeWidth"][k])
                 .attr("stroke-linecap", templateCurves["strokeLinecap"][k])
                 .attr("stroke-dasharray", curveStrokeDashArray[k])
-                .attr("d", function (d, i) {
-                    return line(d, i);
-                });
+                .attr("d", line(measureData[curveNames[k]])); // AJB this is not right???                
         }
     }
 
@@ -1311,7 +1356,7 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
             return d.isMarked() || checkPreviousMarked(d, i);
         })
         .y(function (d, i) {
-            return y(getCurveData(i, depthCurveName, sfData));
+            return y(depthData[i]);
         });
 
     var areaPath = svg
@@ -1333,7 +1378,7 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
             return d.isMarked() || checkPreviousMarked(d, i);
         })
         .y(function (d, i) {
-            return y(getCurveData(i, depthCurveName, sfData));
+            return y(depthData[i]);
         });
 
     var areaTagPathRight = svg
@@ -1354,7 +1399,7 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
             return d.isMarked() || checkPreviousMarked(d, i);
         })
         .y(function (d, i) {
-            return y(getCurveData(i, depthCurveName, sfData));
+            return y(depthData[i]);
         });
 
     var areaTagPathLeft = svg
@@ -1378,7 +1423,6 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
         .on("mouseover", tooltipMouseover)
         .on("mouseout", tooltipMouseout)
         .on("mousemove", mousemove);
-
 
     function tooltipMouseover(evt) {
         focus.style("display", null);
@@ -1549,7 +1593,7 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
                 let categoryRectangle = categoriesRectangles[i];
                 if (categoryRectangle.category) {
                     function rectClick(evt, a, b) {
-                          var markMode = "Replace";
+                        var markMode = "Replace";
                         if (evt instanceof MouseEvent) {
                             evt.preventDefault();
                             evt.stopPropagation();
@@ -1561,7 +1605,7 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
                         } else {
                             d3.event.preventDefault();
                             d3.event.stopPropagation();
-                        }                    
+                        }
                         _dataView.mark(categoryRectangle.categoryRows, markMode);
                     }
 
@@ -1671,7 +1715,7 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
 
     ////////////////   Prepare Tooltips   ///////////////////
 
-    function getTooltipPositionX(xFunction, xArgument) {        
+    function getTooltipPositionX(xFunction, xArgument) {
         if (xFunction && xArgument && xFunction(xArgument) && typeof xArgument != "string") {
             var xVal = xFunction(xArgument);
             if (xVal < margin.left) {
@@ -1763,10 +1807,7 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
     
     */
 
-
-
     function mousemove(evt) {
-
         if (!tooltipDiv) {
             tooltipDiv = d3.select("#mod-container" + "_tooltip");
         }
@@ -1828,7 +1869,7 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
         }
         let value0;
         let value1;
-         
+
         if (curveNames[0] == "ZONE" || curveNames[0] == "FACIES") {
             value0 = d0.categorical(curveNames[0]).formattedValue();
         } else {
@@ -1842,11 +1883,12 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
 
         if (tooltipDiv) {
             let modContainer = d3.select("#mod-container")._groups[0][0];
-           
-            tooltipDiv.html(
 
-                (d.continuous(depthCurveName).value()? depthCurveName + ": " + d.continuous(depthCurveName).value().toFixed(2) + "<br>" : "") +
-                    (curveNames[0] &&  value0
+            tooltipDiv.html(
+                (d.continuous(depthCurveName).value()
+                    ? depthCurveName + ": " + d.continuous(depthCurveName).value().toFixed(2) + "<br>"
+                    : "") +
+                    (curveNames[0] && value0
                         ? "<span style='border:1px solid gray; background-color:" +
                           curveColor0 +
                           "';>&nbsp;&nbsp;</span>&nbsp;" +
@@ -1855,7 +1897,7 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
                           value0 +
                           "<br>"
                         : "") +
-                    (curveNames[1] &&  value1
+                    (curveNames[1] && value1
                         ? "<span style='border:1px solid gray; background-color:" +
                           curveColor1 +
                           "';>&nbsp;&nbsp;</span>&nbsp;" +
@@ -1866,8 +1908,7 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
                         : "")
             );
 
-            let tooltipX =
-                target.parentNode.parentNode.offsetLeft + getTooltipPositionX(curve_x_func, value0) + 10;
+            let tooltipX = target.parentNode.parentNode.offsetLeft + getTooltipPositionX(curve_x_func, value0) + 10;
 
             let tooltipY = evt.pageY > modContainer.clientHeight - 40 ? evt.pageY - 40 : evt.pageY + 10;
 
@@ -1893,7 +1934,7 @@ function logPlot(template_for_plotting, sfData, headerHeight) {
                     y(d.continuous(depthCurveName).value()) +
                     ")"
             )
-            .text(value0 ? value0: "")
+            .text(value0 ? value0 : "")
             .style("cursor", "default");
 
         focus
@@ -2013,7 +2054,6 @@ function insertDropdown(divContent, i, k, templates, name, sfData) {
     var interpolateSpectralImgSrc =
         "data:image/png;base64,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";
 
-    
     var selectedValue;
 
     if (templates[i]) {
@@ -2262,7 +2302,11 @@ function PropertyOnChange(div_id, i, k, templates, sfData, selectedData, propNam
                 colorHelpers.getFillColor(selectedData.value, "light")
             ];
 
-            templateCurves[0]["fill"][k]["colorInterpolator"] = [colorHelpers.getColorInterpolator(selectedData.value), null, null];
+            templateCurves[0]["fill"][k]["colorInterpolator"] = [
+                colorHelpers.getColorInterpolator(selectedData.value),
+                null,
+                null
+            ];
         } else if (propName == "ScaleType") {
             templateCurves[0]["scaleTypeLinearLog"][k] = selectedData.value;
         }
@@ -2435,6 +2479,7 @@ function multipleLogPlot(div_id, templates, sfData) {
 
     sfData = sfData.filter(checkWell);
 
+    /* Get the max header height - this seems needlessly complicated! */
     var maxHeaderHeight = 42;
 
     for (let i = 0; i < templates.length; i++) {
@@ -2444,6 +2489,7 @@ function multipleLogPlot(div_id, templates, sfData) {
             let templateCurves = template_components[0]["curves"][0];
             let template_rectangles = template_components[0]["rectangles"];
             let curveNames = templateCurves["curveNames"];
+            console.log(curveNames);
             let curveColors = templateCurves["curveColors"];
             var NumberOfGradientScales = 0;
             for (let j = 0; j < templateCurves.fill.length; j++) {
@@ -2459,6 +2505,7 @@ function multipleLogPlot(div_id, templates, sfData) {
             }
         }
     }
+    /* End of getting gmax header height */
 
     for (let i = 0; i < templates.length; i++) {
         d3.select("#" + div_id + "TrackHolder" + i)
@@ -2619,7 +2666,7 @@ function multipleLogPlot(div_id, templates, sfData) {
             let TrackHolder = d3.select("#" + div_id).append("div");
 
             TrackHolder.style("vertical-align", "middle")
-                .attr("id", div_id + "TrackHolder" + i)                
+                .attr("id", div_id + "TrackHolder" + i)
                 .style("display", "inline-block");
 
             templates[i][0]["trackBox"]["div_id"] = div_id + "TrackHolder" + i;

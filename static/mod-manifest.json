@@ -1,8 +1,8 @@
 {
     "apiVersion": "1.0",
     "version": "2.0.0",
-    "name": "Well Log v2.0",
-    "id": "spotfire-well-log-mod",
+    "name": "Well Log v2.0 - Unpivot",
+    "id": "spotfire-well-log-mod-unpivot",
     "icon": "icon.svg",
     "externalResources": ["https://fonts.gstatic.com/s/materialicons/v50/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2"],    
     "properties": [
@@ -13,30 +13,7 @@
         }
     ],
     "dataViewDefinition": {
-        "colorAxis": {
-            "mode": "categorical",
-            "dropTarget": {
-                "icon": "Color",
-                "description": "Color by {0}"
-            }
-        },
         "axes": [
-            {
-                "name": "X",
-                "mode": "categorical",
-                "placement": "bottom",
-                "dropTarget": {
-                    "icon": "XAxis3D",
-                    "description": "Use {0} on the mod's X-axis"
-                },
-                "propertyControl": {
-                    "title": "X-axis"
-                },
-                "legendItem": {
-                    "title": "X-axis",
-                    "defaultVisibility": "hidden"
-                }
-            },
             {
                 "name": "DEPTH",
                 "mode": "continuous",
@@ -52,100 +29,30 @@
                 }
             },
             {
-                "name": "GR",
-                "mode": "continuous",
+                "name": "Category",
+                "mode": "categorical",
                 "allowMultipleMeasures": false,
-                "placement": "bottom",
+                "placement": "right",
                 "propertyControl": {
-                    "title": "GR"
+                    "title": "Category"
                 },
                 "allowNonAggregatingMeasures": true,
                 "legendItem": {
-                    "title": "GR",
+                    "title": "Category",
                     "defaultVisibility": "visible"
                 }
             },
             {
-                "name": "CAL",
-                "mode": "continuous",
-                "allowMultipleMeasures": false,
-                "placement": "bottom",
-                "propertyControl": {
-                    "title": "CAL"
-                },
-                "allowNonAggregatingMeasures": true,
-                "legendItem": {
-                    "title": "CAL",
-                    "defaultVisibility": "visible"
-                }
-            },
-            {
-                "name": "PHIN",
-                "mode": "continuous",
-                "allowMultipleMeasures": false,
-                "placement": "bottom",
-                "propertyControl": {
-                    "title": "PHIN"
-                },
-                "allowNonAggregatingMeasures": true,
-                "legendItem": {
-                    "title": "PHIN",
-                    "defaultVisibility": "visible"
-                }
-            },
-            {
-                "name": "PHID",
-                "mode": "continuous",
-                "allowMultipleMeasures": false,
-                "placement": "bottom",
-                "propertyControl": {
-                    "title": "PHID"
-                },
-                "allowNonAggregatingMeasures": true,
-                "legendItem": {
-                    "title": "PHID",
-                    "defaultVisibility": "visible"
-                }
-            },
-            {
-                "name": "RESD",
-                "mode": "continuous",
-                "allowMultipleMeasures": false,
-                "placement": "bottom",
-                "propertyControl": {
-                    "title": "RESD"
-                },
-                "allowNonAggregatingMeasures": true,
-                "legendItem": {
-                    "title": "RESD",
-                    "defaultVisibility": "visible"
-                }
-            },
-            {
-                "name": "ZONE",
+                "name": "Value",
                 "mode": "categorical",
                 "allowMultipleMeasures": false,
                 "placement": "bottom",
                 "propertyControl": {
-                    "title": "ZONE"
+                    "title": "Value"
                 },
                 "allowNonAggregatingMeasures": true,
                 "legendItem": {
-                    "title": "ZONE",
-                    "defaultVisibility": "visible"
-                }
-            },
-            {
-                "name": "FACIES",
-                "mode": "categorical",
-                "allowMultipleMeasures": false,
-                "placement": "bottom",
-                "propertyControl": {
-                    "title": "FACIES"
-                },
-                "allowNonAggregatingMeasures": true,
-                "legendItem": {
-                    "title": "FACIES",
+                    "title": "Value",
                     "defaultVisibility": "visible"
                 }
             },
