@@ -835,6 +835,9 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
     console.log(curveNames);
     let measureData = {};
     let depthData = [];
+    let depthKeys = new Map();
+    let plotData = [];
+    let valueRows = [];
     // The template contains the curve names that this data is intended for, so we need to find out which data is required
     // to populate the template
     let isFirstLeaf = true;
@@ -844,28 +847,32 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
     })) {
         console.log(leaf);
         console.log(leaf.rows());
-        let valueRows = [];
+       
+        let rowIndex = 0;
         for (const row of leaf.rows()) {
+            let depth = row.continuous("DEPTH").value();
             //console.log(row.categorical("Category").formattedValue(), row.categorical("Value").formattedValue());
             //valueRows.push(parseFloat(row.categorical("Value").formattedValue()));
             // Just record the depth value for the first leaf in this group of measures. Todo - consider moving this out of the loop so we only do it once!
+            let valueRow = {"depth": depth};
             if (isFirstLeaf) {
+                depthKeys.set(depth, rowIndex);
                 depthData.push(row.continuous("DEPTH").value());
+                valueRows.push(valueRow);
             }
-            let valueRow = {"depth": row.continuous("DEPTH").value(), "value":parseFloat(row.categorical("Value").formattedValue())};
-            valueRows.push(valueRow);
+            valueRows[depthKeys.get(depth)][leaf.key] = parseFloat(row.categorical("Value").formattedValue());
+            //let valueRow = {"depth": row.continuous("DEPTH").value(), "value":parseFloat(row.categorical("Value").formattedValue())};            
+            rowIndex++;
 
         }
         isFirstLeaf = false;
-        valueRows.sort((a, b) => a["depth"] - b["depth"]);
-        console.log(valueRows);
-        measureData[leaf.key] = (valueRows);
+        
     }
-    console.log(measureData);
-
-    let plotData = {};
-    plotData.measureData = measureData;
-    plotData.depthData = depthData;
+    valueRows.sort((a, b) => a["depth"] - b["depth"]);
+    console.log(valueRows);
+    
+    //plotData.measureData = measureData;
+    //plotData.depthData = depthData;
 
     let y;
 
@@ -873,8 +880,8 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
     let firstKey = categoryLeaves.filter((d) => {return curveNames.includes(d.key)})[0].key;
 
     //////////////////// define Y scale (depth)  ////////////////////
-    let depthMin = d3.min(measureData[firstKey], d => d.depth);
-    let depthMax = d3.max(measureData[firstKey], d => d.depth);
+    let depthMin = d3.min(valueRows, d => d.depth);
+    let depthMax = d3.max(valueRows, d => d.depth);
     y = d3
         .scaleLinear()
         .domain([depthMax, depthMin])
@@ -904,8 +911,8 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
             colorInterpolatorfills = templateCurves["fill"][k]["colorInterpolator"];
         }
 
-        let min_this = d3.min(measureData[curveNames[k]], d => d.value);
-        let max_this = d3.max(measureData[curveNames[k]], d => d.value);
+        let min_this = d3.min(valueRows, d => d[curveNames[k]]);
+        let max_this = d3.max(valueRows, d => d[curveNames[k]]);
 
         console.log(min_this, max_this);
 
@@ -1076,7 +1083,7 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
                                     .scaleSequentialLog(colorInterpolation)
                                     .domain(x_functions_for_each_curve[curveName1].domain());
                             }
-                            
+
                             var grd = svg
                                 .append("defs")
                                 .append("linearGradient")
@@ -1162,32 +1169,33 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
                             fillColor = "url(#linear-gradient-" + curveName1 + "_" + j + ")";
                         }
 
+                        console.log(templateCurves["fill"][i]["fillDirection"]);
                         if (templateCurves["fill"][i]["fillDirection"] == "left") {
                             let start_from_left = template_overall["margin"]["left"];
                             area1
                                 .x1(function (d, i) {
+                                    //console.log(d);
                                     //console.log(x_functions_for_each_curve[curveName1](measureData[curveName1][i].value));
-                                    return x_functions_for_each_curve[curveName1](d[curveName1][i].value);                                  
+                                    return x_functions_for_each_curve[curveName1](d[curveNames[k]]);
                                 })
                                 .x0(function (d, i) {
                                     return start_from_left;
                                 })
                                 .defined(function (d, i) {
+                                    let value = d[curveNames[k]];
                                     return (
-                                        (d[curveName1][i].value ||
-                                            d[curveName1][i].value == 0) &&
-                                            d[curveName1][i].value > threshold
+                                        (value || value == 0) &&
+                                            value > threshold
                                     );
                                 })
                                 .y(function (d, i) {
-                                    return y(depthData[i]);
+                                    return y(d.depth);
                                 });
-
-                            svg.append("path")
-                                .datum(measureData)
+                            
+                            svg.append("path")                                                     
                                 .attr("class", "area")
                                 .attr("clip-path", "url('#clip')")
-                                .attr("d", area1)
+                                .attr("d", area1(valueRows))
                                 .attr("stroke", "none")
                                 .attr("fill", fillColor)
                                 .attr("fill-opacity", getOpacity(j, threshold, null));
@@ -1200,23 +1208,29 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
                                     return width - start_from_right;
                                 })
                                 .defined(function (d, i) {
+
+                                    /*console.log (
+                                        (d.value ||
+                                            d.value == 0) &&
+                                            d.value > threshold);
+                                            */
+                                    let value = d[curveNames[k]];
                                     return (
-                                        (d[curveName1][i].value ||
-                                            d[curveName1][i].value == 0) &&
-                                            d[curveName1][i].value > threshold);
+                                        (value ||
+                                            value == 0) &&
+                                            value > threshold);
                                 })
-                                .x0(function (d, i) {
-                                    return x_functions_for_each_curve[curveName1](measureData[curveName1][i].value);
+                                .x0(function (d, i) {                                    
+                                    return x_functions_for_each_curve[curveNames[k]](d[curveNames[k]]);
                                 })
                                 .y(function (d, i) {
-                                    return y(d[curveName1][i].value);
+                                    return y(d.depth);
                                 });
 
-                            svg.append("path")
-                                .datum(measureData)
+                            svg.append("path")                                                               
                                 .attr("class", "area")
                                 .attr("clip-path", "url('#clip')")
-                                .attr("d", area1)
+                                .attr("d", area1(valueRows))
                                 .attr("stroke", "none")
                                 .attr("fill", fillColor)
                                 .attr("fill-opacity", getOpacity(j, threshold, null));
@@ -1244,39 +1258,43 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
 
                             area1
                                 .x1(function (d, i) {
-                                    return first_curve_x_func(d[curveName1][i].value);
+                                    //console.log(d);
+                                    return first_curve_x_func(d[curveName1]);
                                 })
                                 .x0(function (d, i) {
-                                    return second_curve_x_func(d[between_2_curve][i]);
+                                    return second_curve_x_func(d[between_2_curve]);
                                 })
                                 .defined(function (d, i) {
                                     return (
-                                        (d[curveName1][i].value ||
-                                            d[curveName1][i].value == 0) &&
-                                            d[curveName1][i].value > threshold &&
-                                        (d[between_2_curve][i] ||
-                                        d[between_2_curve][i] == 0) &&
-                                        d[between_2_curve][i] > curve2Threshold &&
-                                        first_curve_x_func(d[curveName1][i].value) >
-                                            second_curve_x_func(d[between_2_curve][i])
+                                        (d[curveName1] ||
+                                            d[curveName1] == 0) &&
+                                            d[curveName1] > threshold &&
+                                        (d[between_2_curve] ||
+                                        d[between_2_curve] == 0) &&
+                                        d[between_2_curve] > curve2Threshold &&
+                                        first_curve_x_func(d[curveName1]) >
+                                            second_curve_x_func(d[between_2_curve])
                                     );
                                 })
                                 .y(function (d, i) {
-                                    return y(depthData[i]);
+                                    return y(d.depth);
                                 });
-
+                                
+                                
+                            console.log("Appending path between");
                             svg.append("path")
-                                .datum(measureData)
                                 .attr("class", "area")
                                 .attr("clip-path", "url('#clip')")
-                                .attr("d", area1)
+                                .attr("d", area1(valueRows))
                                 .attr("stroke", "none")
                                 .attr("fill", fillColor)
                                 .attr("fill-opacity", getOpacity(j, threshold, curve2Threshold));
 
+                            /*
+                            area2 does not appear to be neccessary!
                             let area2 = d3.area();
                             area2
-                                .x1(function (d, i) {
+                                .x1(function (d, i) {                                    
                                     return first_curve_x_func(d[curveName1][i].value);
                                 })
                                 .x0(function (d, i) {
@@ -1302,6 +1320,8 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
                                 .attr("stroke", "none")
                                 .attr("fill", fillColor2)
                                 .attr("fill-opacity", getOpacity(j, threshold, curve2Threshold));
+
+                                */
                         }
                     }
                 }
@@ -1309,33 +1329,32 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
             let line = d3
                 .line()
                 .x(function (d) {
-                    if (isNaN(x_functions_for_each_curve[curveNames[k]](d.value))) {
+                    if (isNaN(x_functions_for_each_curve[curveNames[k]](d[curveNames[k]]))) {
                         return null;
                     } else {
-                        return x_functions_for_each_curve[curveNames[k]](d.value);
+                        return x_functions_for_each_curve[curveNames[k]](d[curveNames[k]]);
                     }
                 })
                 .y(function (d) {
                     return y(d.depth);
                 })
-                .defined(function (d, i) {
-                    return measureData[curveNames[k]][i] || measureData[curveNames[k]][i] == 0
-                        ? true
-                        : false;
+                .defined(function (d) {
+                    return d[curveNames[k]] && d[curveNames[k]] != 0  //AJB not sure about checking for zero here!
                 });
 
-            console.log(measureData[curveNames[k]]);
-            svg.append("path")
-                //.data(measureData[curveNames[k]])
+            //console.log(measureData[curveNames[k]]);
+            svg.append("path")                
                 .attr("fill", "none")
                 .attr("clip-path", "url('#clip')")
                 .attr("stroke", curveColors[k])
                 .attr("stroke-width", templateCurves["strokeWidth"][k])
                 .attr("stroke-linecap", templateCurves["strokeLinecap"][k])
                 .attr("stroke-dasharray", curveStrokeDashArray[k])
-                .attr("d", line(measureData[curveNames[k]])); // AJB this is not right???                
+                .attr("d", line(valueRows));
         }
     }
+
+    return; // AJB return for now to avoid errors during development
 
     /* Marking Representation */
 
