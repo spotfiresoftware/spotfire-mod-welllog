@@ -1084,6 +1084,8 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
                                     .domain(x_functions_for_each_curve[curveName1].domain());
                             }
 
+                            // Linear gradient fill - AJB - not 100% sure that this is working correctly. The offset may be slightly wrong?
+                            // To be checked in testing!
                             var grd = svg
                                 .append("defs")
                                 .append("linearGradient")
@@ -1097,14 +1099,7 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
                                 .data(valueRows)
                                 .join("stop")
                                 .attr("offset", function (d, i) {
-                                    console.log(depthMin, depthMax, depthData[i], 
-                                        (y(depthData[i] - y(depthMin)) /
-                                            (y(depthMax) - y(depthMin))) *
-                                            100.0 +
-                                        "%"
-                                        );
-                                        // this seems to work
-                                    return ( (y(d.depth - y(depthMin)) /
+                                    return ((y(d.depth) /
                                             (y(depthMax) - y(depthMin))) *
                                             100.0 +
                                         "%"
