@@ -1240,7 +1240,7 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
                                 .attr("d", area1(valueRows))
                                 .attr("stroke", "none")
                                 .attr("fill", fillColor)
-                                .attr("fill-opacity", getOpacity(j, threshold, curve2Threshold));                         
+                                .attr("fill-opacity", getOpacity(j, threshold, curve2Threshold));
                         }
                     }
                 }
@@ -2211,6 +2211,19 @@ function InputOnChange(div_id, i, k, templates, sfData, selectedData, propName) 
         let result_1 = multipleLogPlot("mod-container", templates, sfData);
     }
 }
+
+
+/**
+ * Aha! This is called when we change something in the templates - and we call multipleLogplots() to re-draw the charts
+ * Todo: persist the templates in Spotfire properties ;-)
+ * @param {*} div_id 
+ * @param {*} i 
+ * @param {*} k 
+ * @param {*} templates 
+ * @param {*} sfData 
+ * @param {*} selectedData 
+ * @param {*} propName 
+ */
 
 function PropertyOnChange(div_id, i, k, templates, sfData, selectedData, propName) {
     if (templates[i] && initialized) {

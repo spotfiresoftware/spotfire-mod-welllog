@@ -2348,6 +2348,14 @@ function accordionTemplate(templates, i) {
     }
 }
 
+/**
+ * This function inserts the dropdowns for a particular template
+ * @param {*} divContent 
+ * @param {*} i 
+ * @param {*} k 
+ * @param {*} templates 
+ * @param {*} name 
+ */
 function insertDropdown(divContent, i, k, templates, name) {
     var blackImgSrc =
         "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHgAAAAWCAYAAAALmlj4AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH5QMcFisWTT0lnAAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAAQElEQVRo3u3RQREAMAgEsVIn518kWODNJBJ2K0k/zvoSGIzBGIzBGIzBGGwwBmMwBmMwBmOwwRiMwRiMwRjMzgDeaAGOTpcEwwAAAABJRU5ErkJggg==";
@@ -2549,6 +2557,7 @@ function insertDropdown(divContent, i, k, templates, name) {
         defaultSelectedIndex: 0,
         selectText: "Select an item",
         onSelected: function (data) {
+            console.log(data);
             var selData = data.selectedData;
             PropertyOnChange("js_chart", i, k, templates, sfData, selData, name);
         }

@@ -10,6 +10,41 @@
             "name": "verticalZoomHeightMultiplier",
             "type": "double",
             "defaultValue": 2.0
+        },
+        {
+            "name": "template1",
+            "type": "string",
+            "defaultValue": "empty"
+        },
+        {
+            "name": "template2",
+            "type": "string",
+            "defaultValue": "empty"
+        },
+        {
+            "name": "template3",
+            "type": "string",
+            "defaultValue": "empty"
+        },
+        {
+            "name": "template4",
+            "type": "string",
+            "defaultValue": "empty"
+        },
+        {
+            "name": "template5",
+            "type": "string",
+            "defaultValue": "empty"
+        },
+        {
+            "name": "template6",
+            "type": "string",
+            "defaultValue": "empty"
+        },
+        {
+            "name": "template7",
+            "type": "string",
+            "defaultValue": "empty"
         }
     ],
     "dataViewDefinition": {
