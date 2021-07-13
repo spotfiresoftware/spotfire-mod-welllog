@@ -1094,7 +1094,7 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
                                 .attr("y1", y(depthMin))
                                 .attr("y2", y(depthMax))
                                 .selectAll("stop")
-                                .data(measureData)
+                                .data(valueRows)
                                 .join("stop")
                                 .attr("offset", function (d, i) {
                                     console.log(depthMin, depthMax, depthData[i], 
@@ -1104,16 +1104,16 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
                                         "%"
                                         );
                                         // this seems to work
-                                    return ( (y(depthData[i] - y(depthMin)) /
+                                    return ( (y(d.depth - y(depthMin)) /
                                             (y(depthMax) - y(depthMin))) *
                                             100.0 +
                                         "%"
                                     );
                                 })
                                 .attr("stop-color", function (d, i) {
-                                    return !isNaN(d[curveName1][i].value)
+                                    return !isNaN(d[curveName1])
                                         ? colorInterpolator_functions_for_each_curve[curveName1 + "_" + j](
-                                            d[curveName1][i].value
+                                            d[curveName1]
                                           )
                                         : "rgba(0,0,0,0)";
                                 });
