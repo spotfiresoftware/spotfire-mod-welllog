@@ -12,6 +12,11 @@
             "defaultValue": 2.0
         },
         {
+            "name": "template0",
+            "type": "string",
+            "defaultValue": "empty"
+        },
+        {
             "name": "template1",
             "type": "string",
             "defaultValue": "empty"

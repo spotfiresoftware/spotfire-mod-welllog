@@ -180,6 +180,7 @@ var yAxis;
 
 var y_function;
 var sfData;
+var _mod; // The global mod instance
 
 function getCurveData(lineIndex, curveName, sfData) {
     var item;
@@ -202,9 +203,11 @@ function getCurveData(lineIndex, curveName, sfData) {
  */
 export async function render(state, mod, dataView, windowSize, verticalZoomHeightProperty) {
     _dataView = dataView;
+    _mod = mod;
     _verticalZoomHeightProperty = verticalZoomHeightProperty;
+    console.log(verticalZoomHeightProperty);
     _verticalZoomHeightMultiplier = _verticalZoomHeightProperty.value();
-    console.log("Render called");
+    console.log("Render called with mod", mod);
     if (state.preventRender) {
         // Early return if the state currently disallows rendering.
         return;
@@ -275,20 +278,83 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
 
     var zoneLogTrackWidth = 120;
 
-    function buildTemplates(sfdata) {
+    function buildDefaultTemplate(trackNo, curveName, trackWidth, height) {
+        var pPerfilTrack01CorArea01 = "gray";
+        var pPerfilTrack01CorCurva01 = "gray";
+        var pPerfilTrack01EscalaMaxCurva01 = "";
+        var pPerfilTrack01EscalaMinCurva01 = "";
+        var pPerfilTrack01EspessuraCurva01 = "2";
+        var pPerfilTrack01Limite01Curva01 = "";
+        var pPerfilTrack01Limite02Curva01 = "";
+        var pPerfilTrack01PreenchimentoArea01 = "right";
+        var pPerfilTrack01TipoEscalaCurva01 = "linear";
+        var pPerfilTrack01TracoCurva01 = "2,2";
+        let default_template = [
+            {
+                components: [
+                    {
+                        curves: [
+                            {
+                                curveColors: ["gray"],
+                                curveNames: [curveName],
+                                curveStrokeDashArray: ["2.2"],
+                                curveUnits: [""],
+                                dataType: "curve",
+                                depthCurveName: "DEPTH",
+                                depthUnit: "m",
+                                fill: [
+                                    {
+                                        curve2: "",
+                                        curveName: curveName,
+                                        cutoffs: [
+                                            -99999999,
+                                            "",
+                                            ""
+                                        ],
+                                        fill: "no",
+                                        fillColors: [],
+                                        fillDirection: "none",
+                                        colorInterpolator: [],
+                                        maxScaleX: "",
+                                        minScaleX: ""
+                                    }
+                                ],
+                                scaleTypeLinearLog: ["linear"],
+                                strokeLinecap: ["butt"],
+                                strokeWidth: ["2"],
+                                wellNames: ["1"] // AJB todo - find a better way instead of hardcoding this! Trellis implementation should solve it
+                            }
+                        ]
+                    }
+                ],
+                trackBox: {
+                    width: trackWidth,
+                    height: height,
+                    div_id: "well_holder_track_" + trackNo,
+                    margin: { top: 5, right: 10, bottom: 5, left: 60 }
+                }
+            }
+        ];
+
+        return default_template;
+
+    }
+
+    async function buildTemplates(sfdata) {
         depthCurveName = "DEPTH";
         depthUnit = "m";
 
         wellColumnName = "WELL";
+        let wellLeaves =  (await (await _dataView.hierarchy("WELL")).root()).leaves();
 
-        selectedWell = getCurveData(0, wellColumnName, sfdata);
+        selectedWell = wellLeaves[0].key;
 
         var escala = "linear";
-        var scwidth = window.innerWidth;
         var scheight = window.innerHeight;
 
-        var numberOfTracks = 4;
-
+        let categoryLeaves = (await (await _dataView.hierarchy("Category")).root()).leaves();
+        
+        /*
         var trackWidth =
             (scwidth - zoneLogTrackWidth - zoneLogTrackWidth - ZoomPanelWidth - depthLabelPanelWidth - 30) /
             numberOfTracks;
@@ -296,7 +362,30 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
         if (zoneLogTrackWidth > trackWidth) {
             trackWidth = (scwidth - ZoomPanelWidth - depthLabelPanelWidth - 30) / (numberOfTracks + 2);
             zoneLogTrackWidth = trackWidth;
+        }*/
+
+        let trackWidth = (window.innerWidth - ZoomPanelWidth - depthLabelPanelWidth) / categoryLeaves.length;
+
+        let templates = [];
+        let categoryIndex = 0;
+        for (const leaf of categoryLeaves) {
+            console.log(leaf.key);
+            let template = (await(_mod.property("template" + categoryIndex))).value();        
+            if (template != "empty") {
+                let parsedTemplate = JSON.parse(template);
+                console.log(parsedTemplate);
+                // Explicitly set the width and height as it is likely to have changed since the template property was set
+                parsedTemplate[0].trackBox.width = trackWidth;
+                parsedTemplate[0].trackBox.height = window.innerHeight;
+                console.log(parsedTemplate);
+                templates.push(parsedTemplate);
+            } else {
+                templates.push(buildDefaultTemplate(categoryIndex, leaf.key, trackWidth, window.innerHeight));
+            }
+            categoryIndex++;
         }
+        console.log(templates);
+        return templates;
 
         var pPerfilTrack01CorArea01 = "interpolateSpectral";
         var pPerfilTrack01CorCurva01 = "green";
@@ -352,60 +441,66 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
         var pPerfilTrack04TipoEscalaCurva01 = "linear";
         var pPerfilTrack04TracoCurva01 = "5,5";
 
-        var plot_template_1 = [
-            {
-                components: [
-                    {
-                        curves: [
-                            {
-                                curveColors: [colorHelpers.getFillColor(pPerfilTrack01CorCurva01, "normal")],
-                                curveNames: ["GR"],
-                                curveStrokeDashArray: [pPerfilTrack01TracoCurva01],
-                                curveUnits: [""],
-                                dataType: "curve",
-                                depthCurveName: depthCurveName,
-                                depthUnit: depthUnit,
-                                fill: [
-                                    {
-                                        curve2: "",
-                                        curveName: "GR",
-                                        cutoffs: [
-                                            -99999999,
-                                            pPerfilTrack01Limite01Curva01,
-                                            pPerfilTrack01Limite02Curva01
-                                        ],
-                                        fill: "yes",
-                                        fillColors: [
-                                            colorHelpers.getFillColor(pPerfilTrack01CorArea01, "normal"),
-                                            colorHelpers.getFillColor(pPerfilTrack01CorArea01, "dark"),
-                                            colorHelpers.getFillColor(pPerfilTrack01CorArea01, "light")
-                                        ],
-                                        fillDirection: pPerfilTrack01PreenchimentoArea01,
-                                        colorInterpolator: [
-                                            colorHelpers.getColorInterpolator(pPerfilTrack01CorArea01),
-                                            null,
-                                            null
-                                        ],
-                                        maxScaleX: pPerfilTrack01EscalaMaxCurva01,
-                                        minScaleX: pPerfilTrack01EscalaMinCurva01
-                                    }
-                                ],
-                                scaleTypeLinearLog: [pPerfilTrack01TipoEscalaCurva01],
-                                strokeLinecap: ["butt"],
-                                strokeWidth: [pPerfilTrack01EspessuraCurva01],
-                                wellNames: [selectedWell]
-                            }
-                        ]
+        let plot_template_0 = (await(_mod.property("template0"))).value();
+        
+        if (plot_template_0 != "empty") {            
+            plot_template_0 = JSON.parse(plot_template_0);
+        } else {
+            plot_template_0 = [
+                {
+                    components: [
+                        {
+                            curves: [
+                                {
+                                    curveColors: [colorHelpers.getFillColor(pPerfilTrack01CorCurva01, "normal")],
+                                    curveNames: ["GR"],
+                                    curveStrokeDashArray: [pPerfilTrack01TracoCurva01],
+                                    curveUnits: [""],
+                                    dataType: "curve",
+                                    depthCurveName: depthCurveName,
+                                    depthUnit: depthUnit,
+                                    fill: [
+                                        {
+                                            curve2: "",
+                                            curveName: "GR",
+                                            cutoffs: [
+                                                -99999999,
+                                                pPerfilTrack01Limite01Curva01,
+                                                pPerfilTrack01Limite02Curva01
+                                            ],
+                                            fill: "yes",
+                                            fillColors: [
+                                                colorHelpers.getFillColor(pPerfilTrack01CorArea01, "normal"),
+                                                colorHelpers.getFillColor(pPerfilTrack01CorArea01, "dark"),
+                                                colorHelpers.getFillColor(pPerfilTrack01CorArea01, "light")
+                                            ],
+                                            fillDirection: pPerfilTrack01PreenchimentoArea01,
+                                            colorInterpolator: [
+                                                colorHelpers.getColorInterpolator(pPerfilTrack01CorArea01),
+                                                null,
+                                                null
+                                            ],
+                                            maxScaleX: pPerfilTrack01EscalaMaxCurva01,
+                                            minScaleX: pPerfilTrack01EscalaMinCurva01
+                                        }
+                                    ],
+                                    scaleTypeLinearLog: [pPerfilTrack01TipoEscalaCurva01],
+                                    strokeLinecap: ["butt"],
+                                    strokeWidth: [pPerfilTrack01EspessuraCurva01],
+                                    wellNames: [selectedWell]
+                                }
+                            ]
+                        }
+                    ],
+                    trackBox: {
+                        width: trackWidth,
+                        height: scheight,
+                        div_id: "well_holder_track_01",
+                        margin: { top: 5, right: 10, bottom: 5, left: 60 }
                     }
-                ],
-                trackBox: {
-                    width: trackWidth,
-                    height: scheight,
-                    div_id: "well_holder_track_01",
-                    margin: { top: 5, right: 10, bottom: 5, left: 60 }
                 }
-            }
-        ];
+            ];
+        }
 
         var plot_template_2 = [
             {
@@ -687,10 +782,10 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
         ];
 
         return [
-            plot_template_1,
+            plot_template_0,
             plot_template_2,
             plot_template_3,
-            plot_template_4 
+            plot_template_4
             // AJB removed zome and facies templates for now,
             //plot_template_Zone,
             //plot_template_Facies
@@ -747,7 +842,7 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
 
     var dataRows = await dataView.allRows();
 
-    plot_templates = buildTemplates(dataRows);
+    plot_templates = await buildTemplates(dataRows);
 
     Initialize("mod-container", plot_templates, dataRows);
 
@@ -785,7 +880,6 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
     if (templateCurves["depthUnit"]) {
         depthUnit = templateCurves["depthUnit"];
     }
-
 
     //////////////  Initiate DIVs //////////////
     let svg;
@@ -830,7 +924,7 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
     let curvesDescription = "";
 
     /* For now, let's filter the data and pivot it based on the curve names */
-    let categoryLeaves = (await (await _dataView.hierarchy("Category")).root()).leaves();    
+    let categoryLeaves = (await (await _dataView.hierarchy("Category")).root()).leaves();
     let depthKeys = new Map();
     let valueRows = [];
     // The template contains the curve names that this data is intended for, so we need to find out which data is required
@@ -842,7 +936,7 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
         let rowIndex = 0;
         for (const row of leaf.rows()) {
             let depth = row.continuous("DEPTH").value();
-            let valueRow = {"depth": depth};
+            let valueRow = { depth: depth };
             if (isFirstLeaf) {
                 depthKeys.set(depth, rowIndex);
                 valueRows.push(valueRow);
@@ -857,8 +951,8 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
     let y;
 
     //////////////////// define Y scale (depth)  ////////////////////
-    let depthMin = d3.min(valueRows, d => d.depth);
-    let depthMax = d3.max(valueRows, d => d.depth);
+    let depthMin = d3.min(valueRows, (d) => d.depth);
+    let depthMax = d3.max(valueRows, (d) => d.depth);
     y = d3
         .scaleLinear()
         .domain([depthMax, depthMin])
@@ -875,21 +969,18 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
 
     y_function = y;
 
-
     //////////////  Building curves within tracks //////////////
     for (let k = 0; k < curveNames.length; k++) {
         var maxScaleX = null;
         var minScaleX = null;
-        var colorInterpolatorfills = [];
 
         if (templateCurves["fill"] && k < templateCurves["fill"].length) {
             minScaleX = templateCurves["fill"][k]["minScaleX"] ? templateCurves["fill"][k]["minScaleX"] : null;
             maxScaleX = templateCurves["fill"][k]["maxScaleX"] ? templateCurves["fill"][k]["maxScaleX"] : null;
-            colorInterpolatorfills = templateCurves["fill"][k]["colorInterpolator"];
         }
 
-        let min_this = d3.min(valueRows, d => d[curveNames[k]]);
-        let max_this = d3.max(valueRows, d => d[curveNames[k]]);
+        let min_this = d3.min(valueRows, (d) => d[curveNames[k]]);
+        let max_this = d3.max(valueRows, (d) => d[curveNames[k]]);
 
         mins.push(min_this);
         maxes.push(max_this);
@@ -1037,7 +1128,7 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
                         if (number_colors !== 0) {
                             threshold = templateCurves["fill"][i]["cutoffs"][j];
                             fillColor = templateCurves["fill"][i]["fillColors"][j];
-                            colorInterpolation = templateCurves["fill"][i]["colorInterpolator"][j];
+                            colorInterpolation = colorHelpers.getColorInterpolator(templateCurves["fill"][i]["colorInterpolator"][j]);
                         }
 
                         if (fillColor == "interpolator" && colorInterpolation) {
@@ -1069,16 +1160,12 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
                                 .data(valueRows)
                                 .join("stop")
                                 .attr("offset", function (d, i) {
-                                    return (((y(d.depth) - y(depthMin)) /
-                                            (y(depthMax) - y(depthMin))) *
-                                            100.0 +
-                                        "%"
-                                    );
+                                    return ((y(d.depth) - y(depthMin)) / (y(depthMax) - y(depthMin))) * 100.0 + "%";
                                 })
                                 .attr("stop-color", function (d, i) {
                                     return !isNaN(d[curveName1])
                                         ? colorInterpolator_functions_for_each_curve[curveName1 + "_" + j](
-                                            d[curveName1]
+                                              d[curveName1]
                                           )
                                         : "rgba(0,0,0,0)";
                                 });
@@ -1145,10 +1232,7 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
                                 })
                                 .defined(function (d, i) {
                                     let value = d[curveNames[k]];
-                                    return (
-                                        (value || value == 0) &&
-                                            value > threshold
-                                    );
+                                    return (value || value == 0) && value > threshold;
                                 })
                                 .y(function (d, i) {
                                     return y(d.depth);
@@ -1170,10 +1254,7 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
                                 })
                                 .defined(function (d, i) {
                                     let value = d[curveNames[k]];
-                                    return (
-                                        (value ||
-                                            value == 0) &&
-                                            value > threshold);
+                                    return (value || value == 0) && value > threshold;
                                 })
                                 .x0(function (d, i) {
                                     return x_functions_for_each_curve[curveNames[k]](d[curveNames[k]]);
@@ -1220,14 +1301,11 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
                                 })
                                 .defined(function (d, i) {
                                     return (
-                                        (d[curveName1] ||
-                                            d[curveName1] == 0) &&
-                                            d[curveName1] > threshold &&
-                                        (d[between_2_curve] ||
-                                        d[between_2_curve] == 0) &&
+                                        (d[curveName1] || d[curveName1] == 0) &&
+                                        d[curveName1] > threshold &&
+                                        (d[between_2_curve] || d[between_2_curve] == 0) &&
                                         d[between_2_curve] > curve2Threshold &&
-                                        first_curve_x_func(d[curveName1]) >
-                                            second_curve_x_func(d[between_2_curve])
+                                        first_curve_x_func(d[curveName1]) > second_curve_x_func(d[between_2_curve])
                                     );
                                 })
                                 .y(function (d, i) {
@@ -1258,7 +1336,7 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
                     return y(d.depth);
                 })
                 .defined(function (d) {
-                    return d[curveNames[k]] && d[curveNames[k]] != 0  //AJB not sure about checking for zero here!
+                    return d[curveNames[k]] && d[curveNames[k]] != 0; //AJB not sure about checking for zero here!
                 });
 
             svg.append("path")
@@ -2022,7 +2100,7 @@ function insertDropdown(divContent, i, k, templates, name, sfData) {
         } else if (name == "AreaColor") {
             selectedValue = colorHelpers.getFillColorName(templateCurves[0]["fill"][k]["fillColors"][0]);
             if (selectedValue == "") {
-                selectedValue = templateCurves[0]["fill"][k]["colorInterpolator"][0];
+                selectedValue = colorHelpers.getColorInterpolator(templateCurves[0]["fill"][k]["colorInterpolator"][0]);
             }
         }
     }
@@ -2212,17 +2290,16 @@ function InputOnChange(div_id, i, k, templates, sfData, selectedData, propName) 
     }
 }
 
-
 /**
  * Aha! This is called when we change something in the templates - and we call multipleLogplots() to re-draw the charts
  * Todo: persist the templates in Spotfire properties ;-)
- * @param {*} div_id 
- * @param {*} i 
- * @param {*} k 
- * @param {*} templates 
- * @param {*} sfData 
- * @param {*} selectedData 
- * @param {*} propName 
+ * @param {*} div_id
+ * @param {*} i
+ * @param {*} k
+ * @param {*} templates
+ * @param {*} sfData
+ * @param {*} selectedData
+ * @param {*} propName
  */
 
 function PropertyOnChange(div_id, i, k, templates, sfData, selectedData, propName) {
@@ -2253,7 +2330,7 @@ function PropertyOnChange(div_id, i, k, templates, sfData, selectedData, propNam
             ];
 
             templateCurves[0]["fill"][k]["colorInterpolator"] = [
-                colorHelpers.getColorInterpolator(selectedData.value),
+                selectedData.value,
                 null,
                 null
             ];
@@ -2261,6 +2338,9 @@ function PropertyOnChange(div_id, i, k, templates, sfData, selectedData, propNam
             templateCurves[0]["scaleTypeLinearLog"][k] = selectedData.value;
         }
 
+        console.log("Setting property template" + i, templates[i]);
+        // Store the updated template in the appropriate mod property
+        _mod.property("template" + i).set(JSON.stringify(templates[i]));
         multipleLogPlot("mod-container", templates, sfData);
     }
 }
