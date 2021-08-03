@@ -5,11 +5,13 @@
 */
 
 html,
-body,
 #mod-container {
     margin: 0;
     height: 100%;
     overflow: hidden;
+}
+body {
+    overflow-y: hidden;
 }
 
 #mod-container {

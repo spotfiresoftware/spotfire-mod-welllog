@@ -264,8 +264,10 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
     }
 
     const margin = { top: 20, right: 40, bottom: 40, left: 80 };
-    modContainer.style("height", windowSize.height - margin.bottom - margin.top).style("overflow-y", "scroll");
-
+    
+    modContainer.style("height", windowSize.height - margin.bottom - margin.top).style("overflow-y", "auto");
+    
+    //modContainer.style("height", 1960).style("overflow-y", "visible");
     /**
      * Maximum number of Y scale ticks is an approximate number
      * To get the said number we divide total available height by font size with some arbitrary padding
@@ -351,6 +353,7 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
 
         var escala = "linear";
         var scheight = window.innerHeight;
+        console.log(scheight);
 
         let categoryLeaves = (await (await _dataView.hierarchy("Category")).root()).leaves();
         
@@ -456,6 +459,7 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
         .selectAll("*")
         .remove();
     let height = template_overall["height"] * _verticalZoomHeightMultiplier - 110;
+    console.log(height);
     let height_components = template_overall["height"];
     let width = template_overall["width"];
     let margin = template_overall["margin"];
@@ -501,15 +505,18 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
 
     const trackPlotDiv = d3.select("#" + div_id).append("div");
     trackPlotDiv
-        .attr("height", height_components + "px")
+        .attr("height", height + "px")
         .attr("class", "trackPlotDiv")
         .style("margin", 0)
         .style("padding", 0)
         .style("border", 0)
-        .style("box-sizing", "border-box");
+        .style("box-sizing", "border-box")
+        .style("overflow-y", "visible");
 
     const logPlot_sub_div = trackPlotDiv.append("div");
-    logPlot_sub_div.attr("class", "component_inner").style("position", "relative");
+    logPlot_sub_div.attr("class", "component_inner")
+        .style("position", "relative")
+        .style("overflow-y", "visible");
 
     svg = logPlot_sub_div.append("svg");
 
@@ -638,11 +645,12 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
         }
 
         //////////////  Building Track Components  //////////////
+        console.log(height);
         svg.attr("class", "components")
             .attr("width", width)
             .attr("height", height)
             .style("margin", "0 auto")
-            .style("overflow", "scroll");
+            .style("overflow-y", "visible");
 
         svg.append("g").call(yAxis);
 
@@ -2293,7 +2301,8 @@ function multipleLogPlot(div_id, templates, sfData) {
 
             TrackHolder.style("vertical-align", "middle")
                 .attr("id", div_id + "TrackHolder" + i)
-                .style("display", "inline-block");
+                .style("display", "inline-block")
+                .style("overflow-y", "hidden");
 
             templates[i][0]["trackBox"]["div_id"] = div_id + "TrackHolder" + i;
             new_templates.push(templates[i]);
