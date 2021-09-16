@@ -264,7 +264,7 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
     }
 
     const margin = { top: 20, right: 40, bottom: 40, left: 80 };
-    
+
     modContainer.style("height", windowSize.height - margin.bottom - margin.top).style("overflow-y", "auto");
 
     /**
@@ -307,11 +307,7 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
                                     {
                                         curve2: "",
                                         curveName: curveName,
-                                        cutoffs: [
-                                            -99999999,
-                                            "",
-                                            ""
-                                        ],
+                                        cutoffs: [-99999999, "", ""],
                                         fill: "no",
                                         fillColors: [],
                                         fillDirection: "none",
@@ -338,7 +334,6 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
         ];
 
         return default_template;
-
     }
 
     async function buildTemplates(sfdata) {
@@ -346,7 +341,7 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
         depthUnit = "m";
 
         wellColumnName = "WELL";
-        let wellLeaves =  (await (await _dataView.hierarchy("WELL")).root()).leaves();
+        let wellLeaves = (await (await _dataView.hierarchy("WELL")).root()).leaves();
 
         selectedWell = wellLeaves[0].key;
 
@@ -355,7 +350,7 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
         console.log(scheight);
 
         let categoryLeaves = (await (await _dataView.hierarchy("Category")).root()).leaves();
-        
+
         /*
         var trackWidth =
             (scwidth - zoneLogTrackWidth - zoneLogTrackWidth - ZoomPanelWidth - depthLabelPanelWidth - 30) /
@@ -372,7 +367,7 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
         let categoryIndex = 0;
         for (const leaf of categoryLeaves) {
             console.log(leaf.key);
-            let template = (await(_mod.property("template" + categoryIndex))).value();        
+            let template = (await _mod.property("template" + categoryIndex)).value();
             if (template != "empty") {
                 let parsedTemplate = JSON.parse(template);
                 console.log(parsedTemplate);
@@ -513,9 +508,7 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
         .style("overflow-y", "visible");
 
     const logPlot_sub_div = trackPlotDiv.append("div");
-    logPlot_sub_div.attr("class", "component_inner")
-        .style("position", "relative")
-        .style("overflow-y", "visible");
+    logPlot_sub_div.attr("class", "component_inner").style("position", "relative").style("overflow-y", "visible");
 
     svg = logPlot_sub_div.append("svg");
 
@@ -731,7 +724,9 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
                         if (number_colors !== 0) {
                             threshold = templateCurves["fill"][i]["cutoffs"][j];
                             fillColor = templateCurves["fill"][i]["fillColors"][j];
-                            colorInterpolation = colorHelpers.getColorInterpolator(templateCurves["fill"][i]["colorInterpolator"][j]);
+                            colorInterpolation = colorHelpers.getColorInterpolator(
+                                templateCurves["fill"][i]["colorInterpolator"][j]
+                            );
                         }
 
                         if (fillColor == "interpolator" && colorInterpolation) {
@@ -742,9 +737,7 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
                                     .scaleSequential(colorInterpolation)
                                     .domain(x_functions_for_each_curve[curveName1].domain());
                             } else if (scaleTypeLinearLog[k] == "log") {
-                                colorInterpolator_functions_for_each_curve[
-                                    curveName1 + "_" + j
-                                ] = d3
+                                colorInterpolator_functions_for_each_curve[curveName1 + "_" + j] = d3
                                     .scaleSequentialLog(colorInterpolation)
                                     .domain(x_functions_for_each_curve[curveName1].domain());
                             }
@@ -1932,11 +1925,7 @@ function PropertyOnChange(div_id, i, k, templates, sfData, selectedData, propNam
                 colorHelpers.getFillColor(selectedData.value, "light")
             ];
 
-            templateCurves[0]["fill"][k]["colorInterpolator"] = [
-                selectedData.value,
-                null,
-                null
-            ];
+            templateCurves[0]["fill"][k]["colorInterpolator"] = [selectedData.value, null, null];
         } else if (propName == "ScaleType") {
             templateCurves[0]["scaleTypeLinearLog"][k] = selectedData.value;
         }
@@ -1948,7 +1937,7 @@ function PropertyOnChange(div_id, i, k, templates, sfData, selectedData, propNam
     }
 }
 
-function accordionTemplate(templates, i, sfData) {
+async function accordionTemplate(templates, i, sfData) {
     let template = templates[i];
     let template_components = template[0]["components"];
     let templateCurves = template_components[0]["curves"][0];
@@ -1970,17 +1959,75 @@ function accordionTemplate(templates, i, sfData) {
 
         var tabs = content.append("div").attr("id", "tabs_" + i);
 
+        let plusDdData = [
+            {
+                value: "+" /*"Dashed*/,
+                text: "+",
+                selected: false
+            }
+        ];
+
+        let categoryLeaves = (await (await _dataView.hierarchy("Category")).root()).leaves();
+        for (let leaf of categoryLeaves) {
+            let optionData = {
+                value: leaf.key,
+                selected: false,
+                text: leaf.key
+            };
+
+            plusDdData.push(optionData);
+        }
+
         var ul = tabs.append("ul");
 
         for (let k = 0; k < curveNames.length; k++) {
             if (curveNames[k]) {
-                ul.append("li")
-                    .append("a")
+                let tabHeader = ul
+                    .append("li");
+                tabHeader.append("a")
                     .attr("href", "#tab_" + i + "_" + k)
                     .text(curveNames[k]);
+                tabHeader   
+                    .append("BR");
+                
+
+                tabHeader.append("select").attr("id", "dropdown_measure_selector_" + i);
+                $("#dropdown_measure_selector_" + i).ddslick({
+                    data: plusDdData,
+                    //height: "15px",
+                    width: "100px",
+                    defaultSelectedIndex: 0,
+                    selectText: "Select an item",
+                    onSelected: function (data) {
+                        var selData = data.selectedData;
+                        PropertyOnChange("mod-container", i, k, templates, sfData, selData, name);
+                    }
+                });
             }
         }
 
+        // Add a "+" tab, so you can add another measure to this track
+        let plusTab = ul.append("li");
+        plusTab.append("select").attr("id", "dropdown_plus_tab_" + i);
+
+        $("#dropdown_plus_tab_" + i).ddslick({
+            data: plusDdData,
+            //height: "15px",
+            width: "100px",
+            defaultSelectedIndex: 0,
+            selectText: "Select an item",
+            onSelected: function (data) {
+                var selData = data.selectedData;
+                PropertyOnChange("mod-container", i, k, templates, sfData, selData, name);
+            }
+        });
+
+        /*.append("a")
+            .attr("href", "#tab_" + i + "_" + curveNames.length)
+            .html("+ &#9660;")
+            .on("mousedown", evt => evt.preventDefault);*/
+
+        // The contents of the tabs
         for (let k = 0; k < curveNames.length; k++) {
             if (curveNames[k]) {
                 var tab = tabs.append("div").attr("id", "tab_" + i + "_" + k);
@@ -2104,7 +2151,7 @@ function accordionTemplate(templates, i, sfData) {
     }
 }
 
-function multipleLogPlot(div_id, templates, sfData) {
+async function multipleLogPlot(div_id, templates, sfData) {
     function checkWell(item, i) {
         let wellColumnName = "WELL"; // todo - tidy this!
         return getCurveData(i, wellColumnName, sfData) == selectedWell;
@@ -2204,7 +2251,7 @@ function multipleLogPlot(div_id, templates, sfData) {
                 }
             });
 
-            var confBtn = TracksToolDiv.append("div")
+        var confBtn = TracksToolDiv.append("div")
             .attr("id", "confBtnDiv")
             .style("margin-top", "20px")
             .append("input")
@@ -2291,8 +2338,6 @@ function multipleLogPlot(div_id, templates, sfData) {
                     sliderZoom.value(_verticalZoomHeightMultiplier - 0.25);
                 }
             });
-
-
     }
 
     let new_templates = [];
@@ -2314,7 +2359,7 @@ function multipleLogPlot(div_id, templates, sfData) {
         if (updateAccordionTools) {
             for (let i = 0; i < templates.length; i++) {
                 if (templates[i]) {
-                    accordionTemplate(templates, i, sfData);
+                    await accordionTemplate(templates, i, sfData);
                 }
             }
             updateAccordionTools = false;
