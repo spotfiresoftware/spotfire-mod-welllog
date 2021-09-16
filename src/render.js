@@ -2044,7 +2044,7 @@ async function accordionTemplate(templates, i, sfData) {
                     .on("mousedown", function (evt) {
                         evt.stopPropagation();
                     });
-
+                //
                 divItem.text("Thickness:").append("br");
                 insertDropdown(divItem, i, k, templates, "Thickness", sfData);
 
