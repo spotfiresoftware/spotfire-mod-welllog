@@ -35,6 +35,7 @@ import * as colorHelpers from "./color-helpers.js";
  */
 const modContainer = d3.select("#mod-container");
 
+
 async function markModel(markMode, rectangle) {
     // Implementation of logic to call markIndices or markIndices2 goes here
     var indicesToMark = [];
@@ -392,15 +393,20 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
             .style("border", "0");
 
         $("#" + div_id).append(
-            '<DIV id=drawer_content style="DISPLAY: none"></DIV>' +
-                "<DIV id=drawer_wall></DIV>" +
-                '<DIV id=drawer_menu><DIV id="drawer_menu_content" style="position:relative;">' +
-                '<A id=abtnfechar style="cursor: pointer; float: right;"><IMG style="HEIGHT: 18px; WIDTH: 18px; PADDING-RIGHT:5px; PADDING-TOP:3px;" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABoAAAAaCAYAAACpSkzOAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH5QMaATMDnvmzBwAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAADF0lEQVRIx72WMW/bRhTH3zveMR3irp2kIgWcD5CgSwqkMAzIJzJSjW4NsmXoVCBLp2ZsvoD1UQya5MmMmwbwFmctIgEB5HYOamUIyXf3OohsVdaSqA55C0EQd7/3Hv/3vwdhOIA6wnBwNBwestbBL72e/gQA4OCgD5tC66B+3uz3Qx4ODzkMB0dL+wIuvfwshPgJERkRsSiK87IsH5yemncHB31I03glJElOoNfTHc/zZr7vMzMDM6Nz7lkUHT8FAPCaEIAF3PO8DiLe63Y/N+NxOtc6wOl00oRgBbkjpfxNKQXVeqwSvr+7e1tNJm+eYxgOjoQQPyxDloOIXhPRE2OSX+vsG5V8JaU8kVJ+ek3BXFU2wuHwkAHgWsgS7IqI9oxJLur/sVTJ2QrI3zAAQOz3Q676iut+OBEBEXWNSS4BAHo93ZFSzqSUa4WCiFAUBaDWwU1EnFf9XRtlWQIz71QbtF1z7pzdxy2z46IoEACgZRde5nnxTZaZd0LrAIxJLonoLhFdrVvIzKiUAqUUtIC8zvP8uyxbHA+RJCdQwS6IKNgEaxPW2isiepJl4z/qM4iNM8GVkl5tauM60Vhr76ZpfFHvCU1Jrzjl2AaAiFyWJTrnuklyctnvhxDH0T/fV1nKNmqsK2HmnTiO3jchAAACPlKIVa1DxLnv+9x2I6UUI+Jc66ATx9F/XF+sMMhZGwk3pS+lBCHE2729/c/SNP4XzLvGIMdSyhv/u0VCgOd5X3Y63bPTU/On1gFMpxPAJUgbg2xdIBFdEtG3xiSvtA5gWwuCPM9fLCzoxtcLY25nxNua6rm1dh8RQAgvU0rda2vEoq26iOhlWZYPjEk+pGnywTn3iIg2Juf7PiPiXFTq2gQ5y/P8YT0/aB1AmsZvWxoxKKVAWGtHlYx5DeRxlo1/rw1yCyNmZkZr7cibTN7Eu7u3FSLeb84Ni/skf5Rl41lzEppOJ6B1gGkaz27d+sIAwPdCiOvmhWdRdPzjRxu3RD1ARtHxU+fcCAAwz/MX1tr9TZB6SKkvT2beqW5gdM6NakgYDuAvrltBwrCYxZ8AAAAASUVORK5CYII="></I></I></A>' +
-                '<DIV id="selectedWellDiv" style="clear: right; color: black; display:flex; align-items: center;"></DIV>' +
-                '<DIV id="accordionConf" style="clear: right;">' +
-                "</DIV>" +
-                "</DIV>" +
-                "</DIV>"
+            `<DIV id=drawer_content style="DISPLAY: none"></DIV>
+                <DIV id=drawer_wall></DIV>
+                <DIV id=drawer_menu><DIV id="drawer_menu_content" style="position:relative;">
+                <A id=abtnfechar >✖</I></I></A>
+                <DIV id="selectedWellDiv" style="clear: right; color: black; display:flex; align-items: center;"></DIV>
+                <DIV id="accordionConf" style="clear: right;">
+                </DIV>
+                </DIV>
+                </DIV>
+                <style>
+                #abtnfechar{color:gray;cursor:pointer;float:right;font-size:1.5em;margin:5px}
+                #abtnfechar:hover{color:white}
+                </style>
+                `
         );
 
         vanilla_drawer = vanillaDrawer.initialize();
