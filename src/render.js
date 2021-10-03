@@ -17,6 +17,7 @@ import { nodeFormattedPathAsArray } from "./extended-api.js";
 import { addHandlersSelection } from "./ui-input.js";
 
 import * as vanillaDrawer from "./vanillaDrawer.js";
+import * as Popup from "./popup.js";
 import * as colorHelpers from "./color-helpers.js";
 
 /**
@@ -172,6 +173,7 @@ var _verticalZoomHeightProperty;
 var sliderZoom;
 var initialized = false;
 var vanilla_drawer;
+var popup;
 var updateAccordionTools = true;
 
 var _dataView;
@@ -386,14 +388,16 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
         return templates;
     }
 
-    function Initialize(div_id, templates, sfData) {
+    //add the drawer controls on the left of the screen
+    function Initialize(div_id) {
         d3.select("#" + div_id)
             .style("margin", "0")
             .style("padding", "0")
             .style("border", "0");
 
         $("#" + div_id).append(
-            `<DIV id=drawer_content style="DISPLAY: none"></DIV>
+            `
+                <DIV id=drawer_content style="DISPLAY: none"></DIV>
                 <DIV id=drawer_wall></DIV>
                 <DIV id=drawer_menu><DIV id="drawer_menu_content" style="position:relative;">
                 <A id=abtnfechar >✖</I></I></A>
@@ -499,9 +503,23 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
         .style("display", "inline-flex")
         .style("flex-direction", "row")
         .style("align-items", "flex-end")
-        .style("margin-bottom", "10px");
+        .style("margin-bottom", "10px")
+        
+        
+        var trackHeaderDivContent = trackHeaderDiv
+        .append("div")
+        .attr("class", "trackHeaderDivContent")
+        .style('cursor', 'pointer')
+        .on("click",function(d){
+            //find the accordion to open
+            var accordionCurveNamesSections = Array.from(document.querySelectorAll(".ui-accordion-header")).map(e=>e.innerText)
+            var selectedAccordionIndex = accordionCurveNamesSections.findIndex(str => str.includes(curveNames))
 
-    var trackHeaderDivContent = trackHeaderDiv.append("div").attr("class", "trackHeaderDivContent");
+            //open the accordion
+            vanilla_drawer.drawer_menu_open(d);//d should be the accordion index
+            document.querySelectorAll(".ui-accordion-header")[selectedAccordionIndex].click()
+        });
+
 
     const trackPlotDiv = d3.select("#" + div_id).append("div");
     trackPlotDiv
@@ -540,7 +558,7 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
             let valueRow = { depth: depth };
             if (isFirstLeaf) {
                 depthKeys.set(depth, rowIndex);
-                valueRows.push(valueRow);
+                valueRows.push(valueRow);   
             }
             valueRows[depthKeys.get(depth)][leaf.key] = parseFloat(row.categorical("Value").formattedValue());
             rowIndex++;
@@ -637,7 +655,7 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
         }
 
         if (!isNaN(min) && !isNaN(max)) {
-            header_text_line = min.toFixed(1) + " - " + curveNames[k] + " " + curveUnit + " - " + max.toFixed(1);
+            header_text_line = min.toFixed(1) + " - " + curveNames[k]  + curveUnit + " - " + max.toFixed(1);
         } else {
             header_text_line = curveNames[k];
         }
@@ -1888,7 +1906,7 @@ function InputOnChange(div_id, i, k, templates, sfData, selectedData, propName) 
             templateCurves[0]["fill"][k]["cutoffs"][2] = selectedData;
         }
 
-        let result_1 = multipleLogPlot("mod-container", templates, sfData);
+        multipleLogPlot("mod-container", templates, sfData);
     }
 }
 
@@ -2157,6 +2175,7 @@ async function accordionTemplate(templates, i, sfData) {
     }
 }
 
+//renders all the vertical line chart tracks
 async function multipleLogPlot(div_id, templates, sfData) {
     function checkWell(item, i) {
         let wellColumnName = "WELL"; // todo - tidy this!
@@ -2193,6 +2212,7 @@ async function multipleLogPlot(div_id, templates, sfData) {
     }
     /* End of getting gmax header height */
 
+    //I guess this portion clears the plots
     for (let i = 0; i < templates.length; i++) {
         d3.select("#" + div_id + "TrackHolder" + i)
             .selectAll("div")
@@ -2206,8 +2226,9 @@ async function multipleLogPlot(div_id, templates, sfData) {
     if (!d3.select("#TracksDepthLabel")._groups[0][0]) {
         var TracksDepthLabel = d3.select("#" + div_id).append("div");
 
-        TracksDepthLabel.style("vertical-align", "middle")
+        TracksDepthLabel
             .attr("id", "TracksDepthLabel")
+            .style("vertical-align", "middle")
             .style("display", "inline-block")
             .style("position", "relative")
             .style("width", depthLabelPanelWidth + "px")
@@ -2257,6 +2278,7 @@ async function multipleLogPlot(div_id, templates, sfData) {
                 }
             });
 
+            /*
         var confBtn = TracksToolDiv.append("div")
             .attr("id", "confBtnDiv")
             .style("margin-top", "20px")
@@ -2277,6 +2299,7 @@ async function multipleLogPlot(div_id, templates, sfData) {
                 }
                 vanilla_drawer.drawer_menu_open();
             });
+            */
 
         var divPlusBtn = TracksToolDiv.append("div").style("height", "26px");
 
@@ -2385,6 +2408,7 @@ async function multipleLogPlot(div_id, templates, sfData) {
         .style("opacity", 0);
 
     initialized = true;
+
 
     return new_templates;
 }
