@@ -158,8 +158,8 @@ svg {
   
   #TracksToolDiv {
    height: 100%;
-   //background-color: red;
-   //border: 1px solid blue;
+   --background-color: red;
+   --border: 1px solid blue;
   }
   
   #slider-zoom path.handle:hover, 
@@ -338,4 +338,38 @@ svg {
   #drawer_content { width: 100%; max-width: 728px; margin: 0 auto; padding:10px; background: #eee; }
   #drawer_content p { margin-top: 0; }
   .disabled {pointer-events: none; cursor: default; opacity: 0.5;}
+
+
+
+  /*Popup (to replace drawer?)*/
+  .popup-jsc {
+    width: min-content !important;
+    background-color: #eaeaea !important;
+    border-radius: 0.5em;
+    border: 1px solid whitesmoke;
+    box-shadow: rgb(187 187 187) 5px 4px 9px 1px;
+}
+
+.flt.drag {
+    border: none;
+    margin: 0;
+    padding: 5px;
+    color:"white";
+    background: "whitesmoke";
+}
+
+.trackHeaderDivContent:hover{
+    background: #ffe3e0;
+}
+
+.popupContents {
+display: inline-block;
+padding: 6px 10px;
+font: 1em arial, helvetica, sans-serif;
+color: #555;
+background-color: #ddd;
+border:1px outset lightgray;
+border-radius:.5em;
+}
+
   
