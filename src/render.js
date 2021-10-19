@@ -17,7 +17,7 @@ import { nodeFormattedPathAsArray } from "./extended-api.js";
 import { addHandlersSelection } from "./ui-input.js";
 
 import * as vanillaDrawer from "./vanillaDrawer.js";
-import * as Popup from "./popup.js";
+//import * as Popup from "./popup.js";
 import * as colorHelpers from "./color-helpers.js";
 
 /**
@@ -46,7 +46,7 @@ async function markModel(markMode, rectangle) {
     var header = d3.select(".trackHeaderDiv")._groups[0][0];
     var headerHeight =
         parseFloat(header.style.height.replace(/\D/g, "")) + parseFloat(header.style.marginBottom.replace(/\D/g, ""));
-    console.dir(headerHeight);
+    ///console.dir(headerHeight);
 
     markData.markMode = markMode;
 
@@ -76,7 +76,7 @@ async function markModel(markMode, rectangle) {
         d = d0;
     }
 
-    console.log(d);
+    ///console.log(d);
 
     var j = i;
     let rowsToMark = [];
@@ -159,21 +159,14 @@ $("body").on("mousedown", function (mouseDownEvent) {
 });
 
 // @todo - remove as many global vars as we can!
-var depthCurveName;
-var depthUnit;
 var selectedWell;
-var wellColumnName;
 var tooltipDiv;
-var plot_templates;
-var zoneLogTrackWidth = 140;
 var ZoomPanelWidth = 32;
 var depthLabelPanelWidth = 15;
 var _verticalZoomHeightMultiplier = 5.0;
 var _verticalZoomHeightProperty;
-var sliderZoom;
 var initialized = false;
 var vanilla_drawer;
-var popup;
 var updateAccordionTools = true;
 
 var _dataView;
@@ -182,7 +175,7 @@ var yAxis;
 //var pPerfilHeightMultiplier;
 
 var y_function;
-var sfData;
+///var sfData;
 var _mod; // The global mod instance
 
 function getCurveData(lineIndex, curveName, sfData) {
@@ -207,10 +200,11 @@ function getCurveData(lineIndex, curveName, sfData) {
 export async function render(state, mod, dataView, windowSize, verticalZoomHeightProperty) {
     _dataView = dataView;
     _mod = mod;
+    console.log("xxxxxxxxxxxxxxxx",mod)
     _verticalZoomHeightProperty = verticalZoomHeightProperty;
-    console.log(verticalZoomHeightProperty);
+    ///console.log(verticalZoomHeightProperty);
     _verticalZoomHeightMultiplier = _verticalZoomHeightProperty.value();
-    console.log("Render called with mod", mod);
+    ///console.log("Render called with mod", mod);
     if (state.preventRender) {
         // Early return if the state currently disallows rendering.
         return;
@@ -256,7 +250,7 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
     }*/
 
     const allRows = await dataView.allRows();
-    console.log(allRows);
+    ///console.log(allRows);
     allRows.sort((a, b) => a.continuous("DEPTH").value() - b.continuous("DEPTH").value());
 
     if (allRows == null) {
@@ -280,19 +274,20 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
 
     // Now render here!
 
-    var zoneLogTrackWidth = 120;
+    ///var zoneLogTrackWidth = 120;
 
     function buildDefaultTemplate(trackNo, curveName, trackWidth, height) {
-        var pPerfilTrack01CorArea01 = "gray";
-        var pPerfilTrack01CorCurva01 = "gray";
-        var pPerfilTrack01EscalaMaxCurva01 = "";
-        var pPerfilTrack01EscalaMinCurva01 = "";
-        var pPerfilTrack01EspessuraCurva01 = "2";
-        var pPerfilTrack01Limite01Curva01 = "";
-        var pPerfilTrack01Limite02Curva01 = "";
-        var pPerfilTrack01PreenchimentoArea01 = "right";
-        var pPerfilTrack01TipoEscalaCurva01 = "linear";
-        var pPerfilTrack01TracoCurva01 = "2,2";
+        console.log({"buildDefaultTemplate":[trackNo, curveName, trackWidth, height]}) 
+        ///var pPerfilTrack01CorArea01 = "gray";
+        ///var pPerfilTrack01CorCurva01 = "gray";
+        ///var pPerfilTrack01EscalaMaxCurva01 = "";
+        ///var pPerfilTrack01EscalaMinCurva01 = "";
+        ///var pPerfilTrack01EspessuraCurva01 = "2";
+        ///var pPerfilTrack01Limite01Curva01 = "";
+        ///var pPerfilTrack01Limite02Curva01 = "";
+        ///var pPerfilTrack01PreenchimentoArea01 = "right";
+        ///var pPerfilTrack01TipoEscalaCurva01 = "linear";
+        ///var pPerfilTrack01TracoCurva01 = "2,2";
         let default_template = [
             {
                 components: [
@@ -323,7 +318,8 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
                                 strokeLinecap: ["butt"],
                                 strokeWidth: ["2"],
                                 wellNames: ["1"] // AJB todo - find a better way instead of hardcoding this! Trellis implementation should solve it
-                            }
+                            },
+                            
                         ]
                     }
                 ],
@@ -339,52 +335,36 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
         return default_template;
     }
 
-    async function buildTemplates(sfdata) {
-        depthCurveName = "DEPTH";
-        depthUnit = "m";
+    async function buildTemplates() {
 
-        wellColumnName = "WELL";
         let wellLeaves = (await (await _dataView.hierarchy("WELL")).root()).leaves();
 
         selectedWell = wellLeaves[0].key;
 
-        var escala = "linear";
-        var scheight = window.innerHeight;
-        console.log(scheight);
-
         let categoryLeaves = (await (await _dataView.hierarchy("Category")).root()).leaves();
-
-        /*
-        var trackWidth =
-            (scwidth - zoneLogTrackWidth - zoneLogTrackWidth - ZoomPanelWidth - depthLabelPanelWidth - 30) /
-            numberOfTracks;
-
-        if (zoneLogTrackWidth > trackWidth) {
-            trackWidth = (scwidth - ZoomPanelWidth - depthLabelPanelWidth - 30) / (numberOfTracks + 2);
-            zoneLogTrackWidth = trackWidth;
-        }*/
 
         let trackWidth = (window.innerWidth - ZoomPanelWidth - depthLabelPanelWidth - 40) / categoryLeaves.length;
 
         let templates = [];
         let categoryIndex = 0;
         for (const leaf of categoryLeaves) {
-            console.log(leaf.key);
+            ///console.log(leaf.key);
             let template = (await _mod.property("template" + categoryIndex)).value();
+            console.log(template)
             if (template != "empty") {
                 let parsedTemplate = JSON.parse(template);
-                console.log(parsedTemplate);
+                ///console.log(parsedTemplate);
                 // Explicitly set the width and height as it is likely to have changed since the template property was set
                 parsedTemplate[0].trackBox.width = trackWidth;
                 parsedTemplate[0].trackBox.height = window.innerHeight;
-                console.log(parsedTemplate);
+                ///console.log(parsedTemplate);
                 templates.push(parsedTemplate);
             } else {
                 templates.push(buildDefaultTemplate(categoryIndex, leaf.key, trackWidth, window.innerHeight));
             }
             categoryIndex++;
         }
-        console.log(templates);
+        console.log("buildTemplates()",templates);
         return templates;
     }
 
@@ -443,9 +423,9 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
      *
      */
 
-    var dataRows = await dataView.allRows();
+    let plot_templates = await buildTemplates();
 
-    plot_templates = await buildTemplates(dataRows);
+    var dataRows = await dataView.allRows();
 
     Initialize("mod-container", plot_templates, dataRows);
 
@@ -463,7 +443,7 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
         .selectAll("*")
         .remove();
     let height = template_overall["height"] * _verticalZoomHeightMultiplier - 110;
-    console.log(height);
+    ///console.log(height);
     let height_components = template_overall["height"];
     let width = template_overall["width"];
     let margin = template_overall["margin"];
@@ -515,9 +495,10 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
             var accordionCurveNamesSections = Array.from(document.querySelectorAll(".ui-accordion-header")).map(e=>e.innerText)
             var selectedAccordionIndex = accordionCurveNamesSections.findIndex(str => str.includes(curveNames))
 
-            //open the accordion
+            //open the accordion (if not already open)
             vanilla_drawer.drawer_menu_open(d);//d should be the accordion index
-            document.querySelectorAll(".ui-accordion-header")[selectedAccordionIndex].click()
+            var accordionTab = document.querySelectorAll(".ui-accordion-header")[selectedAccordionIndex]
+            if (accordionTab.getAttribute("aria-expanded")=="false") accordionTab.click()
         });
 
 
@@ -661,7 +642,7 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
         }
 
         //////////////  Building Track Components  //////////////
-        console.log(height);
+        ///console.log(height);
         svg.attr("class", "components")
             .attr("width", width)
             .attr("height", height)
@@ -1695,7 +1676,7 @@ function insertDropdown(divContent, i, k, templates, name, sfData) {
         var template = templates[i];
         let template_components = template[0]["components"];
         let templateCurves = template_components[0]["curves"];
-        let curveNames = templateCurves[0]["curveNames"];
+        ///let curveNames = templateCurves[0]["curveNames"];
 
         if (name == "Thickness") {
             selectedValue = templateCurves[0]["strokeWidth"][k];
@@ -1838,7 +1819,7 @@ function insertDropdown(divContent, i, k, templates, name, sfData) {
         ]
     };
 
-    var dropdownButton = divContent.append("select").attr("id", "dropdown" + name + "_" + i + "_" + k);
+    ///var dropdownButton = divContent.append("select").attr("id", "dropdown" + name + "_" + i + "_" + k);
 
     let NCurves = templates[i][0]["components"][0]["curves"][0]["curveNames"].length;
 
@@ -1852,7 +1833,7 @@ function insertDropdown(divContent, i, k, templates, name, sfData) {
         selectText: "Select an item",
         onSelected: function (data) {
             var selData = data.selectedData;
-            PropertyOnChange("mod-container", i, k, templates, sfData, selData, name);
+            PropertyOnChange( i, k, templates, sfData, selData, name);
         }
     });
 }
@@ -1922,7 +1903,7 @@ function InputOnChange(div_id, i, k, templates, sfData, selectedData, propName) 
  * @param {*} propName
  */
 
-function PropertyOnChange(div_id, i, k, templates, sfData, selectedData, propName) {
+function PropertyOnChange(i, k, templates, sfData, selectedData, propName) {
     if (templates[i] && initialized) {
         var template = templates[i];
         let template_components = template[0]["components"];
@@ -1954,7 +1935,7 @@ function PropertyOnChange(div_id, i, k, templates, sfData, selectedData, propNam
             templateCurves[0]["scaleTypeLinearLog"][k] = selectedData.value;
         }
 
-        console.log("Setting property template" + i, templates[i]);
+        ///console.log("Setting property template" + i, templates[i]);
         // Store the updated template in the appropriate mod property
         _mod.property("template" + i).set(JSON.stringify(templates[i]));
         multipleLogPlot("mod-container", templates, sfData);
@@ -2024,7 +2005,7 @@ async function accordionTemplate(templates, i, sfData) {
                     selectText: "Select an item",
                     onSelected: function (data) {
                         var selData = data.selectedData;
-                        PropertyOnChange("mod-container", i, k, templates, sfData, selData, name);
+                        PropertyOnChange(i, k, templates, sfData, selData, name);
                     }
                 });
             }
@@ -2042,7 +2023,7 @@ async function accordionTemplate(templates, i, sfData) {
             selectText: "Select an item",
             onSelected: function (data) {
                 var selData = data.selectedData;
-                PropertyOnChange("mod-container", i, k, templates, sfData, selData, name);
+                PropertyOnChange( i, k, templates, sfData, selData, name);
             }
         });
 
@@ -2175,8 +2156,15 @@ async function accordionTemplate(templates, i, sfData) {
     }
 }
 
-//renders all the vertical line chart tracks
+// 
+/**
+ * renders all the vertical line chart tracks. 
+ * @param  {string} div_id mod_container
+ * @param  {Array} templates array of templates. Each one represents one track
+ * @param  {Array} sfData spotfire data   
+ */
 async function multipleLogPlot(div_id, templates, sfData) {
+    console.log({"multipleLogPlot":[div_id, templates, sfData]})
     function checkWell(item, i) {
         let wellColumnName = "WELL"; // todo - tidy this!
         return getCurveData(i, wellColumnName, sfData) == selectedWell;
@@ -2192,9 +2180,9 @@ async function multipleLogPlot(div_id, templates, sfData) {
             let template = templates[i];
             let template_components = template[0]["components"];
             let templateCurves = template_components[0]["curves"][0];
-            let template_rectangles = template_components[0]["rectangles"];
+            ///let template_rectangles = template_components[0]["rectangles"];
             let curveNames = templateCurves["curveNames"];
-            console.log(curveNames);
+            ///console.log(curveNames);
             let curveColors = templateCurves["curveColors"];
             var NumberOfGradientScales = 0;
             for (let j = 0; j < templateCurves.fill.length; j++) {
@@ -2248,6 +2236,8 @@ async function multipleLogPlot(div_id, templates, sfData) {
 
         var depth_label_svg = TracksDepthLabel.append("svg").attr("height", 300).attr("width", 20);
 
+        let depthCurveName = "DEPTH";
+        let depthUnit = "m";
         depth_label_svg
             .append("text")
             .style("fill", "black")
@@ -2303,6 +2293,21 @@ async function multipleLogPlot(div_id, templates, sfData) {
 
         var divPlusBtn = TracksToolDiv.append("div").style("height", "26px");
 
+        let sliderZoom = sliderRight()
+            .min(1)
+            .max(15)
+            .step(0.25)
+            .height(window.innerHeight * 0.35)
+            .ticks(0)
+            .default(_verticalZoomHeightMultiplier)
+            .handle(d3.symbol().type(d3.symbolCircle).size(120)())
+            //.fill('#2196f3')
+            .on("onchange", function (val) {
+                //_verticalZoomHeightMultiplier = val;
+                //multipleLogPlot("mod-container", plot_templates, sfData);
+                _verticalZoomHeightProperty.set(val);
+            });
+
         var plusBtn = divPlusBtn
             .append("input")
             .attr("id", "plusBtn")
@@ -2319,20 +2324,7 @@ async function multipleLogPlot(div_id, templates, sfData) {
 
         var divGVertical = TracksToolDiv.append("div").attr("id", "slider-zoom").style("margin", "0px");
 
-        sliderZoom = sliderRight()
-            .min(1)
-            .max(15)
-            .step(0.25)
-            .height(window.innerHeight * 0.35)
-            .ticks(0)
-            .default(_verticalZoomHeightMultiplier)
-            .handle(d3.symbol().type(d3.symbolCircle).size(120)())
-            //.fill('#2196f3')
-            .on("onchange", function (val) {
-                //_verticalZoomHeightMultiplier = val;
-                //multipleLogPlot("mod-container", plot_templates, sfData);
-                _verticalZoomHeightProperty.set(val);
-            });
+
 
         var gZoom = d3
             .select("div#slider-zoom")
