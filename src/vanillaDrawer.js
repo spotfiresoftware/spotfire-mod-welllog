@@ -35,7 +35,7 @@ function VanillaDrawer() {
     this.drawer_wall = document.getElementById("drawer_wall");
     this.drawer_menu = document.getElementById("drawer_menu");
     this.drawer_menu.style.width = this.drawer_menu_w + "px";
-    this.drawer_menu.style.left = "-" + this.drawer_menu_w + "px";
+    this.drawer_menu.style.left = "-" + (this.drawer_menu_w + 2) + "px";
     // --------------------------------------------------
     this.drawer_menu_open = function () {
         this.drawer_menu_x = parseInt(this.drawer_menu.style.left);
