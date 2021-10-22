@@ -178,7 +178,7 @@ svg {
     margin-left: 2px;
     margin-right: 2px;
     margin-bottom: 5px;
-    border: 1px solid lightgray;
+    border: 1px solid #999999;
   } 
   
   .controlgroup {
@@ -326,10 +326,10 @@ svg {
   
   
   html { overflow-y: auto; }
-  #drawer_wall { display: none; position: fixed; left: 0; top: 0; z-index: 99995; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); }
+  #drawer_wall { display: none; position: fixed; left: 0; top: 0; z-index: 99995; width: 100%; height: 100%; background: rgba(0, 0, 0, 0); }
   #drawer_btn { position: absolute; right: 0; top: 0; }
   #drawer_btn a { display: block; width: 26px; height: 26px; text-align:center; line-height:1px;color: #fff; text-decoration: none; background: #333; }
-  #drawer_menu { overflow-y: auto; position: fixed; left: -220px; top: 0; z-index: 99998; width: 220px; height: 100%; color: #fff; background: #333; }
+  #drawer_menu {overflow-y: auto;    position: fixed;    left: -220px;    top: 0;    z-index: 99998;    color: #fff;    background: #fff;    padding-bottom: 5px;    border: 1px solid #b18888;}
   #drawer_menu_inner { padding: 5px; }
   #drawer_menu_inner ul { margin: 0; padding: 0; list-style-type: none; }
   #drawer_menu_inner li { margin: 0; padding: 0; }
@@ -338,7 +338,6 @@ svg {
   #drawer_content { width: 100%; max-width: 728px; margin: 0 auto; padding:10px; background: #eee; }
   #drawer_content p { margin-top: 0; }
   .disabled {pointer-events: none; cursor: default; opacity: 0.5;}
-
 
 
   /*Popup (to replace drawer?)*/
@@ -358,8 +357,22 @@ svg {
     background: "whitesmoke";
 }
 
-.trackHeaderDivContent:hover{
-    background: #ffe3e0;
+
+.trackHeaderDivContentGear:hover{
+    color:#858991 !important;
+    cursor:pointer;
+}
+
+[id*="mod-containerTrackHolder2_gear"][id*="_gear"],
+.trackHeaderDivContentGear{
+    color:#BDBFC3;
+    /* display: block; */
+    height:15px;
+    position: absolute;
+    height:14px;
+    top: 0;
+    right: 0;
+    /* vertical-align: middle; */
 }
 
 .popupContents {
