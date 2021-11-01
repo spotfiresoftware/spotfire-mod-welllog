@@ -325,8 +325,7 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
         return default_template;
     }
 
-    async function buildTemplates() {
-
+    async function buildTemplates(isReset=false) {
         let wellLeaves = (await (await _dataView.hierarchy("WELL")).root()).leaves();
         ///console.log({"_dataView":_dataView})
         selectedWell = wellLeaves[0].key;
@@ -341,7 +340,8 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
         for (const leaf of categoryLeaves) {
             ///console.log(leaf.key);
             let template = (await _mod.property("template" + categoryIndex)).value();
-            if (template != "empty") {
+
+            if ( template != "empty" && !isReset) {
                 let parsedTemplate = JSON.parse(template);
                 // Explicitly set the width and height as it is likely to have changed since the template property was set
                 parsedTemplate[0].trackBox.width = trackWidth;
@@ -358,8 +358,8 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
     }
 
     //add the drawer controls on the left of the screen
-    function createVanillaDrawer(div_id) {
-        d3.select("#" + div_id)
+    function createVanillaDrawer() {
+        d3.select("#mod-container")
             .style("margin", "0")
             .style("padding", "0")
             .style("border", "0")
@@ -371,7 +371,7 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
                 <DIV id=drawer_menu>
                 <DIV id="drawer_menu_content" style="position:relative;">
                 <A id=abtnfechar >✖</I></I></A>
-                <h3 style="float: left;margin-left: 10px;color:black;width: 89%;">Well Log Tracks Settings</h3>
+                <h3 class="drawer_menu_header" style="float: left;margin-left: 10px;color:black;width: 89%;">Well Log Tracks Settings</h3>
                 <DIV id="accordionConf" style="clear:both;">
                 </DIV>
                 </DIV>
@@ -417,17 +417,19 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
      *
      */
 
-    //read tempmlates from mod property
-    let plot_templates = await buildTemplates();
+    //read templates from mod property
+    let plot_templates = await buildTemplates(false); //use true to reset
 
     //get data
     var dataRows = await dataView.allRows();
 
     //creates property drawer with options for each track with nothing inside
-    createVanillaDrawer("mod-container", plot_templates, dataRows);
+    createVanillaDrawer(plot_templates, dataRows);
+    vanilla_drawer.draggable(document.getElementById("drawer_menu"))   
+
 
     //creates each plot per template
-    multipleLogPlot("mod-container", plot_templates, dataRows);
+    multipleLogPlot(plot_templates, dataRows);
 }
 
 async function logPlot(template_for_plotting, sfData, headerHeight) {
@@ -1850,59 +1852,6 @@ function insertDropdown(divContent, i, k, templates, name, sfData) {
     });
 }
 
-function insertTextInput(divContent, i, k, templates, propName, sfData) {
-    var selectedData = "";
-
-    if (templates[i]) {
-        var template = templates[i];
-        let template_components = template[0]["components"];
-        let templateCurves = template_components[0]["curves"];
-        let curveNames = templateCurves[0]["curveNames"];
-
-        if (propName == "ScaleMin") {
-            selectedData = templateCurves[0]["fill"][k]["minScaleX"];
-        } else if (propName == "ScaleMax") {
-            selectedData = templateCurves[0]["fill"][k]["maxScaleX"];
-        } else if (propName == "CutoffShaleSilt") {
-            selectedData = templateCurves[0]["fill"][k]["cutoffs"][1];
-        } else if (propName == "CutoffSiltSand") {
-            selectedData = templateCurves[0]["fill"][k]["cutoffs"][2];
-        }
-    }
-
-    var textInput = divContent
-        .append("input")
-        .attr("type", "number")
-        .attr("id", "TextInput" + propName + "_" + i + "_" + k)
-        .style("font-size", "13px")
-        .style("width", "95px")
-        .attr("value", selectedData)
-        .on("input", function (d) {
-            InputOnChange(divContent, i, k, templates, sfData, this.value, propName);
-        });
-}
-
-function InputOnChange(div_id, i, k, templates, sfData, selectedData, propName) {
-    if (templates[i] && initialized) {
-        var template = templates[i];
-        let template_components = template[0]["components"];
-        let templateCurves = template_components[0]["curves"];
-        let curveNames = templateCurves[0]["curveNames"];
-
-        if (propName == "ScaleMin") {
-            templateCurves[0]["fill"][k]["minScaleX"] = selectedData;
-        } else if (propName == "ScaleMax") {
-            templateCurves[0]["fill"][k]["maxScaleX"] = selectedData;
-        } else if (propName == "CutoffShaleSilt") {
-            templateCurves[0]["fill"][k]["cutoffs"][1] = selectedData;
-        } else if (propName == "CutoffSiltSand") {
-            templateCurves[0]["fill"][k]["cutoffs"][2] = selectedData;
-        }
-
-        multipleLogPlot("mod-container", templates, sfData);
-    }
-}
-
 /**
  * Aha! This is called when we change something in the templates - and we call multipleLogplots() to re-draw the charts
  * Todo: persist the templates in Spotfire properties ;-)
@@ -1952,30 +1901,83 @@ function PropertyOnChange(i, k, templates, sfData, selectedData, propName) {
             curveNames[k]=selectedData.value
 
         }
-        if (propName=="addCurveName"){
-            console.log("add curve name to ")
+        if (propName=="duplicateCurve"){
+            for (k in templateCurves[0]) {if (Array.isArray(templateCurves[0][k])) templateCurves[0][k].push(templateCurves[0][k][0])}
+            //accordionTemplate()
+            //partially works, needs to switch tabs and back to refresh (is there a mod.refresh?)
+        }
+        if (propName=="removeCurve"){
+            for (k in templateCurves[0]) {if (Array.isArray(templateCurves[0][k])) templateCurves[0][k].pop()}
+            updateAccordionTools = true
+            //accordionTemplate()
+            //partially works, needs to switch tabs and back to refresh (is there a mod.refresh?)
         }
 
         ///console.log("Setting property template" + i, templates[i]);
         // Store the updated template in the appropriate mod property
         _mod.property("template" + i).set(JSON.stringify(templates[i]));
-        multipleLogPlot("mod-container", templates, sfData);
+        multipleLogPlot(templates, sfData);
     }
 }
 
-//here is where we need to focus our work because debening on the templates is the rendering
-//the accordion is the way to setup the template. 
-//for example, to plot 2 curves on track 4 (PHIN and PHID):
-//templates[3][0].components[0].curves[0].curveNames=["PHIN","PHID"]
-//templates[3][0].components[0].curves[0].curveColors=["black","yellow"]
-//fill1 = templates[3][0].components[0].curves[0].fill[0]
-//fill2 = templates[2][0].components[0].curves[0].fill[0]
-//templates[3][0].components[0].curves[0].fill = [fill1,fill2]
+function insertTextInput(divContent, i, k, templates, propName, sfData) {
+    var selectedData = "";
 
+    if (templates[i]) {
+        var template = templates[i];
+        let template_components = template[0]["components"];
+        let templateCurves = template_components[0]["curves"];
+        let curveNames = templateCurves[0]["curveNames"];
+
+        if (propName == "ScaleMin") {
+            selectedData = templateCurves[0]["fill"][k]["minScaleX"];
+        } else if (propName == "ScaleMax") {
+            selectedData = templateCurves[0]["fill"][k]["maxScaleX"];
+        } else if (propName == "CutoffShaleSilt") {
+            selectedData = templateCurves[0]["fill"][k]["cutoffs"][1];
+        } else if (propName == "CutoffSiltSand") {
+            selectedData = templateCurves[0]["fill"][k]["cutoffs"][2];
+        }
+    }
+
+    divContent
+        .append("input")
+        .attr("type", "number")
+        .attr("id", "TextInput" + propName + "_" + i + "_" + k)
+        .style("font-size", "13px")
+        .style("width", "95px")
+        .attr("value", selectedData)
+        .on("input", function (d) {
+            if (templates[i] && initialized) {
+                var template = templates[i];
+                let template_components = template[0]["components"];
+                let templateCurves = template_components[0]["curves"];
+                let curveNames = templateCurves[0]["curveNames"];
+        
+                if (propName == "ScaleMin") {
+                    templateCurves[0]["fill"][k]["minScaleX"] = selectedData;
+                } else if (propName == "ScaleMax") {
+                    templateCurves[0]["fill"][k]["maxScaleX"] = selectedData;
+                } else if (propName == "CutoffShaleSilt") {
+                    templateCurves[0]["fill"][k]["cutoffs"][1] = selectedData;
+                } else if (propName == "CutoffSiltSand") {
+                    templateCurves[0]["fill"][k]["cutoffs"][2] = selectedData;
+                }
+        
+                multipleLogPlot(templates, sfData);
+            }        });
+}
+
+
+//creates a jquery accordion. Each panel contains one or more tabs
+//an accordion panel represents a track (template)
+//a tab is a curve for each track (template_components[0]["curves"][0];)
 async function accordionTemplate(templates, i, sfData) {
     let template = templates[i];
     let template_components = template[0]["components"];
     let templateCurves = template_components[0]["curves"][0];
+
+  
 
     if (templateCurves["dataType"] == "curve") {
         let curveNames = templateCurves["curveNames"];
@@ -1988,82 +1990,62 @@ async function accordionTemplate(templates, i, sfData) {
             .append("h3")
             .text("Track " + (i+1) + ": " + curveNames); 
 
-        let content = d3.select("#accordionConf").append("div");
+            let content = d3.select("#accordionConf").append("div");
 
-        //Track tabs
 
-        var tabs = content.append("div").attr("id", "tabs_" + i);
+            /*
+            Track tabs
+            <div id="tabs">
+            <ul>
+                <li><a href="#tabs-1"> trucks </a></li>
+                <li><a href="#tabs-2"> cars  </a></li>
+                <li><a href="#tabs-3"> boats </a></li>
+            </ul>
+            <div id="tabs-1"> trucks are cool </div>
+            <div id="tabs-2"> cars are fast  </div>
+            <div id="tabs-3"> boats can sink  </div>
+            </div> 
+            */
 
-        var ul = tabs.append("ul");
-
-        for (let k = 0; k < curveNames.length; k++) {
-            if (curveNames[k]) {
-                let tabHeader = ul
-                    .append("li")
-                        .append("a")
-                            .attr("href", "#tab_" + i + "_" + k)
-                            .text(curveNames[k]);
-
-//                tabHeader.append("BR");
-                
-
-                /*tabHeader.append("select").attr("id", "dropdown_measure_selector_" + i);
-                $("#dropdown_measure_selector_" + i).ddslick({
-                    data: plusDdData,
-                    //height: "15px",
-                    width: "100px",
-                    defaultSelectedIndex: 0,
-                    selectText: "Select an item",
-                    onSelected: function (data) {
-                        var selData = data.selectedData;
-                        PropertyOnChange(i, k, templates, sfData, selData, "curveName");
-                    }
-                });
-                */
+            var tabs = content.append("div").attr("id", "tabs_" + i);
+            var ul = tabs.append("ul"); 
+            for (let k = 0; k < curveNames.length+15; k++) {
+                if (curveNames[k]) {
+                    ul.append("li").append("a")
+                    .attr("href", "#tab_" + i + "_" + k)
+                    .text(curveNames[k]);
+                }
             }
-        }
-
-        // Add a "+" tab, so you can add another measure to this track
-        let plusTab = ul.append("li")
-        /*plusTab.append("select").attr("id", "dropdown_plus_tab_" + i);
-
-        $("#dropdown_plus_tab_" + i).ddslick({
-            data: plusDdData,
-            //height: "15px",
-            width: "100px",
-            defaultSelectedIndex: 0,
-            selectText: "Select an item",
-            onSelected: function (data) {
-                var selData = data.selectedData;
-                PropertyOnChange( i, k, templates, sfData, selData, "addCurveName");
-            }
-        });*/
-
-        .append("a")
-            .attr("href", "#tab_" + i + "_" + curveNames.length)
+            
+            
+            
+            // Add a "[+]" tab, so you can add another measure to this track
+            ul.append("li")
+            .append("a")
+            .attr("href", "#tab_" + i + "_addTabButton")
+            .attr("title", "Duplicates this track")
             .html("+")
-            .on("mousedown", evt => 
-                //TODO: duplicate a tab with first curve goes here
+            .on("mousedown", evt => {
+                PropertyOnChange( i, null, templates, sfData, curveNames[curveNames.length], "duplicateCurve");
                 evt.preventDefault
-            );
+            });
 
+            // Add a "[-]" tab, so you can remove the previous measure from this track
+            ul.append("li")
+            .append("a")
+            .attr("href", "#tab_" + i + "_addTabButton")
+            .attr("title", "Removes last track")
+            .html("-")
+            .on("mousedown", evt => {
+                PropertyOnChange( i, null, templates, sfData, curveNames[curveNames.length], "removeCurve");
+                evt.preventDefault
+            });
+
+            
         // The contents of the tabs
         for (let k = 0; k < curveNames.length; k++) {
             if (curveNames[k]) {
                 var tab = tabs.append("div").attr("id", "tab_" + i + "_" + k);
-
-                //add a filedset
-/*                var fieldset = tab.append("fieldset");
-                fieldset.append("legend").text("Measure");
-                var controlgroup = fieldset.append("div").attr("class","controlgroup");
-                var divItem = controlgroup.append("div")
-                    .attr("class", "controlGroupDiv")
-                    .on("mousedown", function (evt) {
-                        evt.stopPropagation();
-                });
-*/
-                //add measure dropdown here
-
 
                 var fieldset = tab.append("fieldset");
                 fieldset.append("legend").text("Line");
@@ -2211,26 +2193,25 @@ async function accordionTemplate(templates, i, sfData) {
                     });
                 divItem.text("Silt/Sand:").append("br");
                 insertTextInput(divItem, i, k, templates, "CutoffSiltSand", sfData);
+
             }
         }
 
-        $("#" + "tabs_" + i).tabs();
     }
+
+    $("#" + "tabs_" + i).tabs();
+
+
 }
-
-
-
 
 // 
 /**
  * renders all the vertical line chart tracks. 
- * @param  {string} div_id mod_container
  * @param  {Array} templates array of templates. Each one represents one track
  * @param  {Array} sfData spotfire data   
  */
-async function multipleLogPlot(div_id, templates, sfData) {
-
-
+async function multipleLogPlot(templates, sfData) {
+    let div_id="mod-container"
 
     //I guess this portion clears the plots
     for (let i = 0; i < templates.length; i++) {
@@ -2340,7 +2321,7 @@ async function multipleLogPlot(div_id, templates, sfData) {
                 _verticalZoomHeightProperty.set(val);
             });
 
-        var plusBtn = divPlusBtn
+        divPlusBtn
             .append("input")
             .attr("id", "plusBtn")
             .attr("type", "image")
@@ -2354,7 +2335,7 @@ async function multipleLogPlot(div_id, templates, sfData) {
                 }
             });
 
-        var divGVertical = TracksToolDiv.append("div").attr("id", "slider-zoom").style("margin", "0px");
+        TracksToolDiv.append("div").attr("id", "slider-zoom").style("margin", "0px");
 
 
 
@@ -2370,7 +2351,7 @@ async function multipleLogPlot(div_id, templates, sfData) {
 
         var divMinusBtnRelPos = TracksToolDiv.append("div").style("position", "relative").style("height", "26px");
 
-        var divMinusBtn = divMinusBtnRelPos
+        divMinusBtnRelPos
             .append("div")
               .style("position", "absolute")
               .style("top", "-10px")
@@ -2465,7 +2446,7 @@ async function multipleLogPlot(div_id, templates, sfData) {
 
     }
     
-    //needs to be outside the loop because we are finding the maxHeaderHeight
+    //needs to be outside the loop because we are finding the maxHeaderHeight there
     templatesToPlot.forEach((template,i) => {
         logPlot(template, sfData, maxHeaderHeight + "px")
     });
