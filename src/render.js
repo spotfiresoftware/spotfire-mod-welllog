@@ -13,11 +13,10 @@ import "jquery-ui/ui/widgets/accordion";
 import "ddslick/src/jquery.ddslick";
 
 import { invalidateTooltip } from "./extended-api.js";
-import { nodeFormattedPathAsArray } from "./extended-api.js";
+import { nodeFormattedPathAsArray } from "./extended-api.js"; 
 import { addHandlersSelection } from "./ui-input.js";
 
 import * as vanillaDrawer from "./vanillaDrawer.js";
-//import * as Popup from "./popup.js";
 import * as colorHelpers from "./color-helpers.js";
 
 /**
@@ -179,7 +178,6 @@ var y_function;
 var _mod; // The global mod instance
 
 
-
 /**
  * Renders the chart.
  * @param {Object} state
@@ -189,6 +187,8 @@ var _mod; // The global mod instance
  * @param {Spotfire.ModProperty<string>} example - an example property
  */
 export async function render(state, mod, dataView, windowSize, verticalZoomHeightProperty) {
+    // console.log("render", [arguments])
+
     _dataView = dataView;
     _mod = mod;
     _verticalZoomHeightProperty = verticalZoomHeightProperty;
@@ -209,7 +209,7 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
     const { radioButton, checkbox } = popout.components;
     const { section } = popout;
 
-    invalidateTooltip(tooltip);
+    //invalidateTooltip(tooltip);
 
     /**
      * The DataView can contain errors which will cause rowCount method to throw.
@@ -364,7 +364,7 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
             .style("padding", "0")
             .style("border", "0")
 
-        .append("div").html(
+        .append("div").attr("id","vanillaDrawerContainer").html(
             `
                 <DIV id=drawer_content style="DISPLAY: none"></DIV>
                 <DIV id=drawer_wall></DIV>
@@ -430,6 +430,9 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
 
     //creates each plot per template
     multipleLogPlot(plot_templates, dataRows);
+
+    //bring up settings dialog where left off in case render was called from setting dialog
+    //TODO
 }
 
 async function logPlot(template_for_plotting, sfData, headerHeight) {
@@ -1690,33 +1693,16 @@ function insertDropdown(divContent, i, k, templates, name, sfData) {
         let template_components = template[0]["components"];
         let templateCurves = template_components[0]["curves"];
         ///let curveNames = templateCurves[0]["curveNames"];
+ 
+        if    (name == "Thickness")       { selectedValue = templateCurves[0]["strokeWidth"][k];
+    } else if (name == "LineStyle")      { selectedValue = templateCurves[0]["curveStrokeDashArray"][k];
+    } else if (name == "LineColor")      { selectedValue = document.querySelector(`#lineColor${i}`).value;
+    } else if (name == "AreaFill")       { selectedValue = templateCurves[0]["fill"][k]["fill"] == "no"?"none":selectedValue = templateCurves[0]["fill"][k]["fillDirection"];
+    } else if (name == "AreaFill2Curve") { selectedValue = templateCurves[0]["fill"][k]["fill"] == "no"?"none":selectedValue = templateCurves[0]["fill"][k]["fillDirection"];
+    } else if (name == "ScaleType")      { selectedValue = templateCurves[0]["scaleTypeLinearLog"][k];
+    } else if (name == "AreaColor")      { selectedValue = colorHelpers.getFillColorName(templateCurves[0]["fill"][k]["fillColors"][0]);
+      if (selectedValue == "") selectedValue = colorHelpers.getColorInterpolator(templateCurves[0]["fill"][k]["colorInterpolator"][0]);
 
-        if (name == "Thickness") {
-            selectedValue = templateCurves[0]["strokeWidth"][k];
-        } else if (name == "LineStyle") {
-            selectedValue = templateCurves[0]["curveStrokeDashArray"][k];
-        } else if (name == "LineColor") {
-            selectedValue = document.querySelector(`#lineColor${i}`).value
-            //selectedValue = colorHelpers.getFillColorName(templateCurves[0]["curveColors"][k]);
-        } else if (name == "AreaFill") {
-            if (templateCurves[0]["fill"][k]["fill"] == "no") {
-                selectedValue = "none";
-            } else {
-                selectedValue = templateCurves[0]["fill"][k]["fillDirection"];
-            }
-        } else if (name == "AreaFill2Curve") {
-            if (templateCurves[0]["fill"][k]["fill"] == "no") {
-                selectedValue = "none";
-            } else {
-                selectedValue = templateCurves[0]["fill"][k]["fillDirection"];
-            }
-        } else if (name == "ScaleType") {
-            selectedValue = templateCurves[0]["scaleTypeLinearLog"][k];
-        } else if (name == "AreaColor") {
-            selectedValue = colorHelpers.getFillColorName(templateCurves[0]["fill"][k]["fillColors"][0]);
-            if (selectedValue == "") {
-                selectedValue = colorHelpers.getColorInterpolator(templateCurves[0]["fill"][k]["colorInterpolator"][0]);
-            }
         }
     }
 
@@ -1856,14 +1842,14 @@ function insertDropdown(divContent, i, k, templates, name, sfData) {
  * Aha! This is called when we change something in the templates - and we call multipleLogplots() to re-draw the charts
  * Todo: persist the templates in Spotfire properties ;-)
  * @param {interger} i "track number"
- * @param {*} k
+ * @param {*} p
  * @param {*} templates
  * @param {*} sfData
  * @param {*} selectedData  "json with options for the propName"
  * @param {String} propName "name property to change. For example LineColor"
  */
 
-function PropertyOnChange(i, k, templates, sfData, selectedData, propName) {
+function PropertyOnChange(i, p, templates, sfData, selectedData, propName) {
     ///console.log({"PropertyOnChange":[i, k, templates, sfData, selectedData, propName]})
     if (templates[i] && initialized) {
         var template = templates[i];
@@ -1871,46 +1857,75 @@ function PropertyOnChange(i, k, templates, sfData, selectedData, propName) {
         let templateCurves = template_components[0]["curves"];
         let curveNames = templateCurves[0]["curveNames"];
 
-        if (propName == "Thickness") {
-            templateCurves[0]["strokeWidth"][k] = selectedData.value;
-        } else if (propName == "LineStyle") {
-            templateCurves[0]["curveStrokeDashArray"][k] = selectedData.value;
-        } else if (propName == "LineColor") {
-            //templateCurves[0]["curveColors"][k] = colorHelpers.getFillColor(selectedData.value, "normal"); //old way (delete)
-            templateCurves[0]["curveColors"][k] = selectedData.value; //color picker (need to preserve color)
-        } else if (propName == "AreaFill") {
+        if      (propName == "Thickness") { templateCurves[0]["strokeWidth"][p] = selectedData.value;} 
+        else if (propName == "LineStyle") { templateCurves[0]["curveStrokeDashArray"][p] = selectedData.value;} 
+        else if (propName == "LineColor") { templateCurves[0]["curveColors"][p] = selectedData.value;} 
+        else if (propName == "AreaFill") { 
             if (selectedData.value == "none") {
-                templateCurves[0]["fill"][k]["fill"] = "no";
+                templateCurves[0]["fill"][p]["fill"] = "no";
             } else {
-                templateCurves[0]["fill"][k]["fill"] = "yes";
-                templateCurves[0]["fill"][k]["fillDirection"] = selectedData.value;
+                templateCurves[0]["fill"][p]["fill"] = "yes";
+                templateCurves[0]["fill"][p]["fillDirection"] = selectedData.value;
             }
-        } else if (propName == "AreaColor") {
-            templateCurves[0]["fill"][k]["fillColors"] = [
+        } 
+        
+        else if (propName == "AreaColor") {
+            templateCurves[0]["fill"][p]["fillColors"] = [
                 colorHelpers.getFillColor(selectedData.value, "normal"),
                 colorHelpers.getFillColor(selectedData.value, "dark"),
                 colorHelpers.getFillColor(selectedData.value, "light")
             ];
+            templateCurves[0]["fill"][p]["colorInterpolator"] = [selectedData.value, null, null];
+        } 
 
-            templateCurves[0]["fill"][k]["colorInterpolator"] = [selectedData.value, null, null];
-        } else if (propName == "ScaleType") {
-            templateCurves[0]["scaleTypeLinearLog"][k] = selectedData.value;
-        }
+        else if (propName == "ScaleType") {templateCurves[0]["scaleTypeLinearLog"][p] = selectedData.value;}
+        else if (propName=="curveName"){curveNames[p]=selectedData.value}
 
-        if (propName=="curveName"){
-            curveNames[k]=selectedData.value
+        //copy first curve
+        else if (propName=="duplicateCurve"){
+
+            //duplicates first curve properties (arrays such as colors, style, curvName, etc)
+            for (p in templateCurves[0]) {if (Array.isArray(templateCurves[0][p])) templateCurves[0][p].push(templateCurves[0][p][0])}
+
+
+            //add a tab
+            var k=curveNames.length-1;
+            var tid= `tab_${i}_${k}`
+            var ul = d3.select(`#tabs_${i} ul`);
+            ul.insert("li",`:nth-child(${k+1})`).append("a").attr("href",`#${tid}`).append("span").text(curveNames[0]);
+            
+            //add tab panels (placeholder)
+            //d3.select(`#tabs_${i}`).append("div").attr("id",tid).append("P").html(tid);
+            
+            //populate tab
+            var tabs = d3.select("#" + "tabs_" + i)
+            addAccordionTabContents(i,k,curveNames,tabs,templates,sfData,["#333333"])
+            
+            //refresh tabs
+            $("#" + "tabs_" + i).tabs().tabs("refresh");
+            $("#" + "tabs_" + i).tabs("option", "active", k); //makes the new tab active
 
         }
-        if (propName=="duplicateCurve"){
-            for (k in templateCurves[0]) {if (Array.isArray(templateCurves[0][k])) templateCurves[0][k].push(templateCurves[0][k][0])}
-            //accordionTemplate()
-            //partially works, needs to switch tabs and back to refresh (is there a mod.refresh?)
-        }
-        if (propName=="removeCurve"){
-            for (k in templateCurves[0]) {if (Array.isArray(templateCurves[0][k])) templateCurves[0][k].pop()}
-            updateAccordionTools = true
-            //accordionTemplate()
-            //partially works, needs to switch tabs and back to refresh (is there a mod.refresh?)
+        
+        else if (propName=="removeCurve"){
+            var curveCount = curveNames.length-1
+            if(curveCount){ //don't remove last curve
+                //remove curve: item from all templateCuves arrays (colors, style, curvName, etc)
+                for (p in templateCurves[0]) {if (Array.isArray(templateCurves[0][p])) templateCurves[0][p].pop()}
+                
+                var ttr = `#tab_${i}_${curveCount}`
+                
+                //remove last tab
+                // document.querySelector(`a[href='${ttr}']`).parentElement.remove()  //another (non jquery) way to remove tab
+                $(`a[href='${ttr}']`).closest("li").remove()
+
+                //remove last tab contents
+                $(ttr).remove();
+
+                //refresh tabs (do we need this?)
+                $("#" + "tabs_" + i).tabs().tabs("refresh");
+
+            }
         }
 
         ///console.log("Setting property template" + i, templates[i]);
@@ -1918,6 +1933,13 @@ function PropertyOnChange(i, k, templates, sfData, selectedData, propName) {
         _mod.property("template" + i).set(JSON.stringify(templates[i]));
         multipleLogPlot(templates, sfData);
     }
+}
+
+//adds a tab to an accordion panel and populates with properties
+//i is track
+//k is the curve for that track
+function addAccordionTab(i,k){
+
 }
 
 function insertTextInput(divContent, i, k, templates, propName, sfData) {
@@ -1982,9 +2004,6 @@ async function accordionTemplate(templates, i, sfData) {
     if (templateCurves["dataType"] == "curve") {
         let curveNames = templateCurves["curveNames"];
         let curveColors = templateCurves["curveColors"];
-        let curveStrokeDashArray = templateCurves["curveStrokeDashArray"];
-        let scaleTypeLinearLog = templateCurves["scaleTypeLinearLog"];
-        let depthCurveName = templateCurves["depthCurveName"];
 
         d3.select("#accordionConf")
             .append("h3")
@@ -1995,15 +2014,15 @@ async function accordionTemplate(templates, i, sfData) {
 
             /*
             Track tabs
-            <div id="tabs">
+            <div id="tabs_0">
             <ul>
-                <li><a href="#tabs-1"> trucks </a></li>
-                <li><a href="#tabs-2"> cars  </a></li>
-                <li><a href="#tabs-3"> boats </a></li>
+                <li><a href="#tabs_0_0"> trucks </a></li>
+                <li><a href="#tabs_0_1"> cars  </a></li>
+                <li><a href="#tabs_0_2"> boats </a></li>
             </ul>
-            <div id="tabs-1"> trucks are cool </div>
-            <div id="tabs-2"> cars are fast  </div>
-            <div id="tabs-3"> boats can sink  </div>
+            <div id="tabs_0_0"> trucks are cool </div>
+            <div id="tabs_0_1"> cars are fast  </div>
+            <div id="tabs_0_2"> boats can sink  </div>
             </div> 
             */
 
@@ -2026,10 +2045,17 @@ async function accordionTemplate(templates, i, sfData) {
             .attr("title", "Duplicates this track")
             .html("+")
             .on("mousedown", evt => {
+
+
+
                 PropertyOnChange( i, null, templates, sfData, curveNames[curveNames.length], "duplicateCurve");
+                //addAccordionTabContents(i,curveNames.length,curveNames,tabs,templates,sfData,curveColors)
+
+
+                //TODO duplicate code goes here or on PropertyOnChange
                 evt.preventDefault
             });
-
+            
             // Add a "[-]" tab, so you can remove the previous measure from this track
             ul.append("li")
             .append("a")
@@ -2044,164 +2070,148 @@ async function accordionTemplate(templates, i, sfData) {
             
         // The contents of the tabs
         for (let k = 0; k < curveNames.length; k++) {
-            if (curveNames[k]) {
-                var tab = tabs.append("div").attr("id", "tab_" + i + "_" + k);
-
-                var fieldset = tab.append("fieldset");
-                fieldset.append("legend").text("Line");
-                var controlgroup = fieldset.append("div").attr("class", "controlgroup");
-                var divItem = controlgroup
-                    .append("div")
-                    .attr("class", "controlGroupDiv")
-                    .on("mousedown", function (evt) {
-                        evt.stopPropagation();
-                    });
-                //
-                divItem.text("Thickness:").append("br");
-                insertDropdown(divItem, i, k, templates, "Thickness", sfData);
-
-                divItem = controlgroup
-                    .append("div")
-                    .attr("class", "controlGroupDiv")
-                    .on("mousedown", function (evt) {
-                        evt.stopPropagation();
-                    });
-
-                divItem.text("Decoration:").append("br");
-                insertDropdown(divItem, i, k, templates, "LineStyle", sfData);
-
-                divItem = controlgroup
-                    .append("div")
-                      .attr("class", "controlGroupDiv")
-                      .on("mousedown", function (evt) {
-                        evt.stopPropagation();
-                    });
-                    
-                    
-                divItem.text("Measure:").append("div")
-                    
-                .append("select").attr("id", "dropdown_measure_selector_" + i)
-
-                //generate dropdown options for track curve
-                let measureDdOptions=[]
-                let categoryLeaves = (await (await _dataView.hierarchy("Category")).root()).leaves();
-                for (let leaf of categoryLeaves) {
-                    measureDdOptions.push({
-                        value: leaf.key,
-                        selected: curveNames[0]==leaf.key,
-                        text: leaf.key
-                    });
-                }
-        
-                $("#dropdown_measure_selector_" + i).ddslick({
-                    data: measureDdOptions,
-                    //height: "15px",
-                    width: "100px",
-                    defaultSelectedIndex: 0,
-                    selectText: "Select an item",
-                    onSelected: function (data) {
-                        var selData = data.selectedData;
-                        PropertyOnChange(i, k, templates, sfData, selData, "curveName");
-                    }
-                });
-
-                
-                divItem = controlgroup
-                .append("div")
-                  .text("Color:")
-                  .append("div")
-                    .html(`<input style="width:100px;height: 15px;" id="lineColor${k}" type="color" value="${curveColors}">`)
-                    .on("change",function(){ // use "change" or "input" events. "input" might be slower but updates the graph instantly
-                      PropertyOnChange( i, k, templates, sfData, this.firstChild, "LineColor"); 
-                  }); 
-
-                fieldset = tab.append("fieldset");
-                fieldset.append("legend").text("Area");
-
-                controlgroup = fieldset.append("div").attr("class", "controlgroup");
-
-                divItem = controlgroup
-                    .append("div")
-                    .attr("class", "controlGroupDiv")
-                    .on("mousedown", function (evt) {
-                        evt.stopPropagation();
-                    });
-                divItem.text("Fill:").append("br");
-                insertDropdown(divItem, i, k, templates, "AreaFill", sfData);
-
-                divItem = controlgroup
-                    .append("div")
-                    .attr("class", "controlGroupDiv")
-                    .on("mousedown", function (evt) {
-                        evt.stopPropagation();
-                    });
-                divItem.text("Color:").append("br");
-                insertDropdown(divItem, i, k, templates, "AreaColor", sfData);
-
-                fieldset = tab.append("fieldset");
-                fieldset.append("legend").text("Scale");
-
-                divItem = fieldset
-                    .append("div")
-                    .attr("class", "controlGroupDiv")
-                    .on("mousedown", function (evt) {
-                        evt.stopPropagation();
-                    });
-                divItem.text("Type:").append("br");
-                insertDropdown(divItem, i, k, templates, "ScaleType", sfData);
-
-                controlgroup = fieldset.append("div").attr("class", "controlgroup");
-
-                divItem = controlgroup
-                    .append("div")
-                    .attr("class", "controlGroupDiv")
-                    .on("mousedown", function (evt) {
-                        evt.stopPropagation();
-                    });
-                divItem.text("Min:").append("br");
-                insertTextInput(divItem, i, k, templates, "ScaleMin", sfData);
-
-                divItem = controlgroup
-                    .append("div")
-                    .attr("class", "controlGroupDiv")
-                    .on("mousedown", function (evt) {
-                        evt.stopPropagation();
-                    });
-                divItem.text("Max:").append("br");
-                insertTextInput(divItem, i, k, templates, "ScaleMax", sfData);
-
-                fieldset = tab.append("fieldset");
-
-                fieldset.append("legend").text("Cutoffs/Threshold");
-
-                controlgroup = fieldset.append("div").attr("class", "controlgroup");
-
-                divItem = controlgroup
-                    .append("div")
-                    .attr("class", "controlGroupDiv")
-                    .on("mousedown", function (evt) {
-                        evt.stopPropagation();
-                    });
-                divItem.text("Shale/Silt:").append("br");
-                insertTextInput(divItem, i, k, templates, "CutoffShaleSilt", sfData);
-
-                divItem = controlgroup
-                    .append("div")
-                    .attr("class", "controlGroupDiv")
-                    .on("mousedown", function (evt) {
-                        evt.stopPropagation();
-                    });
-                divItem.text("Silt/Sand:").append("br");
-                insertTextInput(divItem, i, k, templates, "CutoffSiltSand", sfData);
-
-            }
+            await addAccordionTabContents(i,k,curveNames,tabs,templates,sfData,curveColors)
         }
 
+        
     }
+    
+    $("#" + "tabs_" + i).tabs()
 
-    $("#" + "tabs_" + i).tabs();
+
+}
+
+//i: accordion panel index
+//k: tab index
+//
+async function addAccordionTabContents(i,k,curveNames,tabs,templates,sfData,curveColors){
+
+    if (curveNames[k]) {
+
+        var tab = tabs.append("div").attr("id", "tab_" + i + "_" + k);
+
+        //LINE
+        var fieldset = tab.append("fieldset");
+        fieldset.append("legend").text("Line");
+        var controlgroup = fieldset.append("div").attr("class", "controlgroup");
+       
+        //Line Measure
+        divItem = controlgroup
+        .append("div").attr("class", "controlGroupDiv").on("mousedown", function (evt) {evt.stopPropagation();});
+        divItem.text("Measure:").append("div")
+        .append("select").attr("id", "dropdown_measure_selector_" + k + "_" + i )
+
+        //generate dropdown options for track curve
+        let measureDdOptions=[]
+        let categoryLeaves = (await (await _dataView.hierarchy("Category")).root()).leaves();
+        for (let leaf of categoryLeaves) {
+            measureDdOptions.push({
+                value: leaf.key,
+                selected: curveNames[k]==leaf.key,
+                text: leaf.key
+            });
+        }
+
+        $("#dropdown_measure_selector_" + k + "_" + i ).ddslick({
+            data: measureDdOptions,
+            //height: "15px",
+            width: "100px",
+            defaultSelectedIndex: 0,
+            selectText: "Select an item",
+            onSelected: function (data) {
+                var selData = data.selectedData;
+                PropertyOnChange(i, k, templates, sfData, selData, "curveName");
+
+                //update tab and accordion name
+                let anAccordionHeader =  document.querySelector("#accordionConf h3[aria-expanded='true'] span").nextSibling;
+                let aTab=document.querySelector(`a[href='#tab_${i}_${k}']`);
+                aTab.innerText = curveNames[k];
+                anAccordionHeader.textContent = `Track ${i+1}: `+curveNames.join();
+            }
+        });
+
+        //Line Thickness
+        var divItem = controlgroup
+        .append("div").attr("class", "controlGroupDiv").on("mousedown", function (evt) {evt.stopPropagation();});
+        divItem.text("Thickness:");
+        insertDropdown(divItem, i, k, templates, "Thickness", sfData);
+
+        //Line Color
+        divItem = controlgroup
+        .append("div").attr("class", "controlGroupDiv").on("mousedown", function (evt) {evt.stopPropagation();})
+        divItem.text("Color:")
+          .append("div").append("input").attr("style","width:95px;height: 15px;").attr("id",`lineColor_${i}_${k}`).attr("type","color").attr("value",`${curveColors[k]}">`)
+          .on("change",function(){ // use "change" or "input" events. "input" might be slower but updates the graph instantly
+//            .html(`<input style="width:95px;height: 15px;" id="lineColor_${i}_${k}" type="color" value="${curveColors[k]}">`)
+              PropertyOnChange( i, k, templates, sfData, document.getElementById(`lineColor_${i}_${k}`), "LineColor"); 
+          }); 
+
+        //Line Style
+        divItem = controlgroup
+        .append("div").attr("class", "controlGroupDiv").on("mousedown", function (evt) {evt.stopPropagation();});
+        divItem.text("Decoration:");
+        insertDropdown(divItem, i, k, templates, "LineStyle", sfData);
+
+        
 
 
+        //AREA
+        fieldset = tab.append("fieldset");
+        fieldset.append("legend").text("Area");
+        controlgroup = fieldset.append("div").attr("class", "controlgroup");
+
+        //Area Fill
+        divItem = controlgroup
+        .append("div").attr("class", "controlGroupDiv").on("mousedown", function (evt) {evt.stopPropagation();})
+        divItem.text("Fill:").append("br");
+        insertDropdown(divItem, i, k, templates, "AreaFill", sfData);
+
+        //Area Color
+        divItem = controlgroup
+        .append("div").attr("class", "controlGroupDiv").on("mousedown", function (evt) {evt.stopPropagation();})
+        divItem.text("Color:").append("br");
+        insertDropdown(divItem, i, k, templates, "AreaColor", sfData);
+
+        //SCALE
+        fieldset = tab.append("fieldset");
+        fieldset.append("legend").text("Scale");
+        controlgroup = fieldset.append("div").attr("class", "controlgroup");
+
+        //Scale type
+        divItem = controlgroup
+        .append("div").attr("class", "controlGroupDiv").on("mousedown", function (evt) {evt.stopPropagation();});
+        divItem.text("Type:").append("br");
+        insertDropdown(divItem, i, k, templates, "ScaleType", sfData);
+
+        controlgroup = fieldset.append("div").attr("class", "controlgroup");
+
+        //Scale Min
+        divItem = controlgroup
+        .append("div").attr("class", "controlGroupDiv").on("mousedown", function (evt) {evt.stopPropagation();});
+        divItem.text("Min:").append("br");
+        insertTextInput(divItem, i, k, templates, "ScaleMin", sfData);
+
+        divItem = controlgroup
+        .append("div").attr("class", "controlGroupDiv").on("mousedown", function (evt) {evt.stopPropagation();})
+        divItem.text("Max:").append("br");
+        insertTextInput(divItem, i, k, templates, "ScaleMax", sfData);
+
+        //CUTTOFFS / THRESHOLD
+        fieldset = tab.append("fieldset");
+        fieldset.append("legend").text("Cutoffs/Threshold");
+        controlgroup = fieldset.append("div").attr("class", "controlgroup");
+
+        divItem = controlgroup
+        .append("div").attr("class", "controlGroupDiv").on("mousedown", function (evt) {evt.stopPropagation();})
+        divItem.text("Shale/Silt:").append("br");
+        insertTextInput(divItem, i, k, templates, "CutoffShaleSilt", sfData);
+
+        divItem = controlgroup
+        .append("div").attr("class", "controlGroupDiv").on("mousedown", function (evt) {evt.stopPropagation();})
+        divItem.text("Silt/Sand:").append("br");
+        insertTextInput(divItem, i, k, templates, "CutoffSiltSand", sfData);
+
+    }
 }
 
 // 
