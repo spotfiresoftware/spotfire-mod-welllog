@@ -26,15 +26,53 @@ Spotfire.initialize(async (mod) => {
      */
     const context = mod.getRenderContext();
 
+
+    /**
+    * Wrap a reader and adds an additional method called `hasChanged`.
+    * It allows you to check whether a passed argument is new or unchanged since the last time the subscribe loop was called.
+    * @function
+    * @template A
+    * @param {A} reader
+    * @returns {A & {hasValueChanged(value: any):boolean}}
+    */
+    function readerWithChangeChecker(reader) {
+        let previousValues = [];
+        let currentValues = [];
+
+        function storeValuesForComparison(cb) {
+            return function storeValuesForComparison(...values) {
+                previousValues = currentValues;
+                currentValues = values;
+                return cb(...values);
+            };
+        }
+
+        return {
+            ...reader,
+            subscribe(cb) {
+                reader.subscribe(storeValuesForComparison(cb));
+            },
+            hasValueChanged(value) {
+                return previousValues.indexOf(value) == -1;
+            }
+        };
+    }
+
+
     /**
      * Create reader function which is actually a one time listener for the provided values.
      * @type {Spotfire.Reader}
      */
-    const reader = mod.createReader(
-        mod.visualization.data(),
-        mod.windowSize(),
-        mod.property("verticalZoomHeightMultiplier")
+    // Pass an already created reader as the argument to the wrapper function.
+     let reader = readerWithChangeChecker(
+        mod.createReader(
+            mod.visualization.data(),
+            mod.windowSize(),
+            mod.property("verticalZoomHeightMultiplier"),
+            //mod.property("curveCount")  //enable to monitor this particular property and trigger the render function
+        )
     );
+
 
     /**
      * Create a persistent state used by the rendering code
@@ -56,15 +94,17 @@ Spotfire.initialize(async (mod) => {
      * @param {Spotfire.AnalysisProperty<boolean>} roundedCurves
      * @param {Spotfire.AnalysisProperty<boolean>} gapfill
      */
-    async function onChange(dataView, windowSize, verticalZoomHeightMultiplier) {
+    async function onChange(dataView, windowSize, verticalZoomHeightMultiplier,curveCount) {
+
+        if(reader.hasValueChanged(verticalZoomHeightMultiplier)) {
+            if (DEBUG) console.log("zoom changed")    
+        }
+        if(reader.hasValueChanged(curveCount)) {
+            if (DEBUG) console.log("curveCount changed",curveCount)    
+        }
+
         try {
-            await render(
-                state,
-                mod,
-                dataView,
-                windowSize,
-                verticalZoomHeightMultiplier
-            );
+            await render(state,mod,dataView,windowSize,verticalZoomHeightMultiplier);
             
             context.signalRenderComplete();
 
