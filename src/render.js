@@ -442,6 +442,7 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
     let dataType = templateCurves["dataType"];
 
     let div_id = template_overall["div_id"];
+    let k = div_id.slice(-1);
     d3.select("#" + div_id)
         .selectAll("*")
         .remove();
@@ -506,13 +507,10 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
           .style('display', 'none')
           .attr("class", "trackHeaderDivContentGear") 
              .on("click",function(d){
-              //find the accordion to open
-              var accordionCurveNamesSections = Array.from(document.querySelectorAll(".ui-accordion-header")).map(e=>e.innerText)
-              var selectedAccordionIndex = accordionCurveNamesSections.findIndex(str => str.includes(curveNames))
               
               //open the accordion (if not already open)
               vanilla_drawer.drawer_menu_open(d);//d should be the accordion index
-              var accordionTab = document.querySelectorAll(".ui-accordion-header")[selectedAccordionIndex]
+              var accordionTab = document.querySelectorAll(".ui-accordion-header")[k]
               if (accordionTab.getAttribute("aria-expanded")=="false") accordionTab.click()
             });
            
@@ -967,7 +965,10 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
         }
     }
 
-    return; // AJB return for now to avoid errors during development
+    //return; // AJB return for now to avoid errors during development
+    //JLL uncommented line above to continue with development. Errros on lines 1529,1534 so I commented them out
+    //also added getCurveData vs depthData[i]
+
 
     /* Marking Representation */
 
@@ -979,6 +980,21 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
         }
     }
 
+
+    //need to define "depthData" array to avoid running this function on all the calls that
+    //"return y(getCurveData(lineIndex, "DEPTH", sfData));"
+    //see line 1004 and 1105
+    /*function getCurveData(lineIndex, curveName, sfData) {
+        var item;
+        if (curveName == "ZONE" || curveName == "FACIES" || curveName == "WELL") {
+            item = sfData[lineIndex].categorical(curveName).formattedValue();
+        } else {
+            item = sfData[lineIndex].continuous(curveName).value();
+        }
+    
+        return item;
+    }*/
+
     var areaMark = d3
         .area()
         .x0(margin.left)
@@ -988,8 +1004,15 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
             return d.isMarked() || checkPreviousMarked(d, i);
         })
         .y(function (d, i) {
-            return y(depthData[i]);
+            //return y(depthData[i]);
+            //return y(getCurveData(i, "DEPTH", sfData));
+            return y(sfData[i].continuous("DEPTH").value());
+
         });
+
+
+    
+
 
     var areaPath = svg
         .append("path")
@@ -1010,7 +1033,9 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
             return d.isMarked() || checkPreviousMarked(d, i);
         })
         .y(function (d, i) {
-            return y(depthData[i]);
+            //return y(depthData[i]);
+            return y(sfData[i].continuous("DEPTH").value());
+
         });
 
     var areaTagPathRight = svg
@@ -1031,7 +1056,8 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
             return d.isMarked() || checkPreviousMarked(d, i);
         })
         .y(function (d, i) {
-            return y(depthData[i]);
+            //return y(depthData[i]);
+            return y(sfData[i].continuous("DEPTH").value());
         });
 
     var areaTagPathLeft = svg
@@ -1505,12 +1531,12 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
         if (curveNames[0] == "ZONE" || curveNames[0] == "FACIES") {
             value0 = d0.categorical(curveNames[0]).formattedValue();
         } else {
-            value0 = d0.continuous(curveNames[0]).value();
+///            value0 = d0.continuous(curveNames[0]).value();
         }
         if (curveNames[1] == "ZONE" || curveNames[1] == "FACIES") {
             value1 = d1.categorical(curveNames[1]).formattedValue();
         } else {
-            value1 = curveNames[1] ? d1.continuous(curveNames[1]).value() : "";
+///            value1 = curveNames[1] ? d1.continuous(curveNames[1]).value() : "";
         }
 
         if (tooltipDiv) {
@@ -1850,16 +1876,24 @@ function insertDropdown(divContent, i, k, templates, name, sfData) {
  */
 
 function PropertyOnChange(i, p, templates, sfData, selectedData, propName) {
-    ///console.log({"PropertyOnChange":[i, k, templates, sfData, selectedData, propName]})
+
     if (templates[i] && initialized) {
         var template = templates[i];
         let template_components = template[0]["components"];
         let templateCurves = template_components[0]["curves"];
         let curveNames = templateCurves[0]["curveNames"];
 
+        
+        //change thickness
         if      (propName == "Thickness") { templateCurves[0]["strokeWidth"][p] = selectedData.value;} 
+        
+        //change LineStyle
         else if (propName == "LineStyle") { templateCurves[0]["curveStrokeDashArray"][p] = selectedData.value;} 
+        
+        //change LineColor
         else if (propName == "LineColor") { templateCurves[0]["curveColors"][p] = selectedData.value;} 
+        
+        //change AreaFill
         else if (propName == "AreaFill") { 
             if (selectedData.value == "none") {
                 templateCurves[0]["fill"][p]["fill"] = "no";
@@ -1869,6 +1903,7 @@ function PropertyOnChange(i, p, templates, sfData, selectedData, propName) {
             }
         } 
         
+        //change AreaColor
         else if (propName == "AreaColor") {
             templateCurves[0]["fill"][p]["fillColors"] = [
                 colorHelpers.getFillColor(selectedData.value, "normal"),
@@ -1877,15 +1912,34 @@ function PropertyOnChange(i, p, templates, sfData, selectedData, propName) {
             ];
             templateCurves[0]["fill"][p]["colorInterpolator"] = [selectedData.value, null, null];
         } 
-
+        
+        //change ScaleType
         else if (propName == "ScaleType") {templateCurves[0]["scaleTypeLinearLog"][p] = selectedData.value;}
-        else if (propName=="curveName"){curveNames[p]=selectedData.value}
+        
+        //change curveName
+        else if (propName=="curveName"){
+            var curveName = selectedData.value;
+            curveNames[p]=curveName;
 
+            // var curveNamesCopy=[...curveNames]
+            var j=p>0?p-1:0;
+            templateCurves[0]["fill"][j].curveName=[...curveNames][j]
+            templateCurves[0]["fill"][j].curve2=[...curveNames][p]
+            templateCurves[0]["fill"][p].curveName=[...curveNames][j]
+            templateCurves[0]["fill"][p].curve2=[...curveNames][p]
+
+            //var fillCurveNames = [...curveNames]
+            //fillCurveNames.push(fillCurveNames.shift(0)) //[a,b,c,d] --> [b,c,d,a]
+
+        }
+        
         //copy first curve
         else if (propName=="duplicateCurve"){
-
+            
             //duplicates first curve properties (arrays such as colors, style, curvName, etc)
-            for (p in templateCurves[0]) {if (Array.isArray(templateCurves[0][p])) templateCurves[0][p].push(templateCurves[0][p][0])}
+            var templateCurvesCopy = JSON.parse(JSON.stringify(templateCurves));
+            for (p in templateCurves[0]) {if (Array.isArray(templateCurves[0][p])) templateCurves[0][p].push(templateCurvesCopy[0][p][0])}
+//          for (p in templateCurves[0]["fill"]) {if (Array.isArray(templateCurves[0]["fill"][p])) templateCurves[0]["fill"][p].push(templateCurves[0]["fill"][p][0])}
 
 
             //add a tab
@@ -1905,15 +1959,25 @@ function PropertyOnChange(i, p, templates, sfData, selectedData, propName) {
             $("#" + "tabs_" + i).tabs().tabs("refresh");
             $("#" + "tabs_" + i).tabs("option", "active", k); //makes the new tab active
 
+
+            //update tab and accordion name
+            let anAccordionHeader =  document.querySelector("#accordionConf h3[aria-expanded='true'] span").nextSibling;
+            let aTab=document.querySelector(`a[href='#tab_${i}_${k-1}']`);
+            aTab.innerText = curveNames[k-1];
+            anAccordionHeader.textContent = `Track ${i+1}: `+curveNames.join();
+
+
+
         }
         
+        //delete last curve
         else if (propName=="removeCurve"){
-            var curveCount = curveNames.length-1
-            if(curveCount){ //don't remove last curve
+            var k = curveNames.length-1
+            if(k){ //don't remove last curve
                 //remove curve: item from all templateCuves arrays (colors, style, curvName, etc)
-                for (p in templateCurves[0]) {if (Array.isArray(templateCurves[0][p])) templateCurves[0][p].pop()}
+                for (var kk in templateCurves[0]) {if (Array.isArray(templateCurves[0][kk])) templateCurves[0][kk].pop()}
                 
-                var ttr = `#tab_${i}_${curveCount}`
+                var ttr = `#tab_${i}_${k}`
                 
                 //remove last tab
                 // document.querySelector(`a[href='${ttr}']`).parentElement.remove()  //another (non jquery) way to remove tab
@@ -1922,13 +1986,19 @@ function PropertyOnChange(i, p, templates, sfData, selectedData, propName) {
                 //remove last tab contents
                 $(ttr).remove();
 
-                //refresh tabs (do we need this?)
+                //refresh tabs 
                 $("#" + "tabs_" + i).tabs().tabs("refresh");
+
+                //update tab and accordion name
+                let anAccordionHeader =  document.querySelector("#accordionConf h3[aria-expanded='true'] span").nextSibling;
+                let aTab=document.querySelector(`a[href='#tab_${i}_${k-1}']`);
+                aTab.innerText = curveNames[k-1];
+                anAccordionHeader.textContent = `Track ${i+1}: `+curveNames.join();
 
             }
         }
 
-        ///console.log("Setting property template" + i, templates[i]);
+
         // Store the updated template in the appropriate mod property
         _mod.property("template" + i).set(JSON.stringify(templates[i]));
         multipleLogPlot(templates, sfData);
@@ -1949,7 +2019,6 @@ function insertTextInput(divContent, i, k, templates, propName, sfData) {
         var template = templates[i];
         let template_components = template[0]["components"];
         let templateCurves = template_components[0]["curves"];
-        let curveNames = templateCurves[0]["curveNames"];
 
         if (propName == "ScaleMin") {
             selectedData = templateCurves[0]["fill"][k]["minScaleX"];
@@ -1974,7 +2043,6 @@ function insertTextInput(divContent, i, k, templates, propName, sfData) {
                 var template = templates[i];
                 let template_components = template[0]["components"];
                 let templateCurves = template_components[0]["curves"];
-                let curveNames = templateCurves[0]["curveNames"];
         
                 if (propName == "ScaleMin") {
                     templateCurves[0]["fill"][k]["minScaleX"] = selectedData;
@@ -2028,7 +2096,7 @@ async function accordionTemplate(templates, i, sfData) {
 
             var tabs = content.append("div").attr("id", "tabs_" + i);
             var ul = tabs.append("ul"); 
-            for (let k = 0; k < curveNames.length+15; k++) {
+            for (let k = 0; k < curveNames.length; k++) {
                 if (curveNames[k]) {
                     ul.append("li").append("a")
                     .attr("href", "#tab_" + i + "_" + k)
@@ -2048,7 +2116,7 @@ async function accordionTemplate(templates, i, sfData) {
 
 
 
-                PropertyOnChange( i, null, templates, sfData, curveNames[curveNames.length], "duplicateCurve");
+                PropertyOnChange( i, curveNames.length, templates, sfData, null, "duplicateCurve");
                 //addAccordionTabContents(i,curveNames.length,curveNames,tabs,templates,sfData,curveColors)
 
 
@@ -2063,7 +2131,7 @@ async function accordionTemplate(templates, i, sfData) {
             .attr("title", "Removes last track")
             .html("-")
             .on("mousedown", evt => {
-                PropertyOnChange( i, null, templates, sfData, curveNames[curveNames.length], "removeCurve");
+                PropertyOnChange( i, curveNames.length, templates, sfData, null, "removeCurve");
                 evt.preventDefault
             });
 
@@ -2151,8 +2219,6 @@ async function addAccordionTabContents(i,k,curveNames,tabs,templates,sfData,curv
         .append("div").attr("class", "controlGroupDiv").on("mousedown", function (evt) {evt.stopPropagation();});
         divItem.text("Decoration:");
         insertDropdown(divItem, i, k, templates, "LineStyle", sfData);
-
-        
 
 
         //AREA
@@ -2383,37 +2449,6 @@ async function multipleLogPlot(templates, sfData) {
     }
 
 
-    /* Get the max header height - this seems needlessly complicated! 
-    ok, I'll try to merge this logic in a single loop*/
-    /*
-    var maxHeaderHeight = 80;
-    for (let i = 0; i < templates.length; i++) {
-        if (templates[i]) {
-            let template = templates[i];
-            let template_components = template[0]["components"];
-            let templateCurves = template_components[0]["curves"][0];
-            ///let template_rectangles = template_components[0]["rectangles"];
-            let curveNames = templateCurves["curveNames"];
-            ///console.log(curveNames);
-            let curveColors = templateCurves["curveColors"];
-            var NumberOfGradientScales = 0;
-            for (let j = 0; j < templateCurves.fill.length; j++) {
-                let fillColor = templateCurves.fill[j];
-                if (fillColor.fill == "yes" && fillColor.fillColors.includes("interpolator")) {
-                    NumberOfGradientScales += 1;
-                }
-            }
-
-            var height = curveNames.length * 42 + NumberOfGradientScales * 15;
-            if (height > maxHeaderHeight) {
-                maxHeaderHeight = height;
-            }
-        }
-    }
-    
-    /* End of getting gmax header height */
-
-
     /*get max header (remake) by reducing number of unnecessary loops*/
     var maxHeaderHeight = 42;
     function setMaxHeaderHeight(template){
@@ -2421,7 +2456,6 @@ async function multipleLogPlot(templates, sfData) {
         let templateCurves = template_components[0]["curves"][0];
         ///let template_rectangles = template_components[0]["rectangles"];
         let curveNames = templateCurves["curveNames"];
-        ///console.log(curveNames);
         let curveColors = templateCurves["curveColors"];
         var NumberOfGradientScales = 0;
         for (let j = 0; j < templateCurves.fill.length; j++) {
