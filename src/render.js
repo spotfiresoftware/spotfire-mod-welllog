@@ -1250,20 +1250,17 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
             for (let i = 0; i < categoriesRectangles.length; i++) {
                 let categoryRectangle = categoriesRectangles[i];
                 if (categoryRectangle.category) {
-                    function rectClick(evt, a, b) {
+                    function rectClick(event, a, b) {
                         var markMode = "Replace";
-                        if (evt instanceof MouseEvent) {
-                            evt.preventDefault();
-                            evt.stopPropagation();
-                            if (evt.shiftKey) {
-                                markMode = "Add";
-                            } else if (evt.ctrlKey) {
-                                markMode = "Toggle";
-                            }
-                        } else {
-                            d3.event.preventDefault();
-                            d3.event.stopPropagation();
+                        
+                        event.preventDefault();
+                        event.stopPropagation();
+                        if (event.shiftKey) {
+                            markMode = "Add";
+                        } else if (event.ctrlKey) {
+                            markMode = "Toggle";
                         }
+                    
                         _dataView.mark(categoryRectangle.categoryRows, markMode);
                     }
 
@@ -1501,12 +1498,8 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
 
         var y0;
 
-        if (parseInt(d3.version.charAt(0)) >= 6) {
-            y0 = y.invert(d3.pointer(evt)[1]);
-        } else {
-            y0 = y.invert(d3.event.y);
-        }
-
+        y0 = y.invert(d3.pointer(evt)[1]);
+     
         var i = bisectData(sfData, y0);
 
         var d1 = sfData[i];
@@ -2309,12 +2302,8 @@ async function multipleLogPlot(templates, sfData) {
             .style("display", "inline-block")
             .style("position", "relative")
             .style("width", depthLabelPanelWidth + "px")
-            .on("mousedown", function (evt) {
-                if (evt instanceof MouseEvent) {
-                    evt.stopPropagation();
-                } else {
-                    d3.event.stopPropagation();
-                }
+            .on("mousedown", function (event) {
+                event.stopPropagation();                
             });
 
         TracksDepthLabel = TracksDepthLabel.append("div")
@@ -2349,12 +2338,8 @@ async function multipleLogPlot(templates, sfData) {
             .style("bottom", "0px")
             .style("right", "20px")
             .style("width", ZoomPanelWidth + "px")
-            .on("mousedown", function (evt) {
-                if (evt instanceof MouseEvent) {
-                    evt.stopPropagation();
-                } else {
-                    d3.event.stopPropagation();
-                }
+            .on("mousedown", function (event) {
+                event.stopPropagation();
             });
 
             /*
@@ -2368,17 +2353,11 @@ async function multipleLogPlot(templates, sfData) {
                 "src",
                 " data:image/png;base64,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"
             )
-            .on("click", function (evt) {
-                if (evt instanceof MouseEvent) {
-                    evt.preventDefault();
-                    evt.stopPropagation();
-                } else {
-                    d3.event.preventDefault();
-                    d3.event.stopPropagation();
-                }
-                vanilla_drawer.drawer_menu_open();
-            });
-            */
+            .on("click", (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();                    
+                    vanilla_drawer.drawer_menu_open();
+                });
 
         var divPlusBtn = TracksToolDiv.append("div").style("height", "26px");
 
