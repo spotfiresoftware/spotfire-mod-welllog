@@ -174,7 +174,7 @@ var yAxis;
 //var pPerfilHeightMultiplier;
 
 var y_function;
-///var sfData;
+
 var _mod; // The global mod instance
 
 
@@ -421,21 +421,21 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
     let plot_templates = await buildTemplates(false); //use true to reset
 
     //get data
-    var dataRows = await dataView.allRows();
+    var allDataViewRows = await dataView.allRows();
 
     //creates property drawer with options for each track with nothing inside
-    createVanillaDrawer(plot_templates, dataRows);
+    createVanillaDrawer(plot_templates, allDataViewRows);
     vanilla_drawer.draggable(document.getElementById("drawer_menu"))   
 
 
     //creates each plot per template
-    multipleLogPlot(plot_templates, dataRows);
+    multipleLogPlot(plot_templates, allDataViewRows);
 
     //bring up settings dialog where left off in case render was called from setting dialog
     //TODO
 }
 
-async function logPlot(template_for_plotting, sfData, headerHeight) {
+async function logPlot(template_for_plotting, allDataViewRows, headerHeight) {
     let template_overall = template_for_plotting[0]["trackBox"];
     let template_components = template_for_plotting[0]["components"];
     let templateCurves = template_components[0]["curves"][0];
@@ -551,6 +551,7 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
         for (const row of leaf.rows()) {
             let depth = row.continuous("DEPTH").value();
             let valueRow = { depth: depth };
+            valueRow.isMarked = row.isMarked();
             if (isFirstLeaf) {
                 depthKeys.set(depth, rowIndex);
                 valueRows.push(valueRow);   
@@ -973,10 +974,10 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
     /* Marking Representation */
 
     function checkPreviousMarked(d, i) {
-        if (i <= 0 || i > sfData.length) {
+        if (i <= 0 || i > valueRows.length) {
             return false;
         } else {
-            return sfData[i - 1].isMarked();
+            return valueRows[i - 1].isMarked;
         }
     }
 
@@ -1001,13 +1002,11 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
         .x1(width - margin.right)
 
         .defined(function (d, i) {
-            return d.isMarked() || checkPreviousMarked(d, i);
+            console.log(d);
+            return d.isMarked || checkPreviousMarked(d, i);
         })
-        .y(function (d, i) {
-            //return y(depthData[i]);
-            //return y(getCurveData(i, "DEPTH", sfData));
-            return y(sfData[i].continuous("DEPTH").value());
-
+        .y(function (d, i) {           
+            return y(valueRows[i].depth);
         });
 
 
@@ -1016,7 +1015,7 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
 
     var areaPath = svg
         .append("path")
-        .datum(sfData)
+        .datum(valueRows)
         .attr("class", "area")
         .attr("clip-path", "url('#clip')")
         .attr("d", areaMark)
@@ -1030,17 +1029,17 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
         .x0(width - margin.right)
         .x1(width - margin.right + 4)
         .defined(function (d, i) {
-            return d.isMarked() || checkPreviousMarked(d, i);
+            return d.isMarked || checkPreviousMarked(d, i);
         })
         .y(function (d, i) {
             //return y(depthData[i]);
-            return y(sfData[i].continuous("DEPTH").value());
+            return y(valueRows[i].depth);
 
         });
 
     var areaTagPathRight = svg
         .append("path")
-        .datum(sfData)
+        .datum(valueRows)
         .attr("class", "area")
         //.attr("clip-path", "url('#clip')")
         .attr("d", areaMarkTagRight)
@@ -1053,16 +1052,16 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
         .x0(margin.left - 4)
         .x1(margin.left)
         .defined(function (d, i) {
-            return d.isMarked() || checkPreviousMarked(d, i);
+            return d.isMarked || checkPreviousMarked(d, i);
         })
         .y(function (d, i) {
             //return y(depthData[i]);
-            return y(sfData[i].continuous("DEPTH").value());
+            return y(valueRows[i].depth);
         });
 
     var areaTagPathLeft = svg
         .append("path")
-        .datum(sfData)
+        .datum(valueRows)
         .attr("class", "area")
         //.attr("clip-path", "url('#clip')")
         .attr("d", areaMarkTagLeft)
@@ -1163,12 +1162,12 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
 
             var categoryRows = [];
 
-            for (let index = 0; index < sfData.length; index++) {
-                let dataviewRow = sfData[index];
+            for (let index = 0; index < allDataViewRows.length; index++) {
+                let dataviewRow = allDataViewRows[index];
 
                 let nextDataViewRow = null;
-                if (sfData[index + 1]) {
-                    nextDataViewRow = sfData[index + 1];
+                if (allDataViewRows[index + 1]) {
+                    nextDataViewRow = allDataViewRows[index + 1];
                 }
 
                 Depth = dataviewRow.continuous(depthCurveName).value();
@@ -1186,7 +1185,7 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
 
                     if (
                         categoryName != dataviewRow.categorical(categoryColumnName).formattedValue() ||
-                        index == sfData.length - 1
+                        index == allDataViewRows.length - 1
                     ) {
                         if (categoryName && categoryName != "(Empty)") {
                             if (!categoriesDomain.includes(categoryName)) {
@@ -1233,14 +1232,7 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
 
             categoriesDomain = categoriesDomain.sort();
 
-            if (parseInt(d3.version.charAt(0)) < 6) {
-                categoryColorFunc = d3.scale.ordinal(range).domain(categoriesDomain);
-            } else {
-                categoryColorFunc = d3.scaleOrdinal(range).domain(categoriesDomain);
-            }
-
-            ////////////////////////////
-
+            // Needs updating to some kind of Spotfire colour scheme, when we work with categories?
             categoryColorFunc = d3.scaleOrdinal(d3.schemeCategory10).domain(categoryDomain);
  
             for (let i = 0; i < categoriesRectangles.length; i++) {
@@ -1496,10 +1488,10 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
 
         y0 = y.invert(d3.pointer(evt)[1]);
      
-        var i = bisectData(sfData, y0);
+        var i = bisectData(allDataViewRows, y0);
 
-        var d1 = sfData[i];
-        var d0 = sfData[i - 1];
+        var d1 = allDataViewRows[i];
+        var d0 = allDataViewRows[i - 1];
 
         var d = null;
 
@@ -1662,7 +1654,7 @@ function multipleLogPlot(div_id, templates, sfData) {
 }
 */
 
-function insertDropdown(divContent, i, k, templates, name, sfData) {
+function insertDropdown(divContent, i, k, templates, name, allDataViewRows) {
     var blackImgSrc =
         "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHgAAAAWCAYAAAALmlj4AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH5QMcFisWTT0lnAAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAAQElEQVRo3u3RQREAMAgEsVIn518kWODNJBJ2K0k/zvoSGIzBGIzBGIzBGGwwBmMwBmMwBmOwwRiMwRiMwRjMzgDeaAGOTpcEwwAAAABJRU5ErkJggg==";
     var blueImgSrc =
@@ -1848,7 +1840,7 @@ function insertDropdown(divContent, i, k, templates, name, sfData) {
         selectText: "Select an item",
         onSelected: function (data) {
             var selData = data.selectedData;
-            PropertyOnChange( i, k, templates, sfData, selData, name);
+            PropertyOnChange( i, k, templates, allDataViewRows, selData, name);
         }
     });
 }
@@ -1859,12 +1851,12 @@ function insertDropdown(divContent, i, k, templates, name, sfData) {
  * @param {} i "track number"
  * @param {*} p
  * @param {*} templates
- * @param {*} sfData
+ * @param {*} allDataViewRows
  * @param {*} selectedData  "json with options for the propName"
  * @param {String} propName "name property to change. For example LineColor"
  */
 
-function PropertyOnChange(i, p, templates, sfData, selectedData, propName) {
+function PropertyOnChange(i, p, templates, allDataViewRows, selectedData, propName) {
 
     if (templates[i] && initialized) {
         var template = templates[i];
@@ -1942,7 +1934,7 @@ function PropertyOnChange(i, p, templates, sfData, selectedData, propName) {
             
             //populate tab
             var tabs = d3.select("#" + "tabs_" + i)
-            addAccordionTabContents(i,k,curveNames,tabs,templates,sfData,["#333333"])
+            addAccordionTabContents(i,k,curveNames,tabs,templates,allDataViewRows,["#333333"])
             
             //refresh tabs
             $("#" + "tabs_" + i).tabs().tabs("refresh");
@@ -1990,7 +1982,7 @@ function PropertyOnChange(i, p, templates, sfData, selectedData, propName) {
 
         // Store the updated template in the appropriate mod property
         _mod.property("template" + i).set(JSON.stringify(templates[i]));
-        multipleLogPlot(templates, sfData);
+        multipleLogPlot(templates, allDataViewRows);
     }
 }
 
@@ -2001,7 +1993,7 @@ function addAccordionTab(i,k){
 
 }
 
-function insertTextInput(divContent, i, k, templates, propName, sfData) {
+function insertTextInput(divContent, i, k, templates, propName, allDataViewRows) {
     var selectedData = "";
 
     if (templates[i]) {
@@ -2043,7 +2035,7 @@ function insertTextInput(divContent, i, k, templates, propName, sfData) {
                     templateCurves[0]["fill"][k]["cutoffs"][2] = selectedData;
                 }
         
-                multipleLogPlot(templates, sfData);
+                multipleLogPlot(templates, allDataViewRows);
             }        });
 }
 
@@ -2051,7 +2043,7 @@ function insertTextInput(divContent, i, k, templates, propName, sfData) {
 //creates a jquery accordion. Each panel contains one or more tabs
 //an accordion panel represents a track (template)
 //a tab is a curve for each track (template_components[0]["curves"][0];)
-async function accordionTemplate(templates, i, sfData) {
+async function accordionTemplate(templates, i, allDataViewRows) {
     let template = templates[i];
     let template_components = template[0]["components"];
     let templateCurves = template_components[0]["curves"][0];
@@ -2105,7 +2097,7 @@ async function accordionTemplate(templates, i, sfData) {
 
 
 
-                PropertyOnChange( i, curveNames.length, templates, sfData, null, "duplicateCurve");
+                PropertyOnChange( i, curveNames.length, templates, allDataViewRows, null, "duplicateCurve");
                 //addAccordionTabContents(i,curveNames.length,curveNames,tabs,templates,sfData,curveColors)
 
 
@@ -2120,14 +2112,14 @@ async function accordionTemplate(templates, i, sfData) {
             .attr("title", "Removes last track")
             .html("-")
             .on("mousedown", evt => {
-                PropertyOnChange( i, curveNames.length, templates, sfData, null, "removeCurve");
+                PropertyOnChange( i, curveNames.length, templates, allDataViewRows, null, "removeCurve");
                 evt.preventDefault
             });
 
             
         // The contents of the tabs
         for (let k = 0; k < curveNames.length; k++) {
-            await addAccordionTabContents(i,k,curveNames,tabs,templates,sfData,curveColors)
+            await addAccordionTabContents(i,k,curveNames,tabs,templates,allDataViewRows,curveColors)
         }
 
         
@@ -2141,7 +2133,7 @@ async function accordionTemplate(templates, i, sfData) {
 //i: accordion panel index
 //k: tab index
 //
-async function addAccordionTabContents(i,k,curveNames,tabs,templates,sfData,curveColors){
+async function addAccordionTabContents(i,k,curveNames,tabs,templates,allDataViewRows,curveColors){
 
     if (curveNames[k]) {
 
@@ -2177,7 +2169,7 @@ async function addAccordionTabContents(i,k,curveNames,tabs,templates,sfData,curv
             selectText: "Select an item",
             onSelected: function (data) {
                 var selData = data.selectedData;
-                PropertyOnChange(i, k, templates, sfData, selData, "curveName");
+                PropertyOnChange(i, k, templates, allDataViewRows, selData, "curveName");
 
                 //update tab and accordion name
                 let anAccordionHeader =  document.querySelector("#accordionConf h3[aria-expanded='true'] span").nextSibling;
@@ -2191,7 +2183,7 @@ async function addAccordionTabContents(i,k,curveNames,tabs,templates,sfData,curv
         var divItem = controlgroup
         .append("div").attr("class", "controlGroupDiv").on("mousedown", function (evt) {evt.stopPropagation();});
         divItem.text("Thickness:");
-        insertDropdown(divItem, i, k, templates, "Thickness", sfData);
+        insertDropdown(divItem, i, k, templates, "Thickness", allDataViewRows);
 
         //Line Color
         divItem = controlgroup
@@ -2200,14 +2192,14 @@ async function addAccordionTabContents(i,k,curveNames,tabs,templates,sfData,curv
           .append("div").append("input").attr("style","width:95px;height: 15px;").attr("id",`lineColor_${i}_${k}`).attr("type","color").attr("value",`${curveColors[k]}">`)
           .on("change",function(){ // use "change" or "input" events. "input" might be slower but updates the graph instantly
 //            .html(`<input style="width:95px;height: 15px;" id="lineColor_${i}_${k}" type="color" value="${curveColors[k]}">`)
-              PropertyOnChange( i, k, templates, sfData, document.getElementById(`lineColor_${i}_${k}`), "LineColor"); 
+              PropertyOnChange( i, k, templates, allDataViewRows, document.getElementById(`lineColor_${i}_${k}`), "LineColor"); 
           }); 
 
         //Line Style
         divItem = controlgroup
         .append("div").attr("class", "controlGroupDiv").on("mousedown", function (evt) {evt.stopPropagation();});
         divItem.text("Decoration:");
-        insertDropdown(divItem, i, k, templates, "LineStyle", sfData);
+        insertDropdown(divItem, i, k, templates, "LineStyle", allDataViewRows);
 
 
         //AREA
@@ -2219,13 +2211,13 @@ async function addAccordionTabContents(i,k,curveNames,tabs,templates,sfData,curv
         divItem = controlgroup
         .append("div").attr("class", "controlGroupDiv").on("mousedown", function (evt) {evt.stopPropagation();})
         divItem.text("Fill:").append("br");
-        insertDropdown(divItem, i, k, templates, "AreaFill", sfData);
+        insertDropdown(divItem, i, k, templates, "AreaFill", allDataViewRows);
 
         //Area Color
         divItem = controlgroup
         .append("div").attr("class", "controlGroupDiv").on("mousedown", function (evt) {evt.stopPropagation();})
         divItem.text("Color:").append("br");
-        insertDropdown(divItem, i, k, templates, "AreaColor", sfData);
+        insertDropdown(divItem, i, k, templates, "AreaColor", allDataViewRows);
 
         //SCALE
         fieldset = tab.append("fieldset");
@@ -2236,7 +2228,7 @@ async function addAccordionTabContents(i,k,curveNames,tabs,templates,sfData,curv
         divItem = controlgroup
         .append("div").attr("class", "controlGroupDiv").on("mousedown", function (evt) {evt.stopPropagation();});
         divItem.text("Type:").append("br");
-        insertDropdown(divItem, i, k, templates, "ScaleType", sfData);
+        insertDropdown(divItem, i, k, templates, "ScaleType", allDataViewRows);
 
         controlgroup = fieldset.append("div").attr("class", "controlgroup");
 
@@ -2244,12 +2236,12 @@ async function addAccordionTabContents(i,k,curveNames,tabs,templates,sfData,curv
         divItem = controlgroup
         .append("div").attr("class", "controlGroupDiv").on("mousedown", function (evt) {evt.stopPropagation();});
         divItem.text("Min:").append("br");
-        insertTextInput(divItem, i, k, templates, "ScaleMin", sfData);
+        insertTextInput(divItem, i, k, templates, "ScaleMin", allDataViewRows);
 
         divItem = controlgroup
         .append("div").attr("class", "controlGroupDiv").on("mousedown", function (evt) {evt.stopPropagation();})
         divItem.text("Max:").append("br");
-        insertTextInput(divItem, i, k, templates, "ScaleMax", sfData);
+        insertTextInput(divItem, i, k, templates, "ScaleMax", allDataViewRows);
 
         //CUTTOFFS / THRESHOLD
         fieldset = tab.append("fieldset");
@@ -2259,12 +2251,12 @@ async function addAccordionTabContents(i,k,curveNames,tabs,templates,sfData,curv
         divItem = controlgroup
         .append("div").attr("class", "controlGroupDiv").on("mousedown", function (evt) {evt.stopPropagation();})
         divItem.text("Shale/Silt:").append("br");
-        insertTextInput(divItem, i, k, templates, "CutoffShaleSilt", sfData);
+        insertTextInput(divItem, i, k, templates, "CutoffShaleSilt", allDataViewRows);
 
         divItem = controlgroup
         .append("div").attr("class", "controlGroupDiv").on("mousedown", function (evt) {evt.stopPropagation();})
         divItem.text("Silt/Sand:").append("br");
-        insertTextInput(divItem, i, k, templates, "CutoffSiltSand", sfData);
+        insertTextInput(divItem, i, k, templates, "CutoffSiltSand", allDataViewRows);
 
     }
 }
@@ -2273,9 +2265,9 @@ async function addAccordionTabContents(i,k,curveNames,tabs,templates,sfData,curv
 /**
  * renders all the vertical line chart tracks. 
  * @param  {Array} templates array of templates. Each one represents one track
- * @param  {Array} sfData spotfire data   
+ * @param  {Array} allDataViewRows dataview rows   
  */
-async function multipleLogPlot(templates, sfData) {
+async function multipleLogPlot(templates, allDataViewRows) {
     let div_id="mod-container"
 
     //I guess this portion clears the plots
@@ -2467,13 +2459,13 @@ async function multipleLogPlot(templates, sfData) {
     
     //needs to be outside the loop because we are finding the maxHeaderHeight there
     templatesToPlot.forEach((template,i) => {
-        logPlot(template, sfData, maxHeaderHeight + "px")
+        logPlot(template, allDataViewRows, maxHeaderHeight + "px")
     });
 
 
     //update accordion panels
     if (updateAccordionTools) {
-            for (const i of templates.keys()) await accordionTemplate(templates, i, sfData)
+            for (const i of templates.keys()) await accordionTemplate(templates, i, allDataViewRows)
         updateAccordionTools = false;
     }
 
