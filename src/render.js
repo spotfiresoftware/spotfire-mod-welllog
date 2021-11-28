@@ -1241,12 +1241,8 @@ async function logPlot(template_for_plotting, sfData, headerHeight) {
 
             ////////////////////////////
 
-            if (parseInt(d3.version.charAt(0)) < 6) {
-                categoryColorFunc = d3.scale.ordinal(d3.schemeCategory10).domain(categoryDomain);
-            } else {
-                categoryColorFunc = d3.scaleOrdinal(d3.schemeCategory10).domain(categoryDomain);
-            }
-
+            categoryColorFunc = d3.scaleOrdinal(d3.schemeCategory10).domain(categoryDomain);
+ 
             for (let i = 0; i < categoriesRectangles.length; i++) {
                 let categoryRectangle = categoriesRectangles[i];
                 if (categoryRectangle.category) {
@@ -1860,7 +1856,7 @@ function insertDropdown(divContent, i, k, templates, name, sfData) {
 /**
  * Aha! This is called when we change something in the templates - and we call multipleLogplots() to re-draw the charts
  * Todo: persist the templates in Spotfire properties ;-)
- * @param {interger} i "track number"
+ * @param {} i "track number"
  * @param {*} p
  * @param {*} templates
  * @param {*} sfData
@@ -2293,7 +2289,7 @@ async function multipleLogPlot(templates, sfData) {
         d3.select("#" + div_id + "TrackHolder" + i).remove();
     }
 
-    if (!d3.select("#TracksDepthLabel")._groups[0][0]) {
+    if (!d3.select("#TracksDepthLabel")._groups[0][0]) { // AJB - not good practice searching for individual parts of a selection - is there another way we can do it?
         var TracksDepthLabel = d3.select("#" + div_id).append("div");
 
         TracksDepthLabel
@@ -2303,7 +2299,7 @@ async function multipleLogPlot(templates, sfData) {
             .style("position", "relative")
             .style("width", depthLabelPanelWidth + "px")
             .on("mousedown", function (event) {
-                event.stopPropagation();                
+                event.stopPropagation();
             });
 
         TracksDepthLabel = TracksDepthLabel.append("div")
@@ -2424,13 +2420,13 @@ async function multipleLogPlot(templates, sfData) {
                 if (_verticalZoomHeightMultiplier - 0.25 >= 1) {
                     sliderZoom.value(_verticalZoomHeightMultiplier - 0.25);
                 }
-            });
-    }
+            }); */
+    } 
 
 
     /*get max header (remake) by reducing number of unnecessary loops*/
     var maxHeaderHeight = 42;
-    function setMaxHeaderHeight(template){
+    function setMaxHeaderHeight(template) {
         let template_components = template[0]["components"];
         let templateCurves = template_components[0]["curves"][0];
         ///let template_rectangles = template_components[0]["rectangles"];
@@ -2479,7 +2475,7 @@ async function multipleLogPlot(templates, sfData) {
     if (updateAccordionTools) {
             for (const i of templates.keys()) await accordionTemplate(templates, i, sfData)
         updateAccordionTools = false;
-    }    
+    }
 
 
     $("#accordionConf").accordion({ collapsible: true });
