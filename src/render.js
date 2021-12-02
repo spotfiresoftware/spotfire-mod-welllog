@@ -37,54 +37,25 @@ const modContainer = d3.select("#mod-container");
 
 
 async function markModel(markMode, rectangle) {
-    // Implementation of logic to call markIndices or markIndices2 goes here
-    var indicesToMark = [];
+    
     var markData = {};
 
     var js_chart = d3.select("#mod-container")._groups[0][0];
     var header = d3.select(".trackHeaderDiv")._groups[0][0];
+
+    let trackPlotDiv = d3.select(".trackPlotDiv");
+    console.log(trackPlotDiv, header.style);
+    
     var headerHeight =
         parseFloat(header.style.height.replace(/\D/g, "")) + parseFloat(header.style.marginBottom.replace(/\D/g, ""));
-    ///console.dir(headerHeight);
-
-    markData.markMode = markMode;
+    console.log(headerHeight);
 
     var y0 = y_function.invert(rectangle.y - headerHeight + js_chart.scrollTop);
     var y1 = y_function.invert(rectangle.y - headerHeight + rectangle.height + js_chart.scrollTop);
-
-    var bisectData = d3.bisector(function (d) {
-        return d.continuous("DEPTH").value();
-    }).left;
     let allRows = await _dataView.allRows();
-    var i = bisectData(allRows, y0);
 
-    var d1 = allRows[i];
-    var d0 = allRows[i - 1];
-
-    var d = null;
-
-    if (d0 && d1) {
-        if (d0.continuous("DEPTH").value() && d1.continuous("DEPTH").value()) {
-            d = y0 - d0.continuous("DEPTH").value() > d1.continuous("DEPTH").value() - y0 ? d1 : d0;
-        }
-    }
-    if (d == null) {
-        d = d1;
-    }
-    if (d == null) {
-        d = d0;
-    }
-
-    ///console.log(d);
-
-    var j = i;
-    let rowsToMark = [];
-    while (allRows[j].continuous("DEPTH").value() <= y1) {
-        rowsToMark.push(allRows[j]);
-
-        j = j + 1;
-    }
-    _dataView.mark(rowsToMark, "Replace");
+    console.log("y0", y0, "y1", y1);
+    _dataView.mark(allRows.filter(d => d.continuous("DEPTH").value() >= y0 && d.continuous("DEPTH").value() <= y1), "Replace");
 }
 
 $("body").on("mousedown", function (mouseDownEvent) {
@@ -680,7 +651,7 @@ async function logPlot(template_for_plotting, allDataViewRows, headerHeight) {
 
         //////////////  Header Text   //////////////
 
-        let distance_from_top = "1em";
+        const distance_from_top = "1em";
 
         let svg_header = trackHeaderDivContent.append("div").append("svg");
         svg_header.attr("class", "header");
@@ -1002,15 +973,12 @@ async function logPlot(template_for_plotting, allDataViewRows, headerHeight) {
         .x1(width - margin.right)
 
         .defined(function (d, i) {
-            console.log(d);
+            //console.log(d);
             return d.isMarked || checkPreviousMarked(d, i);
         })
-        .y(function (d, i) {           
+        .y(function (d, i) {
             return y(valueRows[i].depth);
         });
-
-
-    
 
 
     var areaPath = svg
@@ -1240,7 +1208,6 @@ async function logPlot(template_for_plotting, allDataViewRows, headerHeight) {
                 if (categoryRectangle.category) {
                     function rectClick(event, a, b) {
                         var markMode = "Replace";
-                        
                         event.preventDefault();
                         event.stopPropagation();
                         if (event.shiftKey) {
@@ -1248,7 +1215,6 @@ async function logPlot(template_for_plotting, allDataViewRows, headerHeight) {
                         } else if (event.ctrlKey) {
                             markMode = "Toggle";
                         }
-                    
                         _dataView.mark(categoryRectangle.categoryRows, markMode);
                     }
 
@@ -2416,14 +2382,13 @@ async function multipleLogPlot(templates, allDataViewRows) {
     } 
 
 
-    /*get max header (remake) by reducing number of unnecessary loops*/
-    var maxHeaderHeight = 42;
-    function setMaxHeaderHeight(template) {
+    /*get template header height*/
+
+    function getTemplateHeaderHeight(template) {
         let template_components = template[0]["components"];
         let templateCurves = template_components[0]["curves"][0];
         ///let template_rectangles = template_components[0]["rectangles"];
         let curveNames = templateCurves["curveNames"];
-        let curveColors = templateCurves["curveColors"];
         var NumberOfGradientScales = 0;
         for (let j = 0; j < templateCurves.fill.length; j++) {
             let fillColor = templateCurves.fill[j];
@@ -2432,17 +2397,21 @@ async function multipleLogPlot(templates, allDataViewRows) {
             }
         }
 
-        var height = curveNames.length * 42 + NumberOfGradientScales * 15;
-        if (height > maxHeaderHeight) {
-            maxHeaderHeight = height;
-        }
+        // Avoid constant values here - they look like magic numbers that have no
+        // defined meaning.
+        return curveNames.length * 42 + NumberOfGradientScales * 15;
     }
 
     //setup trackholders
     let templatesToPlot = [];
+    let headerHeight = 0;
+    // Calculate the maximum header height and use this for all tracks
+    // Add the track holder divs for each template
+    // Collect the templates to be plotted
     for (let ii = 0; ii < templates.length; ii++) {
         let template = templates[ii] 
-        setMaxHeaderHeight(template)
+        let templateHeaderHeight = getTemplateHeaderHeight(template);
+        headerHeight = (templateHeaderHeight > headerHeight) ? templateHeaderHeight : headerHeight;
         if (template) {
             let TrackHolder = d3.select("#" + div_id).append("div");
 
@@ -2459,7 +2428,7 @@ async function multipleLogPlot(templates, allDataViewRows) {
     
     //needs to be outside the loop because we are finding the maxHeaderHeight there
     templatesToPlot.forEach((template,i) => {
-        logPlot(template, allDataViewRows, maxHeaderHeight + "px")
+        logPlot(template, allDataViewRows, headerHeight + "px")
     });
 
 
