@@ -48,8 +48,8 @@ async function markModel(markMode, rectangle) {
         parseFloat(header.style.height.replace(/\D/g, "")) + parseFloat(header.style.marginBottom.replace(/\D/g, ""));
     console.log(headerHeight);
 
-    var y0 = y_function.invert(rectangle.y - headerHeight + js_chart.scrollTop);
-    var y1 = y_function.invert(rectangle.y - headerHeight + rectangle.height + js_chart.scrollTop);
+    var y0 = y_function(rectangle.y);
+    var y1 = y_function(rectangle.y + rectangle.height);
     let allRows = await _dataView.allRows();
 
     console.log("y0", y0, "y1", y1);
@@ -58,8 +58,6 @@ async function markModel(markMode, rectangle) {
         "Replace"
     );
 }
-
-
 
 // @todo - remove as many global vars as we can!
 var selectedWell;
@@ -418,7 +416,9 @@ async function logPlot(template_for_plotting, allDataViewRows, headerHeight) {
 
     var trackHeaderDivContent = trackHeaderDiv;
 
-    const trackPlotDiv = d3.select("#trackHoldersContainer").append("div")
+    const trackPlotDiv = d3
+        .select("#trackHoldersContainer")
+        .append("div")
         .attr("height", height + "px")
         .attr("class", "trackPlotDiv")
         .style("display", "inline-flex")
@@ -430,11 +430,11 @@ async function logPlot(template_for_plotting, allDataViewRows, headerHeight) {
         .style("box-sizing", "border-box")
         .style("overflow-y", "visible");
 
-        const logPlot_sub_div = trackPlotDiv.append("div")
-        .attr("class", "component_inner")        
+    const logPlot_sub_div = trackPlotDiv
+        .append("div")
+        .attr("class", "component_inner")
         .style("top", 0)
         .style("overflow-y", "visible");
-        
 
     svg = logPlot_sub_div.append("svg");
 
@@ -1196,7 +1196,8 @@ async function logPlot(template_for_plotting, allDataViewRows, headerHeight) {
                         .style("fill", categoryColorFunc(categoryRectangle.category))
                         .style("opacity", 0.7);
 
-                    var fgObj = svg.append("foreignObject")
+                    var fgObj = svg
+                        .append("foreignObject")
                         .attr("x", margin.left)
                         .attr("y", y(categoryRectangle.top))
                         .attr("width", width - margin.right - margin.left)
@@ -1205,7 +1206,8 @@ async function logPlot(template_for_plotting, allDataViewRows, headerHeight) {
                         .on("mousedown", rectClick)
                         .on("mousemove", mousemove);
 
-                    var fgDiv = fgObj.append("xhtml:div")
+                    var fgDiv = fgObj
+                        .append("xhtml:div")
                         .attr("id", "fgObj" + categoryRectangle.top + "_" + i)
                         .attr("rectCategoryId", "Rect" + (categoryRectangle.top * 100).toFixed() + "_" + i)
                         .style("height", "100%")
@@ -2235,9 +2237,7 @@ async function multipleLogPlot(templates, allDataViewRows) {
     let div_id = "mod-container";
 
     // AJB todo - don't remove everything every time (eventually)
-    d3.select("#mod-container")
-    .selectAll("*")
-    .remove();
+    d3.select("#mod-container").selectAll("*").remove();
 
     //I guess this portion clears the plots
     for (let i = 0; i < templates.length; i++) {
@@ -2399,15 +2399,18 @@ async function multipleLogPlot(templates, allDataViewRows) {
         return curveNames.length * 42 + NumberOfGradientScales * 15;
     }
 
-
     // Add a separate div for the headers
 
-    let headersContainerDiv = d3.select("#" + div_id).append("div")
-        .attr("id", "headersContainer"); 
-        
+    let headersContainerDiv = d3
+        .select("#" + div_id)
+        .append("div")
+        .attr("id", "headersContainer");
+
     // Add a div for the tracks/plots
 
-    let trackHoldersContainerDiv = d3.select("#" + div_id).append("div")
+    let trackHoldersContainerDiv = d3
+        .select("#" + div_id)
+        .append("div")
         .attr("id", "trackHoldersContainer")
         .on("mousedown", function (mouseDownEvent) {
             var getMarkMode = function (e) {
@@ -2419,12 +2422,12 @@ async function multipleLogPlot(templates, allDataViewRows) {
                 } else if (e.ctrlKey) {
                     return "Toggle";
                 }
-        
+
                 return "Replace";
             };
-        
+
             mouseDownEvent.preventDefault();
-        
+
             var markMode = getMarkMode(mouseDownEvent);
             //
             // Create initial marking rectangle, will be used if the user only clicks.
@@ -2433,7 +2436,7 @@ async function multipleLogPlot(templates, allDataViewRows) {
                 y = mouseDownEvent.pageY,
                 width = 1,
                 height = 1;
-        
+
             var $selection = $("<div/>")
                 .css({
                     position: "absolute",
@@ -2443,27 +2446,28 @@ async function multipleLogPlot(templates, allDataViewRows) {
                 })
                 .hide()
                 .appendTo(this);
-        
+
+            // draw the marking rectangle
             $(this).on("mousemove", function (mouseMoveEvent) {
-                x = mouseDownEvent.clientX;
-                y = mouseMoveEvent.clientY;
-                width = Math.abs(mouseDownEvent.clientX - mouseMoveEvent.clientX);
-                height = Math.abs(mouseDownEvent.clientY - mouseMoveEvent.clientY);
-        
+                x = Math.min(mouseDownEvent.pageX, mouseMoveEvent.pageX);
+                y = Math.min(mouseDownEvent.pageY, mouseMoveEvent.pageY);
+                width = Math.abs(mouseDownEvent.pageX - mouseMoveEvent.pageX);
+                height = Math.abs(mouseDownEvent.pageY - mouseMoveEvent.pageY);
+
                 $selection.css({
                     left: x + "px",
                     top: y + "px",
                     width: width + "px",
                     height: height + "px"
                 });
-        
+
                 $selection.show();
             });
-        
+
             $(this).on("mouseup", function () {
                 var rectangle = {
-                    x: x,
-                    y: y,
+                    x: mouseDownEvent.clientX,
+                    y: mouseDownEvent.clientY,
                     width: width,
                     height: height
                 };
@@ -2473,7 +2477,7 @@ async function multipleLogPlot(templates, allDataViewRows) {
                 if (typeof markModel != "undefined") {
                     markModel(markMode, rectangle);
                 }
-        
+
                 $selection.remove();
                 $(this).off("mouseup mousemove");
             });
