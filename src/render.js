@@ -48,11 +48,11 @@ async function markModel(markMode, rectangle) {
         parseFloat(header.style.height.replace(/\D/g, "")) + parseFloat(header.style.marginBottom.replace(/\D/g, ""));
     console.log(headerHeight);
 
-    var y0 = y_function(rectangle.y);
-    var y1 = y_function(rectangle.y + rectangle.height);
+    var y0 = y_function.invert(rectangle.y);
+    var y1 = y_function.invert(rectangle.y + rectangle.height);
     let allRows = await _dataView.allRows();
 
-    console.log("y0", y0, "y1", y1);
+    console.log("y0", y0, "y1", y1, "rectangle", rectangle);
     _dataView.mark(
         allRows.filter((d) => d.continuous("DEPTH").value() >= y0 && d.continuous("DEPTH").value() <= y1),
         "Replace"
@@ -1201,10 +1201,10 @@ async function logPlot(template_for_plotting, allDataViewRows, headerHeight) {
                         .attr("x", margin.left)
                         .attr("y", y(categoryRectangle.top))
                         .attr("width", width - margin.right - margin.left)
-                        .attr("height", Math.abs(y(categoryRectangle.top) - y(categoryRectangle.bottom)))
+                        .attr("height", Math.abs(y(categoryRectangle.top) - y(categoryRectangle.bottom)));
                         //.style("cursor", "pointer")
-                        .on("mousedown", rectClick)
-                        .on("mousemove", mousemove);
+                        //.on("mousedown", rectClick)
+                        //.on("mousemove", mousemove);
 
                     var fgDiv = fgObj
                         .append("xhtml:div")
@@ -1221,10 +1221,10 @@ async function logPlot(template_for_plotting, allDataViewRows, headerHeight) {
                         .style("background-color", "transparent")
                         .style("align-items", "center")
                         .style("padding-left", "2px")
-                        .style("padding-right", "2px")
-                        .on("mouseout", rectMouseOut)
-                        .on("mouseover", rectMouseOver)
-                        .on("mousedown", rectClick);
+                        .style("padding-right", "2px");
+                        //.on("mouseout", rectMouseOut)
+                        //.on("mouseover", rectMouseOver)
+                        //.on("mousedown", rectClick);
 
                     fgDiv
                         .append("span")
@@ -2256,10 +2256,8 @@ async function multipleLogPlot(templates, allDataViewRows) {
         .style("vertical-align", "middle")
         .style("display", "inline-block")
         .style("position", "relative")
-        .style("width", depthLabelPanelWidth + "px")
-        .on("mousedown", function (event) {
-            event.stopPropagation();
-        });
+        .style("width", depthLabelPanelWidth + "px");
+        
 
     TracksDepthLabel = TracksDepthLabel.append("div")
         .style("position", "fixed")
@@ -2290,10 +2288,10 @@ async function multipleLogPlot(templates, allDataViewRows) {
         .style("position", "fixed")
         .style("bottom", "0px")
         .style("right", "20px")
-        .style("width", ZoomPanelWidth + "px")
-        .on("mousedown", function (event) {
-            event.stopPropagation();
-        });
+        .style("width", ZoomPanelWidth + "px");
+        //.on("mousedown", function (event) {
+            //event.stopPropagation();
+        //});
 
     /*
         var confBtn = TracksToolDiv.append("div")
@@ -2411,8 +2409,12 @@ async function multipleLogPlot(templates, allDataViewRows) {
     let trackHoldersContainerDiv = d3
         .select("#" + div_id)
         .append("div")
+        .style("z-index", 10)
         .attr("id", "trackHoldersContainer")
+        // This is the main marking event
         .on("mousedown", function (mouseDownEvent) {
+            console.log("trackHoldersContainerDiv mouseDown", mouseDownEvent.currentTarget.offsetTop, mouseDownEvent.target);
+            
             var getMarkMode = function (e) {
                 // shift: add rows
                 // control: toggle rows
@@ -2426,7 +2428,6 @@ async function multipleLogPlot(templates, allDataViewRows) {
                 return "Replace";
             };
 
-            mouseDownEvent.preventDefault();
 
             var markMode = getMarkMode(mouseDownEvent);
             //
@@ -2463,11 +2464,15 @@ async function multipleLogPlot(templates, allDataViewRows) {
 
                 $selection.show();
             });
+            let currentTarget = mouseDownEvent.currentTarget;
 
             $(this).on("mouseup", function () {
+                console.log("mouseDownEvent.target", mouseDownEvent.target, mouseDownEvent.currentTarget);
                 var rectangle = {
                     x: mouseDownEvent.clientX,
-                    y: mouseDownEvent.clientY,
+                    // the currentTarget is always the container rect
+                    // -- offsetTop is the offset to the top of the page
+                    y: mouseDownEvent.clientY - currentTarget.offsetTop,
                     width: width,
                     height: height
                 };
