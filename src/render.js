@@ -2472,7 +2472,7 @@ async function multipleLogPlot(templates, allDataViewRows) {
                     x: mouseDownEvent.clientX,
                     // the currentTarget is always the container rect
                     // -- offsetTop is the offset to the top of the page
-                    y: mouseDownEvent.clientY - currentTarget.offsetTop,
+                    y: mouseDownEvent.clientY - currentTarget.offsetTop + currentTarget.scrollTop,
                     width: width,
                     height: height
                 };
