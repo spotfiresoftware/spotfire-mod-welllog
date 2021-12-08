@@ -2477,8 +2477,20 @@ async function multipleLogPlot(templates, allDataViewRows) {
         });
 
     //setup trackholders
-    let templatesToPlot = [];
-    //let headerHeight = 0;
+    for (let ii = 0; ii < templates.length; ii++) {
+        let template = templates[ii];
+      
+        if (template) {
+            let TrackHolder = d3.select("#" + div_id).append("div");
+
+            TrackHolder.style("vertical-align", "middle")
+                .attr("id", div_id + "TrackHolder" + ii)
+                .style("display", "inline-block")
+                .style("overflow-y", "hidden");
+
+            template[0]["trackBox"]["div_id"] = div_id + "TrackHolder" + ii;
+        }
+    }
 
     // calculate the overall header height
     let headerHeight = Math.max.apply(
