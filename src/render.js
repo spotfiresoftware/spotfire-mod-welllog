@@ -51,7 +51,7 @@ async function markModel(markMode, rectangle) {
 var selectedWell;
 var tooltipDiv;
 const ZOOMPANELWIDTH = 32;
-var depthLabelPanelWidth = 15;
+const DEPTHLABELPANELWIDTH = 15;
 var _verticalZoomHeightMultiplier = 5.0;
 var _verticalZoomHeightProperty;
 var _isInitialized = false;
@@ -222,7 +222,7 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
 
         let categoryLeaves = (await (await _dataView.hierarchy("Category")).root()).leaves();
 
-        let trackWidth = (window.innerWidth - ZOOMPANELWIDTH - depthLabelPanelWidth - 40) / categoryLeaves.length;
+        let trackWidth = (windowSize.width - ZOOMPANELWIDTH - DEPTHLABELPANELWIDTH) / categoryLeaves.length;
 
         let templates = [];
         let categoryIndex = 0;
@@ -2233,23 +2233,24 @@ async function multipleLogPlot(templates, allDataViewRows) {
             .style("vertical-align", "middle")
             .style("display", "inline-block")
             .style("position", "relative")
-            .style("width", depthLabelPanelWidth + "px");
+            .style("width", DEPTHLABELPANELWIDTH + "px");
         const tracksDepthLabelInner = tracksDepthLabelOuter
             .append("div") 
             .attr("id", "tracksDepthLabelInner")           
             .style("position", "fixed")
             .style("top", window.innerHeight * 0.5 + "px")
             .style("left", "5px")
-            .attr("height", window.innerHeight)
+            .attr("height", window.innerHeight);
         
         depth_label_svg = tracksDepthLabelInner.append("svg")
             .attr("id", "tracksDepthLabelSvg")
             .attr("height", 300)
             .attr("width", 20);
     } else {
-        depth_label_svg = d3.select("tracksDepthLabelSvg");
-        d3.select("tracksDepthLabelInner")
-            .style("top", window.innerHeight * 0.5 + "px");
+        depth_label_svg = d3.select("#tracksDepthLabelSvg");            
+        d3.select("#tracksDepthLabelInner")
+            .style("top", window.innerHeight * 0.5 + "px")
+            .attr("height", window.innerHeight);
     }
 
     //depth_label_svg.selectAll("*").remove();
