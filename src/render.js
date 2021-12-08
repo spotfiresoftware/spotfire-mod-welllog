@@ -50,11 +50,11 @@ async function markModel(markMode, rectangle) {
 // @todo - remove as many global vars as we can!
 var selectedWell;
 var tooltipDiv;
-var ZoomPanelWidth = 32;
+const ZOOMPANELWIDTH = 32;
 var depthLabelPanelWidth = 15;
 var _verticalZoomHeightMultiplier = 5.0;
 var _verticalZoomHeightProperty;
-var initialized = false;
+var _isInitialized = false;
 var vanilla_drawer;
 var updateAccordionTools = true;
 var _scrollTop = 0;
@@ -84,7 +84,7 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
     _verticalZoomHeightProperty = verticalZoomHeightProperty;
     ///console.log(verticalZoomHeightProperty);
     _verticalZoomHeightMultiplier = _verticalZoomHeightProperty.value();
-    modContainer.attr("style", "height:" + (windowSize.height - 20) + "px; overflow-y:hidden");
+    modContainer.attr("style", "height:" + (windowSize.height - 30) + "px; overflow-y:hidden");
     ///console.log("Render called with mod", mod);
     if (state.preventRender) {
         // Early return if the state currently disallows rendering.
@@ -222,7 +222,7 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
 
         let categoryLeaves = (await (await _dataView.hierarchy("Category")).root()).leaves();
 
-        let trackWidth = (window.innerWidth - ZoomPanelWidth - depthLabelPanelWidth - 40) / categoryLeaves.length;
+        let trackWidth = (window.innerWidth - ZOOMPANELWIDTH - depthLabelPanelWidth - 40) / categoryLeaves.length;
 
         let templates = [];
         let categoryIndex = 0;
@@ -315,7 +315,10 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
     var allDataViewRows = await dataView.allRows();
 
     //creates property drawer with options for each track with nothing inside
-    createVanillaDrawer(plot_templates, allDataViewRows);
+    if (!_isInitialized) {
+        createVanillaDrawer();
+    }
+
     vanilla_drawer.draggable(document.getElementById("drawer_menu"));
 
     //creates each plot per template
@@ -1753,7 +1756,7 @@ function insertDropdown(divContent, i, k, templates, name, allDataViewRows) {
  */
 
 function PropertyOnChange(i, p, templates, allDataViewRows, selectedData, propName) {
-    if (templates[i] && initialized) {
+    if (templates[i] && _isInitialized) {
         var template = templates[i];
         let template_components = template[0]["components"];
         let templateCurves = template_components[0]["curves"];
@@ -1926,7 +1929,7 @@ function insertTextInput(divContent, i, k, templates, propName, allDataViewRows)
         .style("width", "95px")
         .attr("value", selectedData)
         .on("input", function (d) {
-            if (templates[i] && initialized) {
+            if (templates[i] && _isInitialized) {
                 var template = templates[i];
                 let template_components = template[0]["components"];
                 let templateCurves = template_components[0]["curves"];
@@ -2222,35 +2225,34 @@ async function addAccordionTabContents(i, k, curveNames, tabs, templates, allDat
 async function multipleLogPlot(templates, allDataViewRows) {
     let div_id = "mod-container";
 
-    // AJB todo - don't remove everything every time (eventually)
-    d3.select("#mod-container").selectAll("*").remove();
-
-    //I guess this portion clears the plots
-    for (let i = 0; i < templates.length; i++) {
-        d3.select("#" + div_id + "TrackHolder" + i)
-            .selectAll("div")
-            .remove();
-        d3.select("#" + div_id + "TrackHolder" + i)
-            .selectAll("svg")
-            .remove();
-        d3.select("#" + div_id + "TrackHolder" + i).remove();
+    let depth_label_svg;    
+    if (!_isInitialized) {
+        const tracksDepthLabelOuter = d3
+            .select("#" + div_id)
+            .append("div")           
+            .style("vertical-align", "middle")
+            .style("display", "inline-block")
+            .style("position", "relative")
+            .style("width", depthLabelPanelWidth + "px");
+        const tracksDepthLabelInner = tracksDepthLabelOuter
+            .append("div") 
+            .attr("id", "tracksDepthLabelInner")           
+            .style("position", "fixed")
+            .style("top", window.innerHeight * 0.5 + "px")
+            .style("left", "5px")
+            .attr("height", window.innerHeight)
+        
+        depth_label_svg = tracksDepthLabelInner.append("svg")
+            .attr("id", "tracksDepthLabelSvg")
+            .attr("height", 300)
+            .attr("width", 20);
+    } else {
+        depth_label_svg = d3.select("tracksDepthLabelSvg");
+        d3.select("tracksDepthLabelInner")
+            .style("top", window.innerHeight * 0.5 + "px");
     }
 
-    var TracksDepthLabel = d3.select("#" + div_id).append("div");
-
-    TracksDepthLabel.attr("id", "TracksDepthLabel")
-        .style("vertical-align", "middle")
-        .style("display", "inline-block")
-        .style("position", "relative")
-        .style("width", depthLabelPanelWidth + "px");
-
-    TracksDepthLabel = TracksDepthLabel.append("div")
-        .style("position", "fixed")
-        .style("top", window.innerHeight * 0.5 + "px")
-        .style("left", "5px")
-        .attr("height", window.innerHeight);
-
-    var depth_label_svg = TracksDepthLabel.append("svg").attr("height", 300).attr("width", 20);
+    //depth_label_svg.selectAll("*").remove();
 
     let depthCurveName = "DEPTH";
     let depthUnit = "m";
@@ -2262,18 +2264,22 @@ async function multipleLogPlot(templates, allDataViewRows) {
         .text(depthCurveName + (depthUnit != "" ? " (" + depthUnit + ")" : ""))
         .style("fill", _mod.getRenderContext().styling.general.font.color);
 
-    var TracksToolDiv = d3.select("#" + div_id).append("div");
+    // Add a tools div - not currently used - previously had the zoom control in it. Todo - consider adding
+    // zoom functionality back in!
+    if (!_isInitialized) {
+        d3.select("#" + div_id).append("div")
+            .attr("id", "TracksToolDiv")
+            .style("display", "inline-flex")
+            .style("flex-direction", "column")
+            .style("justify-content", "center")
+            .style("align-items", "center")
+            .style("position", "fixed")
+            .style("bottom", "0px")
+            .style("right", "20px")
+            .style("vertical-align", "top")
+            .style("width", ZOOMPANELWIDTH + "px");
+    }
 
-    TracksToolDiv.style("vertical-align", "top")
-        .attr("id", "TracksToolDiv")
-        .style("display", "inline-flex")
-        .style("flex-direction", "column")
-        .style("justify-content", "center")
-        .style("align-items", "center")
-        .style("position", "fixed")
-        .style("bottom", "0px")
-        .style("right", "20px")
-        .style("width", ZoomPanelWidth + "px");
     //.on("mousedown", function (event) {
     //event.stopPropagation();
     //});
@@ -2383,111 +2389,121 @@ async function multipleLogPlot(templates, allDataViewRows) {
     }
 
     // Add a separate div for the headers
+    const headersContainerDiv = d3.select("#headersContainer").node()
+        ? d3.select("#headersContainer")
+        : d3
+              .select("#" + div_id)
+              .append("div")
+              .attr("id", "headersContainer");
 
-    let headersContainerDiv = d3
-        .select("#" + div_id)
-        .append("div")
-        //.style("overflow-y", "auto")
-        .attr("id", "headersContainer");
+    headersContainerDiv.selectAll("*").remove();
 
-    // Add a div for the tracks/plots
-    console.log(modContainer.node());
-    let trackHoldersContainerDiv = d3
-        .select("#" + div_id)
-        .append("div")
-        .style("z-index", 10)
-        .attr("id", "trackHoldersContainer")
-        // This is the main marking event
-        .on("mousedown", function (mouseDownEvent) {
-            console.log(
-                "trackHoldersContainerDiv mouseDown",
-                mouseDownEvent.currentTarget.offsetTop,
-                mouseDownEvent.target
-            );
+    // Add a div for the tracks/plots (if it doesn't exist - todo - switch to using i)
+    let trackHoldersContainerDiv;
+    if (d3.select("#trackHoldersContainer").node()) {
+        trackHoldersContainerDiv = d3.select("#trackHoldersContainer");
+        trackHoldersContainerDiv.selectAll("*").remove();
+    } else {
+        trackHoldersContainerDiv = d3
+            .select("#" + div_id)
+            .append("div")
+            .attr("id", "trackHoldersContainer")
+            .style("z-index", 10)
+            .attr("id", "trackHoldersContainer")
+            // This is the main marking event
+            .on("mousedown", function (mouseDownEvent) {
+                console.log(
+                    "trackHoldersContainerDiv mouseDown",
+                    mouseDownEvent.currentTarget.offsetTop,
+                    mouseDownEvent.target
+                );
 
-            var getMarkMode = function (e) {
-                // shift: add rows
-                // control: toggle rows
-                // none: replace rows
-                if (e.shiftKey) {
-                    return "Add";
-                } else if (e.ctrlKey) {
-                    return "Toggle";
-                }
+                var getMarkMode = function (e) {
+                    // shift: add rows
+                    // control: toggle rows
+                    // none: replace rows
+                    if (e.shiftKey) {
+                        return "Add";
+                    } else if (e.ctrlKey) {
+                        return "Toggle";
+                    }
 
-                return "Replace";
-            };
-
-            var markMode = getMarkMode(mouseDownEvent);
-            //
-            // Create initial marking rectangle, will be used if the user only clicks.
-            //
-            var x = mouseDownEvent.pageX,
-                y = mouseDownEvent.pageY,
-                width = 1,
-                height = 1;
-
-            var $selection = $("<div/>")
-                .css({
-                    position: "absolute",
-                    border: "1px solid #0a1530",
-                    "background-color": "#8daddf",
-                    opacity: "0.5"
-                })
-                .hide()
-                .appendTo(this);
-
-            // draw the marking rectangle
-            $(this).on("mousemove", function (mouseMoveEvent) {
-                x = Math.min(mouseDownEvent.pageX, mouseMoveEvent.pageX);
-                y = Math.min(mouseDownEvent.pageY, mouseMoveEvent.pageY);
-                width = Math.abs(mouseDownEvent.pageX - mouseMoveEvent.pageX);
-                height = Math.abs(mouseDownEvent.pageY - mouseMoveEvent.pageY);
-
-                $selection.css({
-                    left: x + "px",
-                    top: y + "px",
-                    width: width + "px",
-                    height: height + "px"
-                });
-
-                $selection.show();
-            });
-            let currentTarget = mouseDownEvent.currentTarget;
-
-            $(this).on("mouseup", function () {
-                console.log("mouseDownEvent.target", mouseDownEvent.target, mouseDownEvent.currentTarget);
-                var rectangle = {
-                    x: mouseDownEvent.clientX,
-                    // the currentTarget is always the container rect
-                    // -- offsetTop is the offset to the top of the page
-                    y: mouseDownEvent.clientY - currentTarget.offsetTop + currentTarget.scrollTop,
-                    width: width,
-                    height: height
+                    return "Replace";
                 };
-                // Store the scrollTop so we can re-apply it upon re-rendering from marking
-                _scrollTop = currentTarget.scrollTop;
-                if (typeof markModel != "undefined") {
-                    markModel(markMode, rectangle);
-                }
 
-                $selection.remove();
-                $(this).off("mouseup mousemove");
+                var markMode = getMarkMode(mouseDownEvent);
+                //
+                // Create initial marking rectangle, will be used if the user only clicks.
+                //
+                var x = mouseDownEvent.pageX,
+                    y = mouseDownEvent.pageY,
+                    width = 1,
+                    height = 1;
+
+                var $selection = $("<div/>")
+                    .css({
+                        position: "absolute",
+                        border: "1px solid #0a1530",
+                        "background-color": "#8daddf",
+                        opacity: "0.5"
+                    })
+                    .hide()
+                    .appendTo(this);
+
+                // draw the marking rectangle
+                $(this).on("mousemove", function (mouseMoveEvent) {
+                    x = Math.min(mouseDownEvent.pageX, mouseMoveEvent.pageX);
+                    y = Math.min(mouseDownEvent.pageY, mouseMoveEvent.pageY);
+                    width = Math.abs(mouseDownEvent.pageX - mouseMoveEvent.pageX);
+                    height = Math.abs(mouseDownEvent.pageY - mouseMoveEvent.pageY);
+
+                    $selection.css({
+                        left: x + "px",
+                        top: y + "px",
+                        width: width + "px",
+                        height: height + "px"
+                    });
+
+                    $selection.show();
+                });
+                let currentTarget = mouseDownEvent.currentTarget;
+
+                $(this).on("mouseup", function () {
+                    console.log("mouseDownEvent.target", mouseDownEvent.target, mouseDownEvent.currentTarget);
+                    var rectangle = {
+                        x: mouseDownEvent.clientX,
+                        // the currentTarget is always the container rect
+                        // -- offsetTop is the offset to the top of the page
+                        y: mouseDownEvent.clientY - currentTarget.offsetTop + currentTarget.scrollTop,
+                        width: width,
+                        height: height
+                    };
+                    // Store the scrollTop so we can re-apply it upon re-rendering from marking
+                    _scrollTop = currentTarget.scrollTop;
+                    if (typeof markModel != "undefined") {
+                        markModel(markMode, rectangle);
+                    }
+
+                    $selection.remove();
+                    $(this).off("mouseup mousemove");
+                });
             });
-        });
+    }
 
-    //setup trackholders
+    // setup trackholders - todo - remove properly - removing this has no effect on the rendering
+    // but the divs are referred to when plotting!
     for (let ii = 0; ii < templates.length; ii++) {
         let template = templates[ii];
-      
+
         if (template) {
-            let TrackHolder = d3.select("#" + div_id).append("div");
+            if (!_isInitialized) {
+                let TrackHolder = d3.select("#" + div_id).append("div");
 
-            TrackHolder.style("vertical-align", "middle")
-                .attr("id", div_id + "TrackHolder" + ii)
-                .style("display", "inline-block")
-                .style("overflow-y", "hidden");
-
+                TrackHolder.style("vertical-align", "middle")
+                    .attr("id", div_id + "TrackHolder" + ii)
+                    .style("display", "inline-block")
+                    .style("overflow-y", "hidden");
+            }
             template[0]["trackBox"]["div_id"] = div_id + "TrackHolder" + ii;
         }
     }
@@ -2516,7 +2532,7 @@ async function multipleLogPlot(templates, allDataViewRows) {
 
     // Just calling scrollTop() doesn't work - hence the need to animate
     // -- would be preferable to do this in a d3 native way rather than jQuery, but d3 doesn't seem to work...
-    $("#trackHoldersContainer").animate({ scrollTop: _scrollTop }, 1);
+    $("#trackHoldersContainer").animate({ scrollTop: _scrollTop }, 10);
 
     //update accordion panels
     if (updateAccordionTools) {
@@ -2535,5 +2551,8 @@ async function multipleLogPlot(templates, allDataViewRows) {
         .attr("id", "mod-container" + "_tooltip")
         .style("opacity", 0);
 
-    initialized = true;
+    // this can be used to detect if we need to add divs, etc.
+    // on re-rendering after marking. If already initialized, no need
+    // to add new divs
+    _isInitialized = true;
 }
