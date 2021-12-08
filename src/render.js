@@ -35,18 +35,6 @@ import * as colorHelpers from "./color-helpers.js";
  */
 const modContainer = d3.select("#mod-container");
 
-async function markModel(markMode, rectangle) {
-    var y0 = y_function.invert(rectangle.y);
-    var y1 = y_function.invert(rectangle.y + rectangle.height);
-    let allRows = await _dataView.allRows();
-
-    console.log("y0", y0, "y1", y1, "rectangle", rectangle);
-    _dataView.mark(
-        allRows.filter((d) => d.continuous("DEPTH").value() >= y0 && d.continuous("DEPTH").value() <= y1),
-        markMode
-    );
-}
-
 // @todo - remove as many global vars as we can!
 var selectedWell;
 var tooltipDiv;
@@ -222,7 +210,7 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
 
         let categoryLeaves = (await (await _dataView.hierarchy("Category")).root()).leaves();
 
-        let trackWidth = (windowSize.width - ZOOMPANELWIDTH - DEPTHLABELPANELWIDTH) / categoryLeaves.length;
+        let trackWidth = (windowSize.width - ZOOMPANELWIDTH - DEPTHLABELPANELWIDTH - 20) / categoryLeaves.length;
 
         let templates = [];
         let categoryIndex = 0;
@@ -337,7 +325,7 @@ async function logPlot(template_for_plotting, allDataViewRows, headerHeight) {
     let div_id = template_overall["div_id"];
     let k = div_id.slice(-1);
 
-    let height = template_overall["height"] * _verticalZoomHeightMultiplier - 110;
+    let height = template_overall["height"] * _verticalZoomHeightMultiplier - 120;
     ///console.log(height);
     let height_components = template_overall["height"];
     let width = template_overall["width"];
@@ -1337,6 +1325,7 @@ async function logPlot(template_for_plotting, allDataViewRows, headerHeight) {
     */
 
     function mousemove(evt) {
+        console.log("mousemove");
         if (!tooltipDiv) {
             tooltipDiv = d3.select("#mod-container" + "_tooltip");
         }
@@ -1436,9 +1425,10 @@ async function logPlot(template_for_plotting, allDataViewRows, headerHeight) {
             let tooltipX = target.parentNode.parentNode.offsetLeft + getTooltipPositionX(curve_x_func, value0) + 10;
 
             let tooltipY = evt.pageY > modContainer.clientHeight - 40 ? evt.pageY - 40 : evt.pageY + 10;
-
+            console.log("Setting tooltip style");
             tooltipDiv.style("left", tooltipX + "px");
-            tooltipDiv.style("top", tooltipY + "px");
+            tooltipDiv.style("top", tooltipY + "px")
+                .style("visibility", "visible");
 
             tooltipDiv.transition().duration(600).style("opacity", 0.9);
         }
@@ -2469,7 +2459,7 @@ async function multipleLogPlot(templates, allDataViewRows) {
                 });
                 let currentTarget = mouseDownEvent.currentTarget;
 
-                $(this).on("mouseup", function () {
+                $(this).on("mouseup", async function () {
                     console.log("mouseDownEvent.target", mouseDownEvent.target, mouseDownEvent.currentTarget);
                     var rectangle = {
                         x: mouseDownEvent.clientX,
@@ -2481,9 +2471,15 @@ async function multipleLogPlot(templates, allDataViewRows) {
                     };
                     // Store the scrollTop so we can re-apply it upon re-rendering from marking
                     _scrollTop = currentTarget.scrollTop;
-                    if (typeof markModel != "undefined") {
-                        markModel(markMode, rectangle);
-                    }
+                    var y0 = y_function.invert(rectangle.y);
+                    var y1 = y_function.invert(rectangle.y + rectangle.height);
+                    let allRows = await _dataView.allRows();
+                
+                    console.log("y0", y0, "y1", y1, "rectangle", rectangle);
+                    _dataView.mark(
+                        allRows.filter((d) => d.continuous("DEPTH").value() >= y0 && d.continuous("DEPTH").value() <= y1),
+                        markMode
+                    );
 
                     $selection.remove();
                     $(this).off("mouseup mousemove");
@@ -2548,6 +2544,8 @@ async function multipleLogPlot(templates, allDataViewRows) {
     tooltipDiv = d3
         .select("#" + div_id)
         .append("div")
+        .style("visibility", "hidden")        
+        .style("top", "0")
         .attr("class", "tooltip")
         .attr("id", "mod-container" + "_tooltip")
         .style("opacity", 0);
