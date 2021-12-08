@@ -36,18 +36,6 @@ import * as colorHelpers from "./color-helpers.js";
 const modContainer = d3.select("#mod-container");
 
 async function markModel(markMode, rectangle) {
-    var markData = {};
-
-    var js_chart = d3.select("#mod-container")._groups[0][0];
-    var header = d3.select(".trackHeaderDiv")._groups[0][0];
-
-    let trackPlotDiv = d3.select(".trackPlotDiv");
-    console.log(trackPlotDiv, header.style);
-
-    var headerHeight =
-        parseFloat(header.style.height.replace(/\D/g, "")) + parseFloat(header.style.marginBottom.replace(/\D/g, ""));
-    console.log(headerHeight);
-
     var y0 = y_function.invert(rectangle.y);
     var y1 = y_function.invert(rectangle.y + rectangle.height);
     let allRows = await _dataView.allRows();
@@ -55,7 +43,7 @@ async function markModel(markMode, rectangle) {
     console.log("y0", y0, "y1", y1, "rectangle", rectangle);
     _dataView.mark(
         allRows.filter((d) => d.continuous("DEPTH").value() >= y0 && d.continuous("DEPTH").value() <= y1),
-        "Replace"
+        markMode
     );
 }
 
@@ -69,6 +57,7 @@ var _verticalZoomHeightProperty;
 var initialized = false;
 var vanilla_drawer;
 var updateAccordionTools = true;
+var _scrollTop = 0;
 
 var _dataView;
 var yAxis;
@@ -95,6 +84,7 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
     _verticalZoomHeightProperty = verticalZoomHeightProperty;
     ///console.log(verticalZoomHeightProperty);
     _verticalZoomHeightMultiplier = _verticalZoomHeightProperty.value();
+    modContainer.attr("style", "height:" + (windowSize.height - 20) + "px; overflow-y:hidden");
     ///console.log("Render called with mod", mod);
     if (state.preventRender) {
         // Early return if the state currently disallows rendering.
@@ -153,7 +143,7 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
 
     const margin = { top: 20, right: 40, bottom: 40, left: 80 };
 
-    modContainer.style("height", windowSize.height - margin.bottom - margin.top).style("overflow-y", "auto");
+    modContainer.style("height", windowSize.height - margin.bottom - margin.top); //
 
     /**
      * Maximum number of Y scale ticks is an approximate number
@@ -342,7 +332,6 @@ async function logPlot(template_for_plotting, allDataViewRows, headerHeight) {
     let dataType = templateCurves["dataType"];
 
     let div_id = template_overall["div_id"];
-    console.log(div_id);
     let k = div_id.slice(-1);
 
     let height = template_overall["height"] * _verticalZoomHeightMultiplier - 110;
@@ -377,7 +366,7 @@ async function logPlot(template_for_plotting, allDataViewRows, headerHeight) {
         .append("div")
         .attr("class", "trackHeaderDiv")
         .style("overflow-x", "visible")
-        .style("overflow-y", "visible")
+        .style("overflow-y", "hidden")
         .style("position", "sticky")
         .style("top", 0)
         .style("background-color", await _mod.getRenderContext().styling.general.backgroundColor)
@@ -565,11 +554,8 @@ async function logPlot(template_for_plotting, allDataViewRows, headerHeight) {
 
         //////////////  Building Track Components  //////////////
         ///console.log(height);
-        svg.attr("class", "components")
-            .attr("width", width)
-            .attr("height", height)
-            .style("margin", "0 auto")
-            .style("overflow-y", "visible");
+        svg.attr("class", "components").attr("width", width).attr("height", height).style("margin", "0 auto");
+        //.style("overflow-y", "visible");
 
         svg.append("g").call(yAxis);
 
@@ -1202,9 +1188,9 @@ async function logPlot(template_for_plotting, allDataViewRows, headerHeight) {
                         .attr("y", y(categoryRectangle.top))
                         .attr("width", width - margin.right - margin.left)
                         .attr("height", Math.abs(y(categoryRectangle.top) - y(categoryRectangle.bottom)));
-                        //.style("cursor", "pointer")
-                        //.on("mousedown", rectClick)
-                        //.on("mousemove", mousemove);
+                    //.style("cursor", "pointer")
+                    //.on("mousedown", rectClick)
+                    //.on("mousemove", mousemove);
 
                     var fgDiv = fgObj
                         .append("xhtml:div")
@@ -1222,9 +1208,9 @@ async function logPlot(template_for_plotting, allDataViewRows, headerHeight) {
                         .style("align-items", "center")
                         .style("padding-left", "2px")
                         .style("padding-right", "2px");
-                        //.on("mouseout", rectMouseOut)
-                        //.on("mouseover", rectMouseOver)
-                        //.on("mousedown", rectClick);
+                    //.on("mouseout", rectMouseOut)
+                    //.on("mouseover", rectMouseOver)
+                    //.on("mousedown", rectClick);
 
                     fgDiv
                         .append("span")
@@ -1963,7 +1949,7 @@ function insertTextInput(divContent, i, k, templates, propName, allDataViewRows)
 //creates a jquery accordion. Each panel contains one or more tabs
 //an accordion panel represents a track (template)
 //a tab is a curve for each track (template_components[0]["curves"][0];)
-async function accordionTemplate(templates, i, allDataViewRows) {
+async function createAccordionForTemplate(templates, i, allDataViewRows) {
     let template = templates[i];
     let template_components = template[0]["components"];
     let templateCurves = template_components[0]["curves"][0];
@@ -2257,7 +2243,6 @@ async function multipleLogPlot(templates, allDataViewRows) {
         .style("display", "inline-block")
         .style("position", "relative")
         .style("width", depthLabelPanelWidth + "px");
-        
 
     TracksDepthLabel = TracksDepthLabel.append("div")
         .style("position", "fixed")
@@ -2289,9 +2274,9 @@ async function multipleLogPlot(templates, allDataViewRows) {
         .style("bottom", "0px")
         .style("right", "20px")
         .style("width", ZoomPanelWidth + "px");
-        //.on("mousedown", function (event) {
-            //event.stopPropagation();
-        //});
+    //.on("mousedown", function (event) {
+    //event.stopPropagation();
+    //});
 
     /*
         var confBtn = TracksToolDiv.append("div")
@@ -2402,10 +2387,11 @@ async function multipleLogPlot(templates, allDataViewRows) {
     let headersContainerDiv = d3
         .select("#" + div_id)
         .append("div")
+        //.style("overflow-y", "auto")
         .attr("id", "headersContainer");
 
     // Add a div for the tracks/plots
-
+    console.log(modContainer.node());
     let trackHoldersContainerDiv = d3
         .select("#" + div_id)
         .append("div")
@@ -2413,8 +2399,12 @@ async function multipleLogPlot(templates, allDataViewRows) {
         .attr("id", "trackHoldersContainer")
         // This is the main marking event
         .on("mousedown", function (mouseDownEvent) {
-            console.log("trackHoldersContainerDiv mouseDown", mouseDownEvent.currentTarget.offsetTop, mouseDownEvent.target);
-            
+            console.log(
+                "trackHoldersContainerDiv mouseDown",
+                mouseDownEvent.currentTarget.offsetTop,
+                mouseDownEvent.target
+            );
+
             var getMarkMode = function (e) {
                 // shift: add rows
                 // control: toggle rows
@@ -2427,7 +2417,6 @@ async function multipleLogPlot(templates, allDataViewRows) {
 
                 return "Replace";
             };
-
 
             var markMode = getMarkMode(mouseDownEvent);
             //
@@ -2476,9 +2465,8 @@ async function multipleLogPlot(templates, allDataViewRows) {
                     width: width,
                     height: height
                 };
-                //
-                // markModel is (optionally) implemented in the visualization js code
-                //
+                // Store the scrollTop so we can re-apply it upon re-rendering from marking
+                _scrollTop = currentTarget.scrollTop;
                 if (typeof markModel != "undefined") {
                     markModel(markMode, rectangle);
                 }
@@ -2490,36 +2478,37 @@ async function multipleLogPlot(templates, allDataViewRows) {
 
     //setup trackholders
     let templatesToPlot = [];
-    let headerHeight = 0;
+    //let headerHeight = 0;
 
-    // Calculate the maximum header height and use this for all tracks
-    // Add the track holder divs for each template
-    // Collect the templates to be plotted
-    for (let ii = 0; ii < templates.length; ii++) {
-        let template = templates[ii];
-        let templateHeaderHeight = getTemplateHeaderHeight(template);
-        headerHeight = templateHeaderHeight > headerHeight ? templateHeaderHeight : headerHeight;
-        if (template) {
-            let TrackHolder = d3.select("#" + div_id).append("div");
+    // calculate the overall header height
+    let headerHeight = Math.max.apply(
+        Math,
+        templates.map((t) => getTemplateHeaderHeight(t))
+    );
 
-            TrackHolder.style("vertical-align", "middle")
-                .attr("id", div_id + "TrackHolder" + ii)
-                .style("display", "inline-block")
-                .style("overflow-y", "hidden");
-
-            template[0]["trackBox"]["div_id"] = div_id + "TrackHolder" + ii;
-            templatesToPlot.push(template);
-        }
-    }
-
-    //needs to be outside the loop because we are finding the maxHeaderHeight there
-    templatesToPlot.forEach((template, i) => {
+    // now plot!
+    templates.forEach((template, i) => {
         logPlot(template, allDataViewRows, headerHeight + "px");
     });
 
+    // Apply the height and scroll settings after everything has been rendered - AJB todo - remove hard coded value!
+    trackHoldersContainerDiv.attr(
+        "style",
+        "height:" +
+            (modContainer.node().getBoundingClientRect().height -
+                headersContainerDiv.node().getBoundingClientRect().height -
+                100) +
+            "px;" +
+            "overflow-y:scroll"
+    );
+
+    // Just calling scrollTop() doesn't work - hence the need to animate
+    // -- would be preferable to do this in a d3 native way rather than jQuery, but d3 doesn't seem to work...
+    $("#trackHoldersContainer").animate({ scrollTop: _scrollTop }, 1);
+
     //update accordion panels
     if (updateAccordionTools) {
-        for (const i of templates.keys()) await accordionTemplate(templates, i, allDataViewRows);
+        for (const i of templates.keys()) await createAccordionForTemplate(templates, i, allDataViewRows);
         updateAccordionTools = false;
     }
 
