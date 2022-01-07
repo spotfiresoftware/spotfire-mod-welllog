@@ -1840,15 +1840,15 @@ function PropertyOnChange(templateIdx, curveIdx, templates, allDataViewRows, sel
 
         //delete last curve
         else if (propName == "removeCurve") {
-            var copiedCurveIndex = curveNames.length - 1;
+            let copiedCurveIndex = curveNames.length - 1;
             if (copiedCurveIndex) {
                 //don't remove last curve
                 //remove curve: item from all templateCuves arrays (colors, style, curvName, etc)
-                for (var kk in templateCurves[0]) {
-                    if (Array.isArray(templateCurves[0][kk])) templateCurves[0][kk].pop();
+                for (let i in templateCurves[0]) {
+                    if (Array.isArray(templateCurves[0][i])) templateCurves[0][i].pop();
                 }
 
-                var ttr = `#tab_${templateIdx}_${copiedCurveIndex}`;
+                let ttr = `#tab_${templateIdx}_${copiedCurveIndex}`;
 
                 //remove last tab
                 // document.querySelector(`a[href='${ttr}']`).parentElement.remove()  //another (non jquery) way to remove tab
