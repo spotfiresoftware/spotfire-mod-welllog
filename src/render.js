@@ -381,7 +381,10 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
     }
 ]
 
-plot_templates[3] = [
+console.log(plot_templates[4]);
+
+
+plot_templates[4] = [
     {
         "components": [
             {
@@ -457,6 +460,7 @@ plot_templates[3] = [
     }
 ]
 
+console.log(plot_templates[3]);
 
 
     multipleLogPlot(plot_templates, allDataViewRows);
