@@ -304,8 +304,13 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
 
     //creates each plot per template
 
-  //JLL: DEBIGING templates
-  plot_templates[0] = [
+  // JLL: DEBUGGING templates
+  // AJB: - to use these, use 0 or 4 instead of "test0" or "test4", like:
+  // plot_templates[0] or plot_templates[4]
+  // - to disable, use plot_templates["test0"] or plot_templates["test4"]
+  // - string template indexes are invalid and are therefore ignored by the 
+  // rendering code
+  plot_templates["test0"] = [
     {
         "components": [
             {
@@ -383,8 +388,7 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
 
 console.log(plot_templates[4]);
 
-
-plot_templates[4] = [
+plot_templates["test4"] = [
     {
         "components": [
             {
@@ -421,7 +425,7 @@ plot_templates[4] = [
                                     "RGBA(255,0,0, 0.55)"
                                 ],
                                 "colorInterpolator": [
-                                    null,
+                                    "interpolateReds",
                                     null,
                                     null
                                 ],
@@ -460,7 +464,7 @@ plot_templates[4] = [
     }
 ]
 
-console.log(plot_templates[3]);
+console.log(plot_templates[4]);
 
 
     multipleLogPlot(plot_templates, allDataViewRows);
@@ -1842,22 +1846,22 @@ function insertDropdown(divContent, i, k, templates, name, allDataViewRows) {
             },
             {
                 value: "interpolateReds",
-                selected: selectedValue == d3.interpolateReds,
+                selected: selectedValue == "interpolateReds",
                 imageSrc: interpolateRedsImgSrc
             },
             {
                 value: "interpolateRdBu",
-                selected: selectedValue == d3.interpolateRdBu,
+                selected: selectedValue == "interpolateRdBu",
                 imageSrc: interpolateRdBuImgSrc
             },
             {
                 value: "interpolateSpectral",
-                selected: selectedValue == d3.interpolateSpectral,
+                selected: selectedValue == "interpolateSpectral",
                 imageSrc: interpolateSpectralImgSrc
             },
             {
                 value: "interpolateViridis",
-                selected: selectedValue == d3.interpolateViridis,
+                selected: selectedValue == "interpolateViridis",
                 imageSrc: interpolateViridisImgSrc
             },
             //{ value: "interpolatePlasma", selected: (selectedValue == d3.interpolatePlasma), imageSrc: interpolatePlasmaImgSrc},
