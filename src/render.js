@@ -303,6 +303,162 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
     vanilla_drawer.draggable(document.getElementById("drawer_menu"));
 
     //creates each plot per template
+
+  //JLL: DEBIGING templates
+  plot_templates[0] = [
+    {
+        "components": [
+            {
+                "curves": [
+                    {
+                        "curveColors": [
+                            "#4caf50"
+                        ],
+                        "curveNames": [
+                            "GR"
+                        ],
+                        "curveStrokeDashArray": [
+                            "5,5"
+                        ],
+                        "curveUnits": [
+                            ""
+                        ],
+                        "dataType": "curve",
+                        "depthCurveName": "DEPTH",
+                        "depthUnit": "m",
+                        "fill": [
+                            {
+                                "curve2": "",
+                                "curveName": "GR",
+                                "cutoffs": [
+                                    -99999999,
+                                    "",
+                                    ""
+                                ],
+                                "fill": "yes",
+                                "fillColors": [
+                                    "interpolator",
+                                    "RGBA(0,0,0, 0.25)",
+                                    "RGBA(255,255,255, 0.55)"
+                                ],
+                                "fillDirection": "right",
+                                "colorInterpolator": [
+                                    null,
+                                    null,
+                                    null
+                                ],
+                                "maxScaleX": "",
+                                "minScaleX": ""
+                            }
+                        ],
+                        "scaleTypeLinearLog": [
+                            "linear"
+                        ],
+                        "strokeLinecap": [
+                            "butt"
+                        ],
+                        "strokeWidth": [
+                            "2"
+                        ],
+                        "wellNames": [
+                            "1"
+                        ]
+                    }
+                ]
+            }
+        ],
+        "trackBox": {
+            "width": 137.25,
+            "height": 563,
+            "div_id": "mod-containerTrackHolder0",
+            "margin": {
+                "top": 5,
+                "right": 10,
+                "bottom": 5,
+                "left": 60
+            }
+        }
+    }
+]
+
+plot_templates[3] = [
+    {
+        "components": [
+            {
+                "curves": [
+                    {
+                        "curveColors": [
+                            "#f44336"
+                        ],
+                        "curveNames": [
+                            "RESD"
+                        ],
+                        "curveStrokeDashArray": [
+                            "5,5"
+                        ],
+                        "curveUnits": [
+                            ""
+                        ],
+                        "dataType": "curve",
+                        "depthCurveName": "DEPTH",
+                        "depthUnit": "m",
+                        "fill": [
+                            {
+                                "curve2": "",
+                                "curveName": "RESD",
+                                "cutoffs": [
+                                    -99999999,
+                                    "",
+                                    ""
+                                ],
+                                "fill": "yes",
+                                "fillColors": [
+                                    "interpolator",
+                                    "RGBA(0,0,0, 0.25)",
+                                    "RGBA(255,0,0, 0.55)"
+                                ],
+                                "colorInterpolator": [
+                                    null,
+                                    null,
+                                    null
+                                ],
+                                "fillDirection": "left",
+                                "maxScaleX": "",
+                                "minScaleX": ""
+                            }
+                        ],
+                        "scaleTypeLinearLog": [
+                            "linear"
+                        ],
+                        "strokeLinecap": [
+                            "butt"
+                        ],
+                        "strokeWidth": [
+                            "1"
+                        ],
+                        "wellNames": [
+                            "1"
+                        ]
+                    }
+                ]
+            }
+        ],
+        "trackBox": {
+            "width": 137.25,
+            "height": 563,
+            "div_id": "mod-containerTrackHolder3",
+            "margin": {
+                "top": 5,
+                "right": 10,
+                "bottom": 5,
+                "left": 60
+            }
+        }
+    }
+]
+
+
+
     multipleLogPlot(plot_templates, allDataViewRows);
 
 }
@@ -1871,7 +2027,6 @@ function PropertyOnChange(templateIdx, curveIdx, templates, allDataViewRows, sel
                 anAccordionHeader.textContent = `Track ${templateIdx + 1}: ` + curveNames.join();
             }
         }
-
 
         // Store the updated template in the appropriate mod property
         _mod.property("template" + templateIdx).set(JSON.stringify(templates[templateIdx]));
