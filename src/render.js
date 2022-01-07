@@ -1316,7 +1316,7 @@ async function logPlot(template_for_plotting, allDataViewRows, headerHeight) {
     */
 
     function mousemove(evt) {
-        console.log("mousemove");
+        // console.log("mousemove");
         if (!tooltipDiv) {
             tooltipDiv = d3.select("#mod-container" + "_tooltip");
         }
@@ -1416,7 +1416,7 @@ async function logPlot(template_for_plotting, allDataViewRows, headerHeight) {
             let tooltipX = target.parentNode.parentNode.offsetLeft + getTooltipPositionX(curve_x_func, value0) + 10;
 
             let tooltipY = evt.pageY > modContainer.clientHeight - 40 ? evt.pageY - 40 : evt.pageY + 10;
-            console.log("Setting tooltip style");
+            // console.log("Setting tooltip style");
             tooltipDiv.style("left", tooltipX + "px");
             tooltipDiv.style("top", tooltipY + "px")
                 .style("visibility", "visible");
@@ -1802,16 +1802,16 @@ function PropertyOnChange(templateIdx, curveIdx, templates, allDataViewRows, sel
         //copy first curve
         else if (propName == "duplicateCurve") {
             //duplicates first curve properties (arrays such as colors, style, curvName, etc)
-            var templateCurvesCopy = JSON.parse(JSON.stringify(templateCurves));
+            let templateCurvesCopy = JSON.parse(JSON.stringify(templateCurves));
             for (curveIdx in templateCurves[0]) {
                 if (Array.isArray(templateCurves[0][curveIdx])) templateCurves[0][curveIdx].push(templateCurvesCopy[0][curveIdx][0]);
             }
             //          for (p in templateCurves[0]["fill"]) {if (Array.isArray(templateCurves[0]["fill"][p])) templateCurves[0]["fill"][p].push(templateCurves[0]["fill"][p][0])}
 
             //add a tab
-            var copiedCurveIndex = curveNames.length - 1;
-            var tid = `tab_${templateIdx}_${copiedCurveIndex}`;
-            var ul = d3.select(`#tabs_${templateIdx} ul`);
+            let copiedCurveIndex = curveNames.length - 1;
+            let tid = `tab_${templateIdx}_${copiedCurveIndex}`;
+            let ul = d3.select(`#tabs_${templateIdx} ul`);
             ul.insert("li", `:nth-child(${copiedCurveIndex + 1})`)
                 .append("a")
                 .attr("href", `#${tid}`)
@@ -1822,7 +1822,7 @@ function PropertyOnChange(templateIdx, curveIdx, templates, allDataViewRows, sel
             //d3.select(`#tabs_${i}`).append("div").attr("id",tid).append("P").html(tid);
 
             //populate tab
-            var tabs = d3.select("#" + "tabs_" + templateIdx);
+            let tabs = d3.select("#" + "tabs_" + templateIdx);
             addAccordionTabContents(templateIdx, copiedCurveIndex, curveNames, tabs, templates, allDataViewRows, ["#333333"]);
 
             //refresh tabs
@@ -1873,160 +1873,6 @@ function PropertyOnChange(templateIdx, curveIdx, templates, allDataViewRows, sel
         }
 
 
-        //JLL: DEBIGING templates
-        templates[0] = [
-            {
-                "components": [
-                    {
-                        "curves": [
-                            {
-                                "curveColors": [
-                                    "#4caf50"
-                                ],
-                                "curveNames": [
-                                    "GR"
-                                ],
-                                "curveStrokeDashArray": [
-                                    "5,5"
-                                ],
-                                "curveUnits": [
-                                    ""
-                                ],
-                                "dataType": "curve",
-                                "depthCurveName": "DEPTH",
-                                "depthUnit": "m",
-                                "fill": [
-                                    {
-                                        "curve2": "",
-                                        "curveName": "GR",
-                                        "cutoffs": [
-                                            -99999999,
-                                            "",
-                                            ""
-                                        ],
-                                        "fill": "yes",
-                                        "fillColors": [
-                                            "interpolator",
-                                            "RGBA(0,0,0, 0.25)",
-                                            "RGBA(255,255,255, 0.55)"
-                                        ],
-                                        "fillDirection": "right",
-                                        "colorInterpolator": [
-                                            null,
-                                            null,
-                                            null
-                                        ],
-                                        "maxScaleX": "",
-                                        "minScaleX": ""
-                                    }
-                                ],
-                                "scaleTypeLinearLog": [
-                                    "linear"
-                                ],
-                                "strokeLinecap": [
-                                    "butt"
-                                ],
-                                "strokeWidth": [
-                                    "2"
-                                ],
-                                "wellNames": [
-                                    "1"
-                                ]
-                            }
-                        ]
-                    }
-                ],
-                "trackBox": {
-                    "width": 137.25,
-                    "height": 563,
-                    "div_id": "mod-containerTrackHolder0",
-                    "margin": {
-                        "top": 5,
-                        "right": 10,
-                        "bottom": 5,
-                        "left": 60
-                    }
-                }
-            }
-        ]
-
-        templates[3] = [
-            {
-                "components": [
-                    {
-                        "curves": [
-                            {
-                                "curveColors": [
-                                    "#f44336"
-                                ],
-                                "curveNames": [
-                                    "RESD"
-                                ],
-                                "curveStrokeDashArray": [
-                                    "5,5"
-                                ],
-                                "curveUnits": [
-                                    ""
-                                ],
-                                "dataType": "curve",
-                                "depthCurveName": "DEPTH",
-                                "depthUnit": "m",
-                                "fill": [
-                                    {
-                                        "curve2": "",
-                                        "curveName": "RESD",
-                                        "cutoffs": [
-                                            -99999999,
-                                            "",
-                                            ""
-                                        ],
-                                        "fill": "yes",
-                                        "fillColors": [
-                                            "interpolator",
-                                            "RGBA(0,0,0, 0.25)",
-                                            "RGBA(255,0,0, 0.55)"
-                                        ],
-                                        "colorInterpolator": [
-                                            null,
-                                            null,
-                                            null
-                                        ],
-                                        "fillDirection": "left",
-                                        "maxScaleX": "",
-                                        "minScaleX": ""
-                                    }
-                                ],
-                                "scaleTypeLinearLog": [
-                                    "linear"
-                                ],
-                                "strokeLinecap": [
-                                    "butt"
-                                ],
-                                "strokeWidth": [
-                                    "1"
-                                ],
-                                "wellNames": [
-                                    "1"
-                                ]
-                            }
-                        ]
-                    }
-                ],
-                "trackBox": {
-                    "width": 137.25,
-                    "height": 563,
-                    "div_id": "mod-containerTrackHolder3",
-                    "margin": {
-                        "top": 5,
-                        "right": 10,
-                        "bottom": 5,
-                        "left": 60
-                    }
-                }
-            }
-        ]
-
-
         // Store the updated template in the appropriate mod property
         _mod.property("template" + templateIdx).set(JSON.stringify(templates[templateIdx]));
         multipleLogPlot(templates, allDataViewRows);
@@ -2066,7 +1912,7 @@ function insertTextInput(divContent, i, k, templates, propName, allDataViewRows)
         .attr("value", selectedData)
         .on("input", function (d) {
             if (templates[i] && _isInitialized) {
-                var template = templates[i];
+                let template = templates[i];
                 let template_components = template[0]["components"];
                 let templateCurves = template_components[0]["curves"];
 
@@ -2117,8 +1963,8 @@ async function createAccordionForTemplate(templates, templateIdx, allDataViewRow
             </div> 
             */
 
-        var tabs = content.append("div").attr("id", "tabs_" + templateIdx);
-        var ul = tabs.append("ul");
+        let tabs = content.append("div").attr("id", "tabs_" + templateIdx);
+        let ul = tabs.append("ul");
         for (let k = 0; k < curveNames.length; k++) {
             if (curveNames[k]) {
                 ul.append("li")
@@ -2205,7 +2051,7 @@ async function addAccordionTabContents(templateIdx, curveIdx, curveNames, tabs, 
             defaultSelectedIndex: 0,
             selectText: "Select an item",
             onSelected: function (data) {
-                var selData = data.selectedData;
+                let selData = data.selectedData;
                 PropertyOnChange(templateIdx, curveIdx, templates, allDataViewRows, selData, "curveName");
 
                 //update tab and accordion name
@@ -2514,7 +2360,7 @@ async function multipleLogPlot(templates, allDataViewRows) {
         let templateCurves = template_components[0]["curves"][0];
         ///let template_rectangles = template_components[0]["rectangles"];
         let curveNames = templateCurves["curveNames"];
-        var NumberOfGradientScales = 0;
+        let NumberOfGradientScales = 0;
         for (let j = 0; j < templateCurves.fill.length; j++) {
             let fillColor = templateCurves.fill[j];
             if (fillColor.fill == "yes" && fillColor.fillColors.includes("interpolator")) {
@@ -2551,13 +2397,13 @@ async function multipleLogPlot(templates, allDataViewRows) {
             .attr("id", "trackHoldersContainer")
             // This is the main marking event
             .on("mousedown", function (mouseDownEvent) {
-                console.log(
-                    "trackHoldersContainerDiv mouseDown",
-                    mouseDownEvent.currentTarget.offsetTop,
-                    mouseDownEvent.target
-                );
+                // console.log(
+                //     "trackHoldersContainerDiv mouseDown",
+                //     mouseDownEvent.currentTarget.offsetTop,
+                //     mouseDownEvent.target
+                // );
 
-                var getMarkMode = function (e) {
+                let getMarkMode = function (e) {
                     // shift: add rows
                     // control: toggle rows
                     // none: replace rows
@@ -2570,16 +2416,16 @@ async function multipleLogPlot(templates, allDataViewRows) {
                     return "Replace";
                 };
 
-                var markMode = getMarkMode(mouseDownEvent);
+                let markMode = getMarkMode(mouseDownEvent);
                 //
                 // Create initial marking rectangle, will be used if the user only clicks.
                 //
-                var x = mouseDownEvent.pageX,
+                let x = mouseDownEvent.pageX,
                     y = mouseDownEvent.pageY,
                     width = 1,
                     height = 1;
 
-                var $selection = $("<div/>")
+                    let $selection = $("<div/>")
                     .css({
                         position: "absolute",
                         border: "1px solid #0a1530",
@@ -2608,7 +2454,7 @@ async function multipleLogPlot(templates, allDataViewRows) {
                 let currentTarget = mouseDownEvent.currentTarget;
 
                 $(this).on("mouseup", async function () {
-                    console.log("mouseDownEvent.target", mouseDownEvent.target, mouseDownEvent.currentTarget);
+                    // console.log("mouseDownEvent.target", mouseDownEvent.target, mouseDownEvent.currentTarget);
                     var rectangle = {
                         x: mouseDownEvent.clientX,
                         // the currentTarget is always the container rect
@@ -2623,7 +2469,7 @@ async function multipleLogPlot(templates, allDataViewRows) {
                     var y1 = y_function.invert(rectangle.y + rectangle.height);
                     let allRows = await _dataView.allRows();
                 
-                    console.log("y0", y0, "y1", y1, "rectangle", rectangle);
+                    // console.log("y0", y0, "y1", y1, "rectangle", rectangle);
                     _dataView.mark(
                         allRows.filter((d) => d.continuous("DEPTH").value() >= y0 && d.continuous("DEPTH").value() <= y1),
                         markMode
