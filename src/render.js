@@ -50,6 +50,8 @@ var _scrollTop = 0;
 var _dataView;
 var yAxis;
 
+const ISRESET = false; //JLL: to reset to default templates, set it to true and recomplie. Then change curve properties from GUI such as line color to save and set it back to false
+
 //var pPerfilHeightMultiplier;
 
 var y_function;
@@ -57,7 +59,7 @@ var y_function;
 var _mod; // The global mod instance
 
 /**
- * Renders the chart.
+ * Main function / entry point that Renders the chart.
  * @param {Object} state
  * @param {Spotfire.Mod} mod
  * @param {Spotfire.DataView} dataView - dataView
@@ -67,6 +69,7 @@ var _mod; // The global mod instance
 export async function render(state, mod, dataView, windowSize, verticalZoomHeightProperty) {
     // console.log("render", [arguments])
 
+    //init some (global) vars
     _dataView = dataView;
     _mod = mod;
     _verticalZoomHeightProperty = verticalZoomHeightProperty;
@@ -79,10 +82,12 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
         return;
     }
 
+    //JLL: what is this for? It is never used!
     const onSelection = ({ dragSelectActive }) => {
         state.preventRender = dragSelectActive;
     };
 
+    //JLL: The only reference is styling used once. The rest, I do not know.
     const styling = mod.getRenderContext().styling;
     const { tooltip, popout } = mod.controls;
     const { radioButton, checkbox } = popout.components;
@@ -90,9 +95,7 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
 
     //invalidateTooltip(tooltip);
 
-    /**
-     * The DataView can contain errors which will cause rowCount method to throw.
-     */
+    //The DataView can contain errors which will cause rowCount method to throw.
     let errors = await dataView.getErrors();
     if (errors.length > 0) {
         svg.selectAll("*").remove();
@@ -102,12 +105,13 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
 
     mod.controls.errorOverlay.hide("dataView");
 
+    // JLL: Are we using this safety mechanism? xLimit and colorLimit never used, so I triple comment /// before removing the next commented lines
     // Return and wait for next call to render when reading data was aborted.
     // Last rendered data view is still valid from a users perspective since
     // a document modification was made during a progress indication.
     // Hard abort if row count exceeds an arbitrary selected limit
-    const xLimit = 1250;
-    const colorLimit = 100;
+    ///const xLimit = 1250;
+    ///const colorLimit = 100;
     //const colorCount = (await dataView.hierarchy("Color")).leafCount;
     //const xCount = (await dataView.hierarchy("X")).leafCount;
     /*if (colorCount > colorLimit || xCount > xLimit) {
@@ -118,19 +122,18 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
         mod.controls.errorOverlay.hide("rowCount");
     }*/
 
-    const allRows = await dataView.allRows();
-    ///console.log(allRows);
-    allRows.sort((a, b) => a.continuous("DEPTH").value() - b.continuous("DEPTH").value());
 
-    if (allRows == null) {
-        // Return and wait for next call to render when reading data was aborted.
-        // Last rendered data view is still valid from a users perspective since
-        // a document modification was made during a progress indication.
-        return;
-    }
+    // Return and wait for next call to render when reading data was aborted.
+    // Last rendered data view is still valid from a users perspective since
+    // a document modification was made during a progress indication.
+
+    //get data
+    var allDataViewRows = await dataView.allRows();
+    allDataViewRows.sort((a, b) => a.continuous("DEPTH").value() - b.continuous("DEPTH").value());
+    if (allDataViewRows == null) return;
+
 
     const margin = { top: 20, right: 40, bottom: 40, left: 80 };
-
     modContainer.style("height", windowSize.height - margin.bottom - margin.top); //
 
     /**
@@ -288,32 +291,20 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
      *
      * Drawing code!
      *
-     *
-     *
-     *
-     *
-     *
-     *
      */
 
     //read templates from mod property
-    let plot_templates = await buildTemplates(false); //use true to reset
-
-    //get data
-    var allDataViewRows = await dataView.allRows();
+    let plot_templates = await buildTemplates(ISRESET); //JLL: use true to reset, change some properties to save changes from gui and put it back to false
 
     //creates property drawer with options for each track with nothing inside
-    if (!_isInitialized) {
-        createVanillaDrawer();
-    }
-
+    !_isInitialized && createVanillaDrawer();
+    
+    //makes the vanilla_drawer draggable
     vanilla_drawer.draggable(document.getElementById("drawer_menu"));
 
     //creates each plot per template
     multipleLogPlot(plot_templates, allDataViewRows);
 
-    //bring up settings dialog where left off in case render was called from setting dialog
-    //TODO
 }
 
 async function logPlot(template_for_plotting, allDataViewRows, headerHeight) {
@@ -1881,6 +1872,161 @@ function PropertyOnChange(i, p, templates, allDataViewRows, selectedData, propNa
             }
         }
 
+
+        //JLL: DEBIGING templates
+        templates[0] = [
+            {
+                "components": [
+                    {
+                        "curves": [
+                            {
+                                "curveColors": [
+                                    "#4caf50"
+                                ],
+                                "curveNames": [
+                                    "GR"
+                                ],
+                                "curveStrokeDashArray": [
+                                    "5,5"
+                                ],
+                                "curveUnits": [
+                                    ""
+                                ],
+                                "dataType": "curve",
+                                "depthCurveName": "DEPTH",
+                                "depthUnit": "m",
+                                "fill": [
+                                    {
+                                        "curve2": "",
+                                        "curveName": "GR",
+                                        "cutoffs": [
+                                            -99999999,
+                                            "",
+                                            ""
+                                        ],
+                                        "fill": "yes",
+                                        "fillColors": [
+                                            "interpolator",
+                                            "RGBA(0,0,0, 0.25)",
+                                            "RGBA(255,255,255, 0.55)"
+                                        ],
+                                        "fillDirection": "right",
+                                        "colorInterpolator": [
+                                            null,
+                                            null,
+                                            null
+                                        ],
+                                        "maxScaleX": "",
+                                        "minScaleX": ""
+                                    }
+                                ],
+                                "scaleTypeLinearLog": [
+                                    "linear"
+                                ],
+                                "strokeLinecap": [
+                                    "butt"
+                                ],
+                                "strokeWidth": [
+                                    "2"
+                                ],
+                                "wellNames": [
+                                    "1"
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "trackBox": {
+                    "width": 137.25,
+                    "height": 563,
+                    "div_id": "mod-containerTrackHolder0",
+                    "margin": {
+                        "top": 5,
+                        "right": 10,
+                        "bottom": 5,
+                        "left": 60
+                    }
+                }
+            }
+        ]
+
+        templates[3] = [
+            {
+                "components": [
+                    {
+                        "curves": [
+                            {
+                                "curveColors": [
+                                    "#f44336"
+                                ],
+                                "curveNames": [
+                                    "RESD"
+                                ],
+                                "curveStrokeDashArray": [
+                                    "5,5"
+                                ],
+                                "curveUnits": [
+                                    ""
+                                ],
+                                "dataType": "curve",
+                                "depthCurveName": "DEPTH",
+                                "depthUnit": "m",
+                                "fill": [
+                                    {
+                                        "curve2": "",
+                                        "curveName": "RESD",
+                                        "cutoffs": [
+                                            -99999999,
+                                            "",
+                                            ""
+                                        ],
+                                        "fill": "yes",
+                                        "fillColors": [
+                                            "interpolator",
+                                            "RGBA(0,0,0, 0.25)",
+                                            "RGBA(255,0,0, 0.55)"
+                                        ],
+                                        "colorInterpolator": [
+                                            null,
+                                            null,
+                                            null
+                                        ],
+                                        "fillDirection": "left",
+                                        "maxScaleX": "",
+                                        "minScaleX": ""
+                                    }
+                                ],
+                                "scaleTypeLinearLog": [
+                                    "linear"
+                                ],
+                                "strokeLinecap": [
+                                    "butt"
+                                ],
+                                "strokeWidth": [
+                                    "1"
+                                ],
+                                "wellNames": [
+                                    "1"
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "trackBox": {
+                    "width": 137.25,
+                    "height": 563,
+                    "div_id": "mod-containerTrackHolder3",
+                    "margin": {
+                        "top": 5,
+                        "right": 10,
+                        "bottom": 5,
+                        "left": 60
+                    }
+                }
+            }
+        ]
+
+
         // Store the updated template in the appropriate mod property
         _mod.property("template" + i).set(JSON.stringify(templates[i]));
         multipleLogPlot(templates, allDataViewRows);
@@ -2275,7 +2421,7 @@ async function multipleLogPlot(templates, allDataViewRows) {
     //event.stopPropagation();
     //});
 
-    /*
+/*    
         var confBtn = TracksToolDiv.append("div")
             .attr("id", "confBtnDiv")
             .style("margin-top", "20px")
@@ -2357,7 +2503,9 @@ async function multipleLogPlot(templates, allDataViewRows) {
                 if (_verticalZoomHeightMultiplier - 0.25 >= 1) {
                     sliderZoom.value(_verticalZoomHeightMultiplier - 0.25);
                 }
-            }); */
+            }); 
+
+*/
 
     /*get template header height*/
 
