@@ -3,14 +3,28 @@ import * as colorHelpers from "./color-helpers.js";
 
 
 
-export async function logPlot(template_for_plotting, allDataViewRows, headerHeight,_verticalZoomHeightMultiplier, _mod, _dataView, yAxis) {
+var tooltipDiv;
+
+export async function logPlot(template_for_plotting, allDataViewRows, headerHeight,_verticalZoomHeightMultiplier, _dataView, yAxis, _mod) {
+    
+     // add the tooltip area to the webpage
+     d3.select("#" + "mod-container" + "_tooltip").remove();
+     tooltipDiv = d3
+         .select("#" + div_id)
+         .append("div")
+         .style("visibility", "hidden")        
+         .style("top", "0")
+         .attr("class", "tooltip")
+         .attr("id", "mod-container" + "_tooltip")
+         .style("opacity", 0);
+    
+    
     let template_overall = template_for_plotting[0]["trackBox"];
     let template_components = template_for_plotting[0]["components"];
     let templateCurves = template_components[0]["curves"][0];
     let dataType = templateCurves["dataType"];
 
     let div_id = template_overall["div_id"];
-    let k = div_id.slice(-1);
 
     let height = template_overall["height"] * _verticalZoomHeightMultiplier - 120;
     ///console.log(height);
@@ -55,6 +69,7 @@ export async function logPlot(template_for_plotting, allDataViewRows, headerHeig
         .style("align-items", "flex-end")
         .style("margin-bottom", "10px")
 
+        //this is the gear configuration button
         .on("mouseover", (e) => {
             d3.select("#" + div_id + "_gear")
                 .style("display", "block")
@@ -76,7 +91,9 @@ export async function logPlot(template_for_plotting, allDataViewRows, headerHeig
         .attr("class", "trackHeaderDivContentGear")
         .on("click", function (d) {
             //open the accordion (if not already open)
+            document.getElementById("accordionContainer").style.visibility="visible";
             //ui_config.drawer_menu_open(d); //d should be the accordion index
+            let k=div_id.slice(-1);
             var accordionTab = document.querySelectorAll(".ui-accordion-header")[k];
             if (accordionTab.getAttribute("aria-expanded") == "false") accordionTab.click();
         });
