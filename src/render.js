@@ -329,7 +329,7 @@ export function PropertyOnChange(templateIdx, curveIdx, templates, allDataViewRo
 
             //populate tab
             let tabs = d3.select("#" + "tabs_" + templateIdx);
-            addAccordionTabContents(templateIdx, copiedCurveIndex, curveNames, tabs, templates, allDataViewRows, ["#333333"]);
+            uiConfig.addAccordionTabContents(templateIdx, copiedCurveIndex, curveNames, tabs, templates, allDataViewRows, ["#333333"], _dataView);
 
             //refresh tabs
             $("#" + "tabs_" + templateIdx)

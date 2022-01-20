@@ -175,7 +175,7 @@ export async function createAccordionForTemplate(templates, templateIdx, allData
 }
 
 
-async function addAccordionTabContents(templateIdx, curveIdx, curveNames, tabs, templates, allDataViewRows, curveColors, _dataView) {
+export async function addAccordionTabContents(templateIdx, curveIdx, curveNames, tabs, templates, allDataViewRows, curveColors, _dataView) {
 
     //we can take them out of this function, but it is only used within this scope
     function insertTextInput(divContent, i, k, templates, propName, allDataViewRows) {
