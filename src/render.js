@@ -40,13 +40,11 @@ import * as test_templates from "./test-templates.js";
 const modContainer = d3.select("#mod-container");
 
 // @todo - remove as many global vars as we can!
-var selectedWell;
-var tooltipDiv;
-var ui_config;
 
 var _dataView;
 
-var _isInitialized = false;
+var _isInitialized = false; // this can be used to detect if we need to add divs, etc. On re-rendering after marking. If already initialized, no need to add new divs
+
 var _verticalZoomHeightMultiplier = 5.0;
 var _verticalZoomHeightProperty;
 
@@ -165,9 +163,8 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
     }
 
     async function buildTemplates(isReset = false) {
-        let wellLeaves = (await (await _dataView.hierarchy("WELL")).root()).leaves();
-        ///console.log({"_dataView":_dataView})
-        selectedWell = wellLeaves[0].key;
+        /* let wellLeaves = */(await (await _dataView.hierarchy("WELL")).root()).leaves();
+        // selectedWell = wellLeaves[0].key;
 
         let categoryLeaves = (await (await _dataView.hierarchy("Category")).root()).leaves();
 
@@ -205,8 +202,8 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
     //read templates from mod property
     let plot_templates = await buildTemplates(ISRESET); //JLL: use true to reset, change some properties to save changes from gui and put it back to false
 
-    //creates property drawer with options for each track with nothing inside
-    !_isInitialized && uiConfig.createConfigPopup();
+    //creates a draggable configuration dialog with options for each track with nothing inside
+    !_isInitialized && new uiConfig.ConfigDialog("config_menu");
     
 
 
@@ -223,6 +220,10 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
 
     renderPlot.multipleLogPlot(plot_templates, allDataViewRows, _mod, _isInitialized, _verticalZoomHeightMultiplier, _verticalZoomHeightProperty, _dataView);
 
+    // this can be used to detect if we need to add divs, etc.
+    // on re-rendering after marking. If already initialized, no need
+    // to add new divs
+    _isInitialized = true;
 
 }
 
@@ -241,7 +242,7 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
  * @param {String} propName "name property to change. For example LineColor"
  */
 
-function PropertyOnChange(templateIdx, curveIdx, templates, allDataViewRows, selectedData, propName) {
+export function PropertyOnChange(templateIdx, curveIdx, templates, allDataViewRows, selectedData, propName) {
     if (templates[templateIdx] && _isInitialized) {
         var template = templates[templateIdx];
         let template_components = template[0]["components"];
@@ -337,7 +338,7 @@ function PropertyOnChange(templateIdx, curveIdx, templates, allDataViewRows, sel
             $("#" + "tabs_" + templateIdx).tabs("option", "active", copiedCurveIndex); //makes the new tab active
 
             //update tab and accordion name
-            let anAccordionHeader = document.querySelector("#accordionConf h3[aria-expanded='true'] span").nextSibling;
+            let anAccordionHeader = document.querySelector("#"+uiConfig.accordionId+" h3[aria-expanded='true'] span").nextSibling;
             let aTab = document.querySelector(`a[href='#tab_${templateIdx}_${copiedCurveIndex - 1}']`);
             aTab.innerText = curveNames[copiedCurveIndex - 1];
             anAccordionHeader.textContent = `Track ${templateIdx + 1}: ` + curveNames.join();
@@ -369,7 +370,7 @@ function PropertyOnChange(templateIdx, curveIdx, templates, allDataViewRows, sel
 
                 //update tab and accordion name
                 let anAccordionHeader = document.querySelector(
-                    "#accordionConf h3[aria-expanded='true'] span"
+                    "#"+uiConfig.accordionId+" h3[aria-expanded='true'] span"
                 ).nextSibling;
                 let aTab = document.querySelector(`a[href='#tab_${templateIdx}_${copiedCurveIndex - 1}']`);
                 aTab.innerText = curveNames[copiedCurveIndex - 1];
@@ -379,6 +380,6 @@ function PropertyOnChange(templateIdx, curveIdx, templates, allDataViewRows, sel
 
         // Store the updated template in the appropriate mod property
         _mod.property("template" + templateIdx).set(JSON.stringify(templates[templateIdx]));
-        renderPlot.multipleLogPlot(templates, allDataViewRows, _isInitialized, _verticalZoomHeightMultiplier, _verticalZoomHeightProperty, _dataView);
+        renderPlot.multipleLogPlot(templates, allDataViewRows, _mod, _isInitialized, _verticalZoomHeightMultiplier, _verticalZoomHeightProperty, _dataView);
     }
 }

@@ -4,7 +4,7 @@
   // - to disable, use plot_templates["test0"] or plot_templates["test4"]
   // - string template indexes are invalid and are therefore ignored by the 
   // rendering code
-  export var test_templates=  [
+  export var test_templates =  [
     [
         {
             "components": [

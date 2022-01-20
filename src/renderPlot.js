@@ -11,9 +11,6 @@ var updateAccordionTools = true;
 import * as uiConfig from "./ui-config.js"; 
 
 
-
-
-
 export async function logPlot(template_for_plotting, allDataViewRows, headerHeight,_verticalZoomHeightMultiplier, _dataView, _mod) {
     
      // add the tooltip area to the webpage
@@ -100,8 +97,8 @@ export async function logPlot(template_for_plotting, allDataViewRows, headerHeig
         .attr("class", "trackHeaderDivContentGear")
         .on("click", function (d) {
             //open the accordion (if not already open)
-            document.getElementById("accordionContainer").style.visibility="visible";
-            //ui_config.drawer_menu_open(d); //d should be the accordion index
+            document.getElementById("config_menu").style.visibility="visible";
+            //ui_config.config_menu_open(d); //d should be the accordion index
             let k=div_id.slice(-1);
             var accordionTab = document.querySelectorAll(".ui-accordion-header")[k];
             if (accordionTab.getAttribute("aria-expanded") == "false") accordionTab.click();
@@ -1242,7 +1239,7 @@ export async function multipleLogPlot(templates, allDataViewRows, _mod, _isIniti
             .on("click", (event) => {
                     event.preventDefault();
                     event.stopPropagation();                    
-                    vanilla_drawer.drawer_menu_open();
+                    vanilla_drawer.config_menu_open();
                 });
 
         var divPlusBtn = TracksToolDiv.append("div").style("height", "26px");
@@ -1493,285 +1490,15 @@ export async function multipleLogPlot(templates, allDataViewRows, _mod, _isIniti
     // -- would be preferable to do this in a d3 native way rather than jQuery, but d3 doesn't seem to work...
     // $("#trackHoldersContainer").animate({ scrollTop: _scrollTop }, 10);
 
-    //update accordion panels
+    //Populates accordion panels
     if (updateAccordionTools) {
-        for (const i of templates.keys()) await createAccordionForTemplate(templates, i, allDataViewRows, _dataView);
+        for (const i of templates.keys()) await uiConfig.createAccordionForTemplate(templates, i, allDataViewRows, _dataView);
         updateAccordionTools = false;
     }
 
-    $("#accordionConf").accordion({ collapsible: true });
+    $("#"+uiConfig.accordionId).accordion({ collapsible: true });
+ 
 
-   
-
-    // this can be used to detect if we need to add divs, etc.
-    // on re-rendering after marking. If already initialized, no need
-    // to add new divs
-    _isInitialized = true;
 }
 
 
-//JLL move the accordion stuff to UI module
-//creates a jquery accordion. Each panel contains one or more tabs
-//an accordion panel represents a track (template[0])
-//a tab contains track curves (template_components[0]["curves"][0];)
-async function createAccordionForTemplate(templates, templateIdx, allDataViewRows, _dataView) {
-    let template = templates[templateIdx];
-    let template_components = template[0]["components"];
-    let templateCurves = template_components[0]["curves"][0];
-
-    if (templateCurves["dataType"] == "curve") {
-        let curveNames = templateCurves["curveNames"];
-        let curveColors = templateCurves["curveColors"];
-
-        d3.select("#accordionConf")
-            .append("h3")
-            .text("Track " + (templateIdx + 1) + ": " + curveNames);
-
-        let content = d3.select("#accordionConf").append("div");
-
-        /*
-            Track tabs
-            <div id="tabs_0">
-            <ul>
-                <li><a href="#tabs_0_0"> trucks </a></li>
-                <li><a href="#tabs_0_1"> cars  </a></li>
-                <li><a href="#tabs_0_2"> boats </a></li>
-            </ul>
-            <div id="tabs_0_0"> trucks are cool </div>
-            <div id="tabs_0_1"> cars are fast  </div>
-            <div id="tabs_0_2"> boats can sink  </div>
-            </div> 
-            */
-
-        let tabs = content.append("div").attr("id", "tabs_" + templateIdx);
-        let ul = tabs.append("ul");
-        for (let k = 0; k < curveNames.length; k++) {
-            if (curveNames[k]) {
-                ul.append("li")
-                    .append("a")
-                    .attr("href", "#tab_" + templateIdx + "_" + k)
-                    .text(curveNames[k]);
-            }
-        }
-
-        // Add a "[+]" tab, so you can add another measure to this track
-        ul.append("li")
-            .append("a")
-            .attr("href", "#tab_" + templateIdx + "_addTabButton")
-            .attr("title", "Duplicates this track")
-            .html("+")
-            .on("mousedown", (evt) => {
-                PropertyOnChange(templateIdx, curveNames.length, templates, allDataViewRows, null, "duplicateCurve");
-                //addAccordionTabContents(i,curveNames.length,curveNames,tabs,templates,sfData,curveColors)
-
-                //TODO duplicate code goes here or on PropertyOnChange
-                evt.preventDefault;
-            });
-
-        // Add a "[-]" tab, so you can remove the previous measure from this track
-        ul.append("li")
-            .append("a")
-            .attr("href", "#tab_" + templateIdx + "_addTabButton")
-            .attr("title", "Removes last track")
-            .html("-")
-            .on("mousedown", (evt) => {
-                PropertyOnChange(templateIdx, curveNames.length, templates, allDataViewRows, null, "removeCurve");
-                evt.preventDefault;
-            });
-
-        // The contents of the tabs
-        for (let k = 0; k < curveNames.length; k++) {
-            await addAccordionTabContents(templateIdx, k, curveNames, tabs, templates, allDataViewRows, curveColors, _dataView);
-        }
-    }
-
-    $("#" + "tabs_" + templateIdx).tabs();
-}
-
-
-async function addAccordionTabContents(templateIdx, curveIdx, curveNames, tabs, templates, allDataViewRows, curveColors, _dataView) {
-    if (curveNames[curveIdx]) {
-        var tab = tabs.append("div").attr("id", "tab_" + templateIdx + "_" + curveIdx);
-
-        //LINE
-        var fieldset = tab.append("fieldset");
-        fieldset.append("legend").text("Line");
-        var controlgroup = fieldset.append("div").attr("class", "controlgroup");
-
-        //Line Measure
-        divItem = controlgroup
-            .append("div")
-            .attr("class", "controlGroupDiv")
-            .on("mousedown", function (evt) {
-                evt.stopPropagation();
-            });
-        divItem
-            .text("Measure:")
-            .append("div")
-            .append("select")
-            .attr("id", "dropdown_measure_selector_" + curveIdx + "_" + templateIdx);
-
-        //generate dropdown options for track curve
-        let measureDdOptions = [];
-        let categoryLeaves = (await (await _dataView.hierarchy("Category")).root()).leaves();
-        for (let leaf of categoryLeaves) {
-            measureDdOptions.push({
-                value: leaf.key,
-                selected: curveNames[curveIdx] == leaf.key,
-                text: leaf.key
-            });
-        }
-
-        $("#dropdown_measure_selector_" + curveIdx + "_" + templateIdx).ddslick({
-            data: measureDdOptions,
-            //height: "15px",
-            width: "100px",
-            defaultSelectedIndex: 0,
-            selectText: "Select an item",
-            onSelected: function (data) {
-                let selData = data.selectedData;
-                PropertyOnChange(templateIdx, curveIdx, templates, allDataViewRows, selData, "curveName");
-
-                //update tab and accordion name
-                let anAccordionHeader = document.querySelector(
-                    "#accordionConf h3[aria-expanded='true'] span"
-                ).nextSibling;
-                let aTab = document.querySelector(`a[href='#tab_${templateIdx}_${curveIdx}']`);
-                aTab.innerText = curveNames[curveIdx];
-                anAccordionHeader.textContent = `Track ${templateIdx + 1}: ` + curveNames.join();
-            }
-        });
-
-        //Line Thickness
-        var divItem = controlgroup
-            .append("div")
-            .attr("class", "controlGroupDiv")
-            .on("mousedown", function (evt) {
-                evt.stopPropagation();
-            });
-        divItem.text("Thickness:");
-        uiConfig.insertDropdown(divItem, templateIdx, curveIdx, templates, "Thickness", allDataViewRows);
-
-        //Line Color
-        divItem = controlgroup
-            .append("div")
-            .attr("class", "controlGroupDiv")
-            .on("mousedown", function (evt) {
-                evt.stopPropagation();
-            });
-        divItem
-            .text("Color:")
-            .append("div")
-            .append("input")
-            .attr("style", "width:95px;height: 15px;")
-            .attr("id", `lineColor_${templateIdx}_${curveIdx}`)
-            .attr("type", "color")
-            .attr("value", `${curveColors[curveIdx]}">`)
-            .on("change", function () {
-                // use "change" or "input" events. "input" might be slower but updates the graph instantly
-                //            .html(`<input style="width:95px;height: 15px;" id="lineColor_${i}_${k}" type="color" value="${curveColors[k]}">`)
-                PropertyOnChange(
-                    templateIdx,
-                    curveIdx,
-                    templates,
-                    allDataViewRows,
-                    document.getElementById(`lineColor_${templateIdx}_${curveIdx}`),
-                    "LineColor"
-                );
-            });
-
-        //Line Style
-        divItem = controlgroup
-            .append("div")
-            .attr("class", "controlGroupDiv")
-            .on("mousedown", function (evt) {
-                evt.stopPropagation();
-            });
-        divItem.text("Decoration:");
-        uiConfig.insertDropdown(divItem, templateIdx, curveIdx, templates, "LineStyle", allDataViewRows);
-
-        //AREA
-        fieldset = tab.append("fieldset");
-        fieldset.append("legend").text("Area");
-        controlgroup = fieldset.append("div").attr("class", "controlgroup");
-
-        //Area Fill
-        divItem = controlgroup
-            .append("div")
-            .attr("class", "controlGroupDiv")
-            .on("mousedown", function (evt) {
-                evt.stopPropagation();
-            });
-        divItem.text("Fill:").append("br");
-        uiConfig.insertDropdown(divItem, templateIdx, curveIdx, templates, "AreaFill", allDataViewRows);
-
-        //Area Color
-        divItem = controlgroup
-            .append("div")
-            .attr("class", "controlGroupDiv")
-            .on("mousedown", function (evt) {
-                evt.stopPropagation();
-            });
-        divItem.text("Color:").append("br");
-        uiConfig.insertDropdown(divItem, templateIdx, curveIdx, templates, "AreaColor", allDataViewRows);
-
-        //SCALE
-        fieldset = tab.append("fieldset");
-        fieldset.append("legend").text("Scale");
-        controlgroup = fieldset.append("div").attr("class", "controlgroup");
-
-        //Scale type
-        divItem = controlgroup
-            .append("div")
-            .attr("class", "controlGroupDiv")
-            .on("mousedown", function (evt) {
-                evt.stopPropagation();
-            });
-        divItem.text("Type:").append("br");
-        uiConfig.insertDropdown(divItem, templateIdx, curveIdx, templates, "ScaleType", allDataViewRows);
-
-        controlgroup = fieldset.append("div").attr("class", "controlgroup");
-
-        //Scale Min
-        divItem = controlgroup
-            .append("div")
-            .attr("class", "controlGroupDiv")
-            .on("mousedown", function (evt) {
-                evt.stopPropagation();
-            });
-        divItem.text("Min:").append("br");
-        uiConfig.insertTextInput(divItem, templateIdx, curveIdx, templates, "ScaleMin", allDataViewRows);
-
-        divItem = controlgroup
-            .append("div")
-            .attr("class", "controlGroupDiv")
-            .on("mousedown", function (evt) {
-                evt.stopPropagation();
-            });
-        divItem.text("Max:").append("br");
-        uiConfig.insertTextInput(divItem, templateIdx, curveIdx, templates, "ScaleMax", allDataViewRows);
-
-        //CUTTOFFS / THRESHOLD
-        fieldset = tab.append("fieldset");
-        fieldset.append("legend").text("Cutoffs/Threshold");
-        controlgroup = fieldset.append("div").attr("class", "controlgroup");
-
-        divItem = controlgroup
-            .append("div")
-            .attr("class", "controlGroupDiv")
-            .on("mousedown", function (evt) {
-                evt.stopPropagation();
-            });
-        divItem.text("Shale/Silt:").append("br");
-        uiConfig.insertTextInput(divItem, templateIdx, curveIdx, templates, "CutoffShaleSilt", allDataViewRows);
-
-        divItem = controlgroup
-            .append("div")
-            .attr("class", "controlGroupDiv")
-            .on("mousedown", function (evt) {
-                evt.stopPropagation();
-            });
-        divItem.text("Silt/Sand:").append("br");
-        uiConfig.insertTextInput(divItem, templateIdx, curveIdx, templates, "CutoffSiltSand", allDataViewRows);
-    }
-}
