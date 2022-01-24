@@ -333,6 +333,17 @@ svg {
   #drawer_content p { margin-top: 0; }
   .disabled {pointer-events: none; cursor: default; opacity: 0.5;}
 
+  .ctrlBtn {
+    border: 1px solid #8f8e8e;
+    border-radius: 20%;
+    background: #f1f1f1;
+    box-shadow: 1px 1px 1px 0px;
+  }
+  .ctrlBtn:hover {
+    background: #dfdfdf;
+  }
+
+
 
   /*Popup (to replace drawer?)*/
   .popup-jsc {

@@ -8,7 +8,6 @@ const $ = require("jquery");
 import * as colorHelpers from "./color-helpers.js";
 import * as render from "./render.js"; 
 export var accordionId
-
 //makes a div draggable
 function draggable(elmnt) {
     var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
@@ -52,7 +51,6 @@ function draggable(elmnt) {
 }
 
 //creates an empty draggable configuration Dialog popup
-//JLL: "accordionConf" is hard-coded and used all over the place. Consider not
 export function ConfigDialog(elementId) {
 
     this.width = 333;
@@ -68,14 +66,22 @@ export function ConfigDialog(elementId) {
             `
             <DIV id="${elementId}">
                 <DIV id="${elementId}_content" style="position:relative;">
-                    <A id=closeBtn >✖</I></I></A>
-                    <h3 class="${elementId}_header" style="float: left;margin-left: 10px;color:black;width: 89%;">Well Log Tracks Settings</h3>
+                    <A id=closeBtn title="Close settings" >✖</I></I></A>
+                    <div style="float:right;margin: 0px 2px 0 0;" id="trackBtns" >
+                        <a id="duplicateTrackBtn" title="Duplicate last track" >⧉</a>
+                        <a id="removeTrackBtn" title="Delete last track" >⊘</a>
+                    </div>
+                    <h3 class="${elementId}_header" style="float: left;margin-left: 10px;color:black;margin-top:7px">Well Log Tracks Settings</h3>
                     <DIV id="${accordionId}" style="clear:both;padding-left:6px;padding-right:6px"></DIV>
                 </DIV>
             </DIV>
             <style>
-            #closeBtn{color:#1b8888;cursor:pointer;float:right;font-size:1.5em;margin:5px} 
-            #closeBtn:hover{color:white}
+            #closeBtn{color:darkgray;cursor:pointer;float:right;font-size:1.5em;margin:5px} 
+            #closeBtn:hover {color:#1b8888;}
+            #trackBtns a {font-size:1.5em;color: darkgray;padding: 1px;width: 7px;}            
+            #trackBtns a:hover {color:#1b8888;}
+            #duplicateTrackBtn{top: 6px; position: relative;}
+            #removeTrackBtn{position: relative;top: 4px;margin-left: 2px;}
             </style>
             `
         );
@@ -86,8 +92,6 @@ export function ConfigDialog(elementId) {
     //hide the config dialog
     document.getElementById(elementId).style.visibility="hidden";
 
-
-
     //makes the configuration popup draggable
     draggable(document.getElementById(elementId));        
     
@@ -95,19 +99,19 @@ export function ConfigDialog(elementId) {
         document.getElementById(elementId).style.visibility="hidden";
     });
 
-}
+} 
 
 //creates a jquery accordion. Each panel contains one or more tabs
 //an accordion panel represents a track (template[0])
 //a tab contains track curves (template_components[0]["curves"][0];)
-export async function createAccordionForTemplate(templates, templateIdx, allDataViewRows, _dataView) {
+export async function createAccordionForTemplate(templates, templateIdx, allDataViewRows, _dataView, _isInitialized) {
     let template = templates[templateIdx];
     let template_components = template[0]["components"];
     let templateCurves = template_components[0]["curves"][0];
 
     if (templateCurves["dataType"] == "curve") {
         let curveNames = templateCurves["curveNames"];
-        let curveColors = templateCurves["curveColors"];
+        let curveColors = templateCurves["curveColors"]; 
 
         d3.select("#"+accordionId)
             .append("h3")
@@ -140,14 +144,15 @@ export async function createAccordionForTemplate(templates, templateIdx, allData
             }
         }
 
-        // Add a "[+]" tab, so you can add another measure to this track
+        // Add a "[+]" tab, so you can add another measure to this track ◫ ⧉ ⊘	 “🗑”“🗑”  🗑️ ✂️️📄🗑️⧉
         ul.append("li")
             .append("a")
-            .attr("href", "#tab_" + templateIdx + "_addTabButton")
-            .attr("title", "Duplicates this track")
-            .html("+")
+            .attr("href", "#tab_" + templateIdx + "_ctrlBtn")
+            .attr("class", "ctrlBtn")
+            .attr("title", "Duplicates last curve")
+            .html("◫")
             .on("mousedown", (evt) => {
-                render.PropertyOnChange(templateIdx, curveNames.length, templates, allDataViewRows, null, "duplicateCurve");
+                render.propertyOnChange(templateIdx, curveNames.length, templates, allDataViewRows, null, "duplicateCurve");
                 //addAccordionTabContents(i,curveNames.length,curveNames,tabs,templates,sfData,curveColors)
 
                 //TODO duplicate code goes here or on PropertyOnChange
@@ -157,13 +162,57 @@ export async function createAccordionForTemplate(templates, templateIdx, allData
         // Add a "[-]" tab, so you can remove the previous measure from this track
         ul.append("li")
             .append("a")
-            .attr("href", "#tab_" + templateIdx + "_addTabButton")
-            .attr("title", "Removes last track")
-            .html("-")
+            .attr("href", "#tab_" + templateIdx + "_ctrlBtn")
+            .attr("class", "ctrlBtn")
+            .attr("title", "Removes last curve")
+            .html("⊘")
             .on("mousedown", (evt) => {
-                render.PropertyOnChange(templateIdx, curveNames.length, templates, allDataViewRows, null, "removeCurve");
+                render.propertyOnChange(templateIdx, curveNames.length, templates, allDataViewRows, null, "removeCurve");
                 evt.preventDefault;
             });
+
+
+        //because these buttons are outside the loop, I am preventing to bind the button multiple times
+        //it would be ideal to have these buttons it on the track header level to copy or delete the selected track
+        //and not duplicate or remove the last track from the templates
+        //BUG: it only binds once. for some reason it looses its mousedown powers.
+        if (!templateIdx-1){
+            d3.select("#removeTrackBtn").on("click", (evt) => {
+                render.propertyOnChange(templateIdx, curveNames.length, templates, allDataViewRows, null, "removeTrack");
+                evt.preventDefault;
+            });
+            d3.select("#duplicateTrackBtn").on("click", (evt) => {
+                render.propertyOnChange(templateIdx, curveNames.length, templates, allDataViewRows, null, "duplicateTrack");
+                evt.preventDefault;
+            }); 
+        }
+         
+        
+
+        // // Add a "[*]" tab, so you duplicates the entire track
+        // ul.append("li")
+        //     .append("a")
+        //     .attr("href", "#tab_" + templateIdx + "_ctrlBtn")
+        //     .attr("class", "ctrlBtn")
+        //     .attr("title", "Duplicates the entire track")
+        //     .html("⧉")
+        //     .on("mousedown", (evt) => {
+        //         render.PropertyOnChange(templateIdx, curveNames.length, templates, allDataViewRows, null, "duplicateTrack");
+        //         evt.preventDefault;
+        //     });
+
+        // // Add a "[x]" tab, so you duplicates the entire track
+        // ul.append("li")
+        //     .append("a")
+        //     .attr("href", "#tab_" + templateIdx + "_ctrlBtn")
+        //     .attr("class", "ctrlBtn")
+        //     .attr("title", "Duplicates the entire track")
+        //     .html("🗑")
+        //     .on("mousedown", (evt) => {
+        //         render.PropertyOnChange(templateIdx, curveNames.length, templates, allDataViewRows, null, "removeTrack");
+        //         evt.preventDefault;
+        //     });
+
 
         // The contents of the tabs
         for (let k = 0; k < curveNames.length; k++) {
@@ -175,6 +224,7 @@ export async function createAccordionForTemplate(templates, templateIdx, allData
 }
 
 
+//populates accordion widgets
 export async function addAccordionTabContents(templateIdx, curveIdx, curveNames, tabs, templates, allDataViewRows, curveColors, _dataView) {
 
     //we can take them out of this function, but it is only used within this scope
@@ -356,7 +406,8 @@ export async function addAccordionTabContents(templateIdx, curveIdx, curveNames,
             AreaFill: [
                 { text: "None", value: "none", selected: selectedValue == "none" },
                 { text: "Left", value: "left", selected: selectedValue == "left" },
-                { text: "Right", value: "right", selected: selectedValue == "right" }
+                { text: "Right", value: "right", selected: selectedValue == "right" },
+                { text: "Between", value: "between", selected: selectedValue == "between" }
             ],
             AreaFill2Curve: [
                 { text: "None", value: "none", selected: selectedValue == "none" },
@@ -425,7 +476,7 @@ export async function addAccordionTabContents(templateIdx, curveIdx, curveNames,
             selectText: "Select an item",
             onSelected: function (data) {
                 var selData = data.selectedData;
-                render.PropertyOnChange(templateIdx, curveIdx, templates, allDataViewRows, selData, name);
+                render.propertyOnChange(templateIdx, curveIdx, templates, allDataViewRows, selData, name);
             }
         });
     }
@@ -471,7 +522,7 @@ export async function addAccordionTabContents(templateIdx, curveIdx, curveNames,
             selectText: "Select an item",
             onSelected: function (data) {
                 let selData = data.selectedData;
-                render.PropertyOnChange(templateIdx, curveIdx, templates, allDataViewRows, selData, "curveName");
+                render.propertyOnChange(templateIdx, curveIdx, templates, allDataViewRows, selData, "curveName");
 
                 //update tab and accordion name
                 let anAccordionHeader = document.querySelector(
@@ -511,7 +562,7 @@ export async function addAccordionTabContents(templateIdx, curveIdx, curveNames,
             .on("change", function () {
                 // use "change" or "input" events. "input" might be slower but updates the graph instantly
                 //            .html(`<input style="width:95px;height: 15px;" id="lineColor_${i}_${k}" type="color" value="${curveColors[k]}">`)
-                render.PropertyOnChange(
+                render.propertyOnChange(
                     templateIdx,
                     curveIdx,
                     templates,

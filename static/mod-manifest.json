@@ -8,11 +8,16 @@
     "properties": [
         {
             "name": "verticalZoomHeightMultiplier",
-            "type": "double",
+            "type": "double", 
             "defaultValue": 2.0
+        },        
+        {
+            "name": "curveCount",
+            "type": "integer", 
+            "defaultValue": 0
         },
         {
-            "name": "template0",
+            "name": "template0", 
             "type": "string",
             "defaultValue": "empty"
         },

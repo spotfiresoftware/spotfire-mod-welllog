@@ -66,7 +66,7 @@ var _mod; // The global mod instance
  * @param {Spotfire.ModProperty<string>} example - an example property
  */
 export async function render(state, mod, dataView, windowSize, verticalZoomHeightProperty) {
-    // console.log("render", [arguments])
+    //  console.log("render", [arguments])
 
     //init some (global) vars
     _dataView = dataView;
@@ -211,14 +211,16 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
 
     // JLL: DEBUGGING templates
     // AJB: - to use these, use 0 or 4 instead of "test0" or "test4", like:
-    // plot_templates[0] or plot_templates[4]
+    // plot_templates[0] or plot_templates[4] 
     // - to disable, use plot_templates["test0"] or plot_templates["test4"]
     // - string template indexes are invalid and are therefore ignored by the 
     // rendering code
-    //plot_templates[0]=test_templates[0]
-    console.log(plot_templates[0]);
+    // plot_templates=test_templates.test_templates    //use this line to reset. test_template[5] is for facies not yet implemented, so just pop it
+    // plot_templates.pop() //remove last track
+    // plot_templates[0]=test_templates.test_templates[2] //override track
+    // plot_templates.push(plot_templates[2]) //duplicate
 
-    renderPlot.multipleLogPlot(plot_templates, allDataViewRows, _mod, _isInitialized, _verticalZoomHeightMultiplier, _verticalZoomHeightProperty, _dataView);
+    !_isInitialized && renderPlot.multipleLogPlot(plot_templates, allDataViewRows, _mod, _isInitialized, _verticalZoomHeightMultiplier, _verticalZoomHeightProperty, _dataView);
 
     // this can be used to detect if we need to add divs, etc.
     // on re-rendering after marking. If already initialized, no need
@@ -235,14 +237,13 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
  * Aha! This is called when we change something in the templates - and we call multipleLogplots() to re-draw the charts
  * Todo: persist the templates in Spotfire properties ;-)
  * @param {} templateIdx "track number"
- * @param {*} curveIdx
- * @param {*} templates
- * @param {*} allDataViewRows
+ * @param {*} curveIdx "curve number"
+ * @param {*} templates "template structure holding all tracks. See test-template.js"
+ * @param {*} allDataViewRows "spotfire data rows view"
  * @param {*} selectedData  "json with options for the propName"
- * @param {String} propName "name property to change. For example LineColor"
+ * @param {String} propName "name property to change or action to take. For example LineColor or removeTrack"
  */
-
-export function PropertyOnChange(templateIdx, curveIdx, templates, allDataViewRows, selectedData, propName) {
+export function propertyOnChange(templateIdx, curveIdx, templates, allDataViewRows, selectedData, propName) {
     if (templates[templateIdx] && _isInitialized) {
         var template = templates[templateIdx];
         let template_components = template[0]["components"];
@@ -312,7 +313,7 @@ export function PropertyOnChange(templateIdx, curveIdx, templates, allDataViewRo
             for (curveIdx in templateCurves[0]) {
                 if (Array.isArray(templateCurves[0][curveIdx])) templateCurves[0][curveIdx].push(templateCurvesCopy[0][curveIdx][0]);
             }
-            //          for (p in templateCurves[0]["fill"]) {if (Array.isArray(templateCurves[0]["fill"][p])) templateCurves[0]["fill"][p].push(templateCurves[0]["fill"][p][0])}
+            //for (p in templateCurves[0]["fill"]) {if (Array.isArray(templateCurves[0]["fill"][p])) templateCurves[0]["fill"][p].push(templateCurves[0]["fill"][p][0])}
 
             //add a tab
             let copiedCurveIndex = curveNames.length - 1;
@@ -377,6 +378,46 @@ export function PropertyOnChange(templateIdx, curveIdx, templates, allDataViewRo
                 anAccordionHeader.textContent = `Track ${templateIdx + 1}: ` + curveNames.join();
             }
         }
+
+        //duplicate entire track
+        else if(propName=="duplicateTrack"){
+
+            if(templates.length>8) return; //prevent from adding too many tracks
+            templates.push({ ...templates[templates.length-1] });
+
+            //add accordion panel (todo)
+            $(".ui-accordion").append(document.querySelector(".ui-accordion-header:last-of-type").cloneNode(true))
+
+        }
+
+        //remove last track and updates last accordion panel
+        else if(propName=="removeTrack"){
+            if (templateIdx<1) return; //prevent from removing all tracks
+
+            //remove trac
+            templateIdx-=1
+            templates.pop()
+            
+            //JLL: for some reason, the gui-button looses its onclicking magic on both add and remove track buttons. 
+            //It only works once. 
+            //workaround fix: rebind
+            d3.select("#removeTrackBtn").on("click", (evt) => {
+                propertyOnChange(templateIdx, curveNames.length, templates, allDataViewRows, null, "removeTrack");
+                evt.preventDefault;
+            }); 
+            d3.select("#duplicateTrackBtn").on("click", (evt) => {
+                propertyOnChange(templateIdx, curveNames.length, templates, allDataViewRows, null, "duplicateTrack");
+                evt.preventDefault;
+            }); 
+
+            //remove accordion panel
+            $(".ui-accordion-header:last-of-type").remove()
+            $(".ui-accordion-content:last-of-type").remove()
+            
+
+        }
+
+
 
         // Store the updated template in the appropriate mod property
         _mod.property("template" + templateIdx).set(JSON.stringify(templates[templateIdx]));

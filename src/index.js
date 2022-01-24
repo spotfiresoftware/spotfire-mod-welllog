@@ -69,7 +69,7 @@ Spotfire.initialize(async (mod) => {
             mod.visualization.data(),
             mod.windowSize(),
             mod.property("verticalZoomHeightMultiplier"),
-            //mod.property("curveCount")  //enable to monitor this particular property and trigger the render function
+            //mod.property("curveCount"),  //enable to monitor this particular property and trigger the render function
         )
     );
 
@@ -97,10 +97,10 @@ Spotfire.initialize(async (mod) => {
     async function onChange(dataView, windowSize, verticalZoomHeightMultiplier,curveCount) {
 
         if(reader.hasValueChanged(verticalZoomHeightMultiplier)) {
-            if (DEBUG) console.log("zoom changed")    
+            DEBUG && console.log("zoom changed")    
         }
         if(reader.hasValueChanged(curveCount)) {
-            if (DEBUG) console.log("curveCount changed",curveCount)    
+            DEBUG && console.log("curveCount changed",curveCount)    
         }
 
         try {

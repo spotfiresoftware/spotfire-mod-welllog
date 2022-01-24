@@ -4,14 +4,13 @@ import * as colorHelpers from "./color-helpers.js";
 const $ = require("jquery");
 
 var tooltipDiv;
-var y_function;
+var y_function; 
 export const DEPTHLABELPANELWIDTH = 15;
 export const ZOOMPANELWIDTH = 32;
-var updateAccordionTools = true;
 import * as uiConfig from "./ui-config.js"; 
 
 
-export async function logPlot(template_for_plotting, allDataViewRows, headerHeight,_verticalZoomHeightMultiplier, _dataView, _mod) {
+export async function logPlot(template_for_plotting, allDataViewRows, headerHeight,_verticalZoomHeightMultiplier, _dataView, _mod, trackCount) {
     
      // add the tooltip area to the webpage
      d3.select("#" + "mod-container" + "_tooltip").remove();
@@ -36,6 +35,8 @@ export async function logPlot(template_for_plotting, allDataViewRows, headerHeig
     ///console.log(height);
     let height_components = template_overall["height"];
     let width = template_overall["width"];
+    width = Math.round((await _mod.windowSize()).width / (trackCount + .50)); //JLL _mod.windowSize and window.innerWith are the same. I have to reduce by some extra space (.25) that the track might hold. Consider not using magic .5 number
+    //console.log(trackCount, window.innerWidth, (await _mod.windowSize()).width, width ) 
     let margin = template_overall["margin"];
     let gridlines_color = "#D3D3D3";
     let gridlines_strokeWidth = 0.2;
@@ -1465,9 +1466,10 @@ export async function multipleLogPlot(templates, allDataViewRows, _mod, _isIniti
     );
 
     // now plot!
+    let curveCount = templates.length;
     templates.forEach((template, i) => {
 
-        logPlot(template, allDataViewRows, headerHeight + "px", _verticalZoomHeightMultiplier,  _dataView, _mod);
+        logPlot(template, allDataViewRows, headerHeight + "px", _verticalZoomHeightMultiplier,  _dataView, _mod, curveCount);
     });
 
     // Apply the height and scroll settings after everything has been rendered - AJB todo - remove hard coded value!
@@ -1491,9 +1493,8 @@ export async function multipleLogPlot(templates, allDataViewRows, _mod, _isIniti
     // $("#trackHoldersContainer").animate({ scrollTop: _scrollTop }, 10);
 
     //Populates accordion panels
-    if (updateAccordionTools) {
+    if (!_isInitialized) {
         for (const i of templates.keys()) await uiConfig.createAccordionForTemplate(templates, i, allDataViewRows, _dataView);
-        updateAccordionTools = false;
     }
 
     $("#"+uiConfig.accordionId).accordion({ collapsible: true });
