@@ -3,58 +3,39 @@
 	VanillaDrawer Ver.1.0 2017-05-16
 
 --------------------------------------------------*/
+
 import * as d3 from "d3";
 const $ = require("jquery");
 import * as colorHelpers from "./color-helpers.js";
 import * as render from "./render.js"; 
 export var accordionId
-//makes a div draggable
+
+import "jquery-ui/ui/widgets/tabs";
+import "jquery-ui/ui/widgets/accordion"; 
+import "jquery-ui/ui/widgets/draggable"; 
+
+
+//makes a div draggable 
 function draggable(elmnt) {
-    var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-    if (document.getElementById(elmnt.id + "_header")) {
-      /* if present, the header is where you move the DIV from:*/
-      document.getElementById(elmnt.id + "_header").onmousedown = dragMouseDown;
-    } else {
-      /* otherwise, move the DIV from anywhere inside the DIV:*/
-      elmnt.onmousedown = dragMouseDown;
-    }
-  
-    function dragMouseDown(e) {
-      e = e || window.event;
-      e.preventDefault();
-      // get the mouse cursor position at startup:
-      pos3 = e.clientX;
-      pos4 = e.clientY;
-      document.onmouseup = closeDragElement;
-      // call a function whenever the cursor moves:
-      document.onmousemove = elementDrag;
-    }
-  
-    function elementDrag(e) {
-      e = e || window.event;
-      e.preventDefault();
-      // calculate the new cursor position:
-      pos1 = pos3 - e.clientX;
-      pos2 = pos4 - e.clientY;
-      pos3 = e.clientX;
-      pos4 = e.clientY;
-      // set the element's new position:
-      elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
-      elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
-    }
-  
-    function closeDragElement() {
-      /* stop moving when mouse button is released:*/
-      document.onmouseup = null;
-      document.onmousemove = null;
-    }
+
 }
 
-//creates an empty draggable configuration Dialog popup
-export function ConfigDialog(elementId) {
+//creates or re-creates a draggable configuration Dialog popup with close buttons and accordion placeholder
+export function configDialog(plot_templates, allDataViewRows, _dataView, _mod, _verticalZoomHeightMultiplier, _verticalZoomHeightProperty) {
 
-    this.width = 333;
+    let elementId = "config_menu"
     accordionId = elementId+"_accordion"
+
+    //old approach to recreate the configDialog. Might not be needed anymore.
+    //clears the configDialog (and bindings)
+    // $("#"+accordionId).accordion("destroy");
+    // let parent = document.querySelector("#"+accordionId)
+    // while (parent && parent.lastChild) parent.removeChild(parent.lastChild);
+    // parent = document.querySelector("#"+elementId)
+    // while (parent && parent.lastChild) parent.removeChild(parent.lastChild);
+
+    ////document.querySelector(elementId) &&  document.querySelector(elementId).remove() //removes only element, not bindings
+
 
     //add dialog placeholder to #mod-container
     d3.select("#mod-container")
@@ -67,8 +48,8 @@ export function ConfigDialog(elementId) {
             <DIV id="${elementId}">
                 <DIV id="${elementId}_content" style="position:relative;">
                     <A id=closeBtn title="Close settings" >✖</I></I></A>
-                    <div style="float:right;margin: 0px 2px 0 0;" id="trackBtns" >
-                        <a id="duplicateTrackBtn" title="Duplicate last track" >⧉</a>
+                    <div id="trackBtns" >
+                        <a id="duplicateTrackBtn" title="Duplicate last track" >◫</a>
                         <a id="removeTrackBtn" title="Delete last track" >⊘</a>
                     </div>
                     <h3 class="${elementId}_header" style="float: left;margin-left: 10px;color:black;margin-top:7px">Well Log Tracks Settings</h3>
@@ -76,35 +57,43 @@ export function ConfigDialog(elementId) {
                 </DIV>
             </DIV>
             <style>
+            #${elementId}{width:333px}
             #closeBtn{color:darkgray;cursor:pointer;float:right;font-size:1.5em;margin:5px} 
             #closeBtn:hover {color:#1b8888;}
+            #trackBtns {float:right;margin: 0px 2px 0 0;top: 6px;left: -3px;}
             #trackBtns a {font-size:1.5em;color: darkgray;padding: 1px;width: 7px;}            
             #trackBtns a:hover {color:#1b8888;}
-            #duplicateTrackBtn{top: 6px; position: relative;}
-            #removeTrackBtn{position: relative;top: 4px;margin-left: 2px;}
+            #duplicateTrackBtn{top: 5px; position: relative;left:-3px;}
+            #removeTrackBtn{position: relative;top: 4px;margin-left: 2px;} 
+            .ui-accordion-content{height:auto };
             </style>
             `
         );
 
-    this.config_menu = document.getElementById(elementId);
-    this.config_menu.style.width = this.width + "px";
+    //setup close button
+    this.close = function(){document.getElementById(elementId).style.visibility="hidden";}
+
+    document.getElementById('closeBtn').addEventListener('click', this.close ); 
 
     //hide the config dialog
-    document.getElementById(elementId).style.visibility="hidden";
+    document.getElementById(elementId).style.visibility="hidden"; 
 
     //makes the configuration popup draggable
-    draggable(document.getElementById(elementId));        
+    $("#"+elementId).draggable();
     
-    $("#closeBtn").click(function (evt) {
-        document.getElementById(elementId).style.visibility="hidden";
-    });
+    //Populates accordion panels
+    for (const i of plot_templates.keys()) createAccordionTabs(plot_templates, i, allDataViewRows, _dataView);
+
+    //generate an accordion
+    $("#"+accordionId).accordion({ collapsible: true,heightStyle: 'content'});
 
 } 
 
 //creates a jquery accordion. Each panel contains one or more tabs
 //an accordion panel represents a track (template[0])
 //a tab contains track curves (template_components[0]["curves"][0];)
-export async function createAccordionForTemplate(templates, templateIdx, allDataViewRows, _dataView, _isInitialized) {
+export async function createAccordionTabs(templates, templateIdx, allDataViewRows, _dataView) {
+
     let template = templates[templateIdx];
     let template_components = template[0]["components"];
     let templateCurves = template_components[0]["curves"][0];
@@ -122,14 +111,14 @@ export async function createAccordionForTemplate(templates, templateIdx, allData
         /*
             Track tabs
             <div id="tabs_0">
-            <ul>
-                <li><a href="#tabs_0_0"> trucks </a></li>
-                <li><a href="#tabs_0_1"> cars  </a></li>
-                <li><a href="#tabs_0_2"> boats </a></li>
-            </ul>
-            <div id="tabs_0_0"> trucks are cool </div>
-            <div id="tabs_0_1"> cars are fast  </div>
-            <div id="tabs_0_2"> boats can sink  </div>
+                <ul>
+                    <li><a href="#tabs_0_0"> trucks </a></li>
+                    <li><a href="#tabs_0_1"> cars  </a></li>
+                    <li><a href="#tabs_0_2"> boats </a></li>
+                </ul>
+                <div id="tabs_0_0"> trucks are cool </div>
+                <div id="tabs_0_1"> cars are fast  </div>
+                <div id="tabs_0_2"> boats can sink  </div>
             </div> 
             */
 
@@ -150,12 +139,9 @@ export async function createAccordionForTemplate(templates, templateIdx, allData
             .attr("href", "#tab_" + templateIdx + "_ctrlBtn")
             .attr("class", "ctrlBtn")
             .attr("title", "Duplicates last curve")
-            .html("◫")
+            .html("+")//⧉
             .on("mousedown", (evt) => {
                 render.propertyOnChange(templateIdx, curveNames.length, templates, allDataViewRows, null, "duplicateCurve");
-                //addAccordionTabContents(i,curveNames.length,curveNames,tabs,templates,sfData,curveColors)
-
-                //TODO duplicate code goes here or on PropertyOnChange
                 evt.preventDefault;
             });
 
@@ -165,7 +151,7 @@ export async function createAccordionForTemplate(templates, templateIdx, allData
             .attr("href", "#tab_" + templateIdx + "_ctrlBtn")
             .attr("class", "ctrlBtn")
             .attr("title", "Removes last curve")
-            .html("⊘")
+            .html("-")//⊘
             .on("mousedown", (evt) => {
                 render.propertyOnChange(templateIdx, curveNames.length, templates, allDataViewRows, null, "removeCurve");
                 evt.preventDefault;
@@ -186,33 +172,35 @@ export async function createAccordionForTemplate(templates, templateIdx, allData
                 evt.preventDefault;
             }); 
         }
-         
-        
 
-        // // Add a "[*]" tab, so you duplicates the entire track
-        // ul.append("li")
-        //     .append("a")
-        //     .attr("href", "#tab_" + templateIdx + "_ctrlBtn")
-        //     .attr("class", "ctrlBtn")
-        //     .attr("title", "Duplicates the entire track")
-        //     .html("⧉")
-        //     .on("mousedown", (evt) => {
-        //         render.PropertyOnChange(templateIdx, curveNames.length, templates, allDataViewRows, null, "duplicateTrack");
-        //         evt.preventDefault;
-        //     });
 
-        // // Add a "[x]" tab, so you duplicates the entire track
-        // ul.append("li")
-        //     .append("a")
-        //     .attr("href", "#tab_" + templateIdx + "_ctrlBtn")
-        //     .attr("class", "ctrlBtn")
-        //     .attr("title", "Duplicates the entire track")
-        //     .html("🗑")
-        //     .on("mousedown", (evt) => {
-        //         render.PropertyOnChange(templateIdx, curveNames.length, templates, allDataViewRows, null, "removeTrack");
-        //         evt.preventDefault;
-        //     });
+        //JLL: Do not remove as it is a placeholder for future functionality. You can test by uncommenting
+        // Add a "[*]" tab, so you duplicates the entire track
+        /*
+        ul.append("li")
+            .append("a")
+            .attr("href", "#tab_" + templateIdx + "_ctrlBtn")
+            .attr("class", "ctrlBtn")
+            .attr("title", "Duplicates the entire track")
+            .html("⧉") //⧉
+            .on("mousedown", (evt) => {
+                render.PropertyOnChange(templateIdx, curveNames.length, templates, allDataViewRows, null, "duplicateTrack");
+                evt.preventDefault;
+            });
 
+        // Add a "[x]" tab to remove the entire track
+        ul.append("li")
+            .append("a")
+            .attr("href", "#tab_" + templateIdx + "_ctrlBtn")
+            .attr("class", "ctrlBtn")
+            .attr("title", "Duplicates the entire track")
+            .html("⊘")//🗑
+            .on("mousedown", (evt) => {
+                render.PropertyOnChange(templateIdx, curveNames.length, templates, allDataViewRows, null, "removeTrack");
+                evt.preventDefault;
+            });
+
+        */  
 
         // The contents of the tabs
         for (let k = 0; k < curveNames.length; k++) {
@@ -220,7 +208,9 @@ export async function createAccordionForTemplate(templates, templateIdx, allData
         }
     }
 
+    //render tabs
     $("#" + "tabs_" + templateIdx).tabs();
+
 }
 
 

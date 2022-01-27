@@ -162,6 +162,156 @@
                     "curves": [
                         {
                             "curveColors": [
+                                "#212121"
+                            ],
+                            "curveNames": [
+                                "CAL"
+                            ],
+                            "curveStrokeDashArray": [
+                                "solid"
+                            ],
+                            "curveUnits": [
+                                ""
+                            ],
+                            "dataType": "curve",
+                            "depthCurveName": "DEPTH",
+                            "depthUnit": "m",
+                            "fill": [
+                                {
+                                    "curve2": "",
+                                    "curveName": "CAL",
+                                    "cutoffs": [
+                                        -99999999,
+                                        "175",
+                                        "180"
+                                    ],
+                                    "fill": "yes",
+                                    "fillColors": [
+                                        "#3f51b5",
+                                        "#002984",
+                                        "#757de8"
+                                    ],
+                                    "colorInterpolator": [
+                                        null,
+                                        null,
+                                        null
+                                    ],
+                                    "fillDirection": "left",
+                                    "maxScaleX": "",
+                                    "minScaleX": ""
+                                }
+                            ],
+                            "scaleTypeLinearLog": [
+                                "linear"
+                            ],
+                            "strokeLinecap": [
+                                "butt"
+                            ],
+                            "strokeWidth": [
+                                "1"
+                            ],
+                            "wellNames": [
+                                "1"
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "trackBox": {
+                "width": 137.25,
+                "height": 563,
+                "div_id": "mod-containerTrackHolder1",
+                "margin": {
+                    "top": 5,
+                    "right": 10,
+                    "bottom": 5,
+                    "left": 60
+                }
+            }
+        }
+    ],
+    [
+        {
+            "components": [
+                {
+                    "curves": [
+                        {
+                            "curveColors": [
+                                "#212121"
+                            ],
+                            "curveNames": [
+                                "CAL"
+                            ],
+                            "curveStrokeDashArray": [
+                                "solid"
+                            ],
+                            "curveUnits": [
+                                ""
+                            ],
+                            "dataType": "curve",
+                            "depthCurveName": "DEPTH",
+                            "depthUnit": "m",
+                            "fill": [
+                                {
+                                    "curve2": "",
+                                    "curveName": "CAL",
+                                    "cutoffs": [
+                                        -99999999,
+                                        "175",
+                                        "180"
+                                    ],
+                                    "fill": "yes",
+                                    "fillColors": [
+                                        "#3f51b5",
+                                        "#002984",
+                                        "#757de8"
+                                    ],
+                                    "colorInterpolator": [
+                                        null,
+                                        null,
+                                        null
+                                    ],
+                                    "fillDirection": "left",
+                                    "maxScaleX": "",
+                                    "minScaleX": ""
+                                }
+                            ],
+                            "scaleTypeLinearLog": [
+                                "linear"
+                            ],
+                            "strokeLinecap": [
+                                "butt"
+                            ],
+                            "strokeWidth": [
+                                "1"
+                            ],
+                            "wellNames": [
+                                "1"
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "trackBox": {
+                "width": 137.25,
+                "height": 563,
+                "div_id": "mod-containerTrackHolder1",
+                "margin": {
+                    "top": 5,
+                    "right": 10,
+                    "bottom": 5,
+                    "left": 60
+                }
+            }
+        }
+    ],
+    [
+        {
+            "components": [
+                {
+                    "curves": [
+                        {
+                            "curveColors": [
                                 "#3f51b5",
                                 "#f44336"
                             ],

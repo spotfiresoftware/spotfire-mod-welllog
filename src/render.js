@@ -8,8 +8,6 @@
 import * as d3 from "d3";
 import { sliderRight } from "d3-simple-slider";
 const $ = require("jquery");
-import "jquery-ui/ui/widgets/tabs";
-import "jquery-ui/ui/widgets/accordion";
 import "ddslick/src/jquery.ddslick";
 
 
@@ -202,33 +200,32 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
     //read templates from mod property
     let plot_templates = await buildTemplates(ISRESET); //JLL: use true to reset, change some properties to save changes from gui and put it back to false
 
-    //creates a draggable configuration dialog with options for each track with nothing inside
-    !_isInitialized && new uiConfig.ConfigDialog("config_menu");
+    //creates a draggable configuration dialog with options for each track with nothing inside but the placeholders for accordion
+    !_isInitialized && uiConfig.configDialog(plot_templates, allDataViewRows, _dataView, _mod, _verticalZoomHeightMultiplier, _verticalZoomHeightProperty);
     
-
-
     //creates each plot per template
 
     // JLL: DEBUGGING templates
     // AJB: - to use these, use 0 or 4 instead of "test0" or "test4", like:
     // plot_templates[0] or plot_templates[4] 
     // - to disable, use plot_templates["test0"] or plot_templates["test4"]
-    // - string template indexes are invalid and are therefore ignored by the 
-    // rendering code
-    // plot_templates=test_templates.test_templates    //use this line to reset. test_template[5] is for facies not yet implemented, so just pop it
-    // plot_templates.pop() //remove last track
-    // plot_templates[0]=test_templates.test_templates[2] //override track
-    // plot_templates.push(plot_templates[2]) //duplicate
+    // - string template indexes are invalid and are therefore ignored by the rendering code
 
-    !_isInitialized && renderPlot.multipleLogPlot(plot_templates, allDataViewRows, _mod, _isInitialized, _verticalZoomHeightMultiplier, _verticalZoomHeightProperty, _dataView);
+    //plot_templates=test_templates.test_templates        //use this line to reset. test_template[5] is for facies not yet implemented, so just pop it
+    // plot_templates.pop()                               //remove last track
+    // plot_templates[0]=test_templates.test_templates[2] //override track
+    // plot_templates.push(plot_templates[2])             //duplicate
+
+    //renders plot
+    await renderPlot.multipleLogPlot(plot_templates, allDataViewRows, _mod, _isInitialized, _verticalZoomHeightMultiplier, _verticalZoomHeightProperty, _dataView);
 
     // this can be used to detect if we need to add divs, etc.
     // on re-rendering after marking. If already initialized, no need
     // to add new divs
-    _isInitialized = true;
+    _isInitialized = true; 
 
 }
-
+ 
 
 
 
@@ -239,11 +236,11 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
  * @param {} templateIdx "track number"
  * @param {*} curveIdx "curve number"
  * @param {*} templates "template structure holding all tracks. See test-template.js"
- * @param {*} allDataViewRows "spotfire data rows view"
- * @param {*} selectedData  "json with options for the propName"
- * @param {String} propName "name property to change or action to take. For example LineColor or removeTrack"
+ * @param {*} allDataViewRows "Spotfire data rows view"
+ * @param {*} optionSettings  "JSON options when changing a propName"
+ * @param {String} option "Property to change or action to take. Options are:Thickness,LineStyle,LineColor,AreaFill,AreaColor,ScaleType,curveName,duplicateCurve*, removeCurve*, duplicateTrack*,removeTrack*"
  */
-export function propertyOnChange(templateIdx, curveIdx, templates, allDataViewRows, selectedData, propName) {
+export function propertyOnChange(templateIdx, curveIdx, templates, allDataViewRows, optionSettings, option) {
     if (templates[templateIdx] && _isInitialized) {
         var template = templates[templateIdx];
         let template_components = template[0]["components"];
@@ -251,48 +248,48 @@ export function propertyOnChange(templateIdx, curveIdx, templates, allDataViewRo
         let curveNames = templateCurves[0]["curveNames"];
 
         //change thickness
-        if (propName == "Thickness") {
-            templateCurves[0]["strokeWidth"][curveIdx] = selectedData.value;
+        if (option == "Thickness") {
+            templateCurves[0]["strokeWidth"][curveIdx] = optionSettings.value;
         }
 
         //change LineStyle
-        else if (propName == "LineStyle") {
-            templateCurves[0]["curveStrokeDashArray"][curveIdx] = selectedData.value;
+        else if (option == "LineStyle") {
+            templateCurves[0]["curveStrokeDashArray"][curveIdx] = optionSettings.value;
         }
 
         //change LineColor
-        else if (propName == "LineColor") {
-            templateCurves[0]["curveColors"][curveIdx] = selectedData.value;
+        else if (option == "LineColor") {
+            templateCurves[0]["curveColors"][curveIdx] = optionSettings.value;
         }
 
         //change AreaFill
-        else if (propName == "AreaFill") {
-            if (selectedData.value == "none") {
+        else if (option == "AreaFill") {
+            if (optionSettings.value == "none") {
                 templateCurves[0]["fill"][curveIdx]["fill"] = "no";
             } else {
                 templateCurves[0]["fill"][curveIdx]["fill"] = "yes";
-                templateCurves[0]["fill"][curveIdx]["fillDirection"] = selectedData.value;
+                templateCurves[0]["fill"][curveIdx]["fillDirection"] = optionSettings.value;
             }
         }
 
         //change AreaColor
-        else if (propName == "AreaColor") {
+        else if (option == "AreaColor") {
             templateCurves[0]["fill"][curveIdx]["fillColors"] = [
-                colorHelpers.getFillColor(selectedData.value, "normal"),
-                colorHelpers.getFillColor(selectedData.value, "dark"),
-                colorHelpers.getFillColor(selectedData.value, "light")
+                colorHelpers.getFillColor(optionSettings.value, "normal"),
+                colorHelpers.getFillColor(optionSettings.value, "dark"),
+                colorHelpers.getFillColor(optionSettings.value, "light")
             ];
-            templateCurves[0]["fill"][curveIdx]["colorInterpolator"] = [selectedData.value, null, null];
+            templateCurves[0]["fill"][curveIdx]["colorInterpolator"] = [optionSettings.value, null, null];
         }
 
         //change ScaleType
-        else if (propName == "ScaleType") {
-            templateCurves[0]["scaleTypeLinearLog"][curveIdx] = selectedData.value;
+        else if (option == "ScaleType") {
+            templateCurves[0]["scaleTypeLinearLog"][curveIdx] = optionSettings.value;
         }
 
         //change curveName
-        else if (propName == "curveName") {
-            var curveName = selectedData.value;
+        else if (option == "curveName") {
+            var curveName = optionSettings.value;
             curveNames[curveIdx] = curveName;
 
             // var curveNamesCopy=[...curveNames]
@@ -307,7 +304,7 @@ export function propertyOnChange(templateIdx, curveIdx, templates, allDataViewRo
         }
 
         //copy first curve
-        else if (propName == "duplicateCurve") {
+        else if (option == "duplicateCurve") {
             //duplicates first curve properties (arrays such as colors, style, curvName, etc)
             let templateCurvesCopy = JSON.parse(JSON.stringify(templateCurves));
             for (curveIdx in templateCurves[0]) {
@@ -323,7 +320,7 @@ export function propertyOnChange(templateIdx, curveIdx, templates, allDataViewRo
                 .append("a")
                 .attr("href", `#${tid}`)
                 .append("span")
-                .text(curveNames[0]);
+                .text(curveNames[0]); 
 
             //add tab panels (placeholder)
             //d3.select(`#tabs_${i}`).append("div").attr("id",tid).append("P").html(tid);
@@ -333,20 +330,18 @@ export function propertyOnChange(templateIdx, curveIdx, templates, allDataViewRo
             uiConfig.addAccordionTabContents(templateIdx, copiedCurveIndex, curveNames, tabs, templates, allDataViewRows, ["#333333"], _dataView);
 
             //refresh tabs
-            $("#" + "tabs_" + templateIdx)
-                .tabs()
-                .tabs("refresh");
+            $("#" + "tabs_" + templateIdx).tabs().tabs("refresh");
             $("#" + "tabs_" + templateIdx).tabs("option", "active", copiedCurveIndex); //makes the new tab active
 
             //update tab and accordion name
             let anAccordionHeader = document.querySelector("#"+uiConfig.accordionId+" h3[aria-expanded='true'] span").nextSibling;
             let aTab = document.querySelector(`a[href='#tab_${templateIdx}_${copiedCurveIndex - 1}']`);
-            aTab.innerText = curveNames[copiedCurveIndex - 1];
+            $(aTab).text(curveNames[copiedCurveIndex - 1]);
             anAccordionHeader.textContent = `Track ${templateIdx + 1}: ` + curveNames.join();
         }
 
         //delete last curve
-        else if (propName == "removeCurve") {
+        else if (option == "removeCurve") {
             let copiedCurveIndex = curveNames.length - 1;
             if (copiedCurveIndex) {
                 //don't remove last curve
@@ -380,18 +375,24 @@ export function propertyOnChange(templateIdx, curveIdx, templates, allDataViewRo
         }
 
         //duplicate entire track
-        else if(propName=="duplicateTrack"){
+        else if(option=="duplicateTrack"){
 
             if(templates.length>8) return; //prevent from adding too many tracks
-            templates.push({ ...templates[templates.length-1] });
+            templates.push(JSON.parse(JSON.stringify(templates[templates.length-1]))); //clone last track
 
-            //add accordion panel (todo)
-            $(".ui-accordion").append(document.querySelector(".ui-accordion-header:last-of-type").cloneNode(true))
+            let trackBox = templates[templates.length-1][0]["trackBox"]; //modify last track
+            trackBox.div_id = trackBox.div_id.slice(0,-1)+(templateIdx+2)
+            
+            uiConfig.createAccordionTabs(templates, templateIdx+1, allDataViewRows, _dataView)
+
+            //refresh tabs
+            $("#" + "tabs_" + templateIdx).tabs().tabs("refresh");
+            $("#config_menu_accordion").accordion("refresh") 
 
         }
 
         //remove last track and updates last accordion panel
-        else if(propName=="removeTrack"){
+        else if(option=="removeTrack"){
             if (templateIdx<1) return; //prevent from removing all tracks
 
             //remove trac
@@ -411,13 +412,11 @@ export function propertyOnChange(templateIdx, curveIdx, templates, allDataViewRo
             }); 
 
             //remove accordion panel
-            $(".ui-accordion-header:last-of-type").remove()
+            $(".ui-accordion-header:last-of-type").remove() 
             $(".ui-accordion-content:last-of-type").remove()
             
 
         }
-
-
 
         // Store the updated template in the appropriate mod property
         _mod.property("template" + templateIdx).set(JSON.stringify(templates[templateIdx]));

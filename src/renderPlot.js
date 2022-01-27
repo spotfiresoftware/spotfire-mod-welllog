@@ -1492,12 +1492,7 @@ export async function multipleLogPlot(templates, allDataViewRows, _mod, _isIniti
     // -- would be preferable to do this in a d3 native way rather than jQuery, but d3 doesn't seem to work...
     // $("#trackHoldersContainer").animate({ scrollTop: _scrollTop }, 10);
 
-    //Populates accordion panels
-    if (!_isInitialized) {
-        for (const i of templates.keys()) await uiConfig.createAccordionForTemplate(templates, i, allDataViewRows, _dataView);
-    }
 
-    $("#"+uiConfig.accordionId).accordion({ collapsible: true });
  
 
 }
