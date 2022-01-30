@@ -26,17 +26,6 @@ export function configDialog(plot_templates, allDataViewRows, _dataView, _mod, _
     let elementId = "config_menu"
     accordionId = elementId+"_accordion"
 
-    //old approach to recreate the configDialog. Might not be needed anymore.
-    //clears the configDialog (and bindings)
-    // $("#"+accordionId).accordion("destroy");
-    // let parent = document.querySelector("#"+accordionId)
-    // while (parent && parent.lastChild) parent.removeChild(parent.lastChild);
-    // parent = document.querySelector("#"+elementId)
-    // while (parent && parent.lastChild) parent.removeChild(parent.lastChild);
-
-    ////document.querySelector(elementId) &&  document.querySelector(elementId).remove() //removes only element, not bindings
-
-
     //add dialog placeholder to #mod-container
     d3.select("#mod-container")
         .style("margin", "0")

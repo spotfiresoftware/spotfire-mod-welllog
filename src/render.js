@@ -6,7 +6,6 @@
 
 //@ts-check
 import * as d3 from "d3";
-import { sliderRight } from "d3-simple-slider";
 const $ = require("jquery");
 import "ddslick/src/jquery.ddslick";
 
@@ -36,6 +35,7 @@ import * as test_templates from "./test-templates.js";
  * Prepare some dom elements that will persist  throughout mod lifecycle
  */
 const modContainer = d3.select("#mod-container");
+const DEBUG = true; //turns on or off console.logs
 
 // @todo - remove as many global vars as we can!
 
@@ -64,7 +64,7 @@ var _mod; // The global mod instance
  * @param {Spotfire.ModProperty<string>} example - an example property
  */
 export async function render(state, mod, dataView, windowSize, verticalZoomHeightProperty) {
-    //  console.log("render", [arguments])
+    DEBUG && console.log("render", [arguments])
 
     //init some (global) vars
     _dataView = dataView;
@@ -160,6 +160,8 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
         return default_template;
     }
 
+    //The  buildTemplates function creates 8 tracks as default. If there are only 4 categories, it will duplicate the categories
+    //when rebuilding the templates, it will check if a track was deleted by setting the mod property to "empty"
     async function buildTemplates(isReset = false) {
         /* let wellLeaves = */(await (await _dataView.hierarchy("WELL")).root()).leaves();
         // selectedWell = wellLeaves[0].key;
@@ -171,9 +173,13 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
         let templates = [];
         let categoryIndex = 0;
 
-        for (const leaf of categoryLeaves) {
-            ///console.log(leaf.key);
-            let template = (await _mod.property("template" + categoryIndex)).value();
+
+//        for (const leaf of categoryLeaves) { 
+          //it is not about leaves, it is about number of up to 8 mod property tracks
+          for (let i=0;i<8;i++){
+            let leaf = categoryLeaves[i%categoryLeaves.length] //loop through available leaves
+
+            let template = (await _mod.property("template" + categoryIndex)).value(); //get mod
 
             if (template != "empty" && !isReset) {
                 let parsedTemplate = JSON.parse(template);
@@ -182,8 +188,10 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
                 parsedTemplate[0].trackBox.height = window.innerHeight;
                 ///console.log(parsedTemplate);
                 templates.push(parsedTemplate);
-            } else {
-                templates.push(buildDefaultTemplate(categoryIndex, leaf.key, trackWidth, window.innerHeight));
+            } else { //create default template. 
+                if(template!="empty"){
+                    templates.push(buildDefaultTemplate(categoryIndex, leaf.key, trackWidth, window.innerHeight));
+                }
             }
             categoryIndex++;
         }
@@ -377,7 +385,7 @@ export function propertyOnChange(templateIdx, curveIdx, templates, allDataViewRo
         //duplicate entire track
         else if(option=="duplicateTrack"){
 
-            if(templates.length>8) return; //prevent from adding too many tracks
+            if(templates.length>7) return; //prevent from adding too many tracks
             templates.push(JSON.parse(JSON.stringify(templates[templates.length-1]))); //clone last track
 
             let trackBox = templates[templates.length-1][0]["trackBox"]; //modify last track
@@ -389,6 +397,13 @@ export function propertyOnChange(templateIdx, curveIdx, templates, allDataViewRo
             $("#" + "tabs_" + templateIdx).tabs().tabs("refresh");
             $("#config_menu_accordion").accordion("refresh") 
 
+            templateIdx+=1
+
+            //open last tab
+            var accordionTab = document.querySelectorAll(".ui-accordion-header")[templateIdx];
+            if (accordionTab.getAttribute("aria-expanded") == "false") accordionTab.click();
+
+
         }
 
         //remove last track and updates last accordion panel
@@ -396,30 +411,36 @@ export function propertyOnChange(templateIdx, curveIdx, templates, allDataViewRo
             if (templateIdx<1) return; //prevent from removing all tracks
 
             //remove trac
-            templateIdx-=1
             templates.pop()
-            
+
+            //make sure template mod property is gone
+            _mod.property("template" + templateIdx).set("empty");
+
             //JLL: for some reason, the gui-button looses its onclicking magic on both add and remove track buttons. 
             //It only works once. 
             //workaround fix: rebind
             d3.select("#removeTrackBtn").on("click", (evt) => {
-                propertyOnChange(templateIdx, curveNames.length, templates, allDataViewRows, null, "removeTrack");
+                propertyOnChange(templateIdx-1, curveNames.length, templates, allDataViewRows, null, "removeTrack");
                 evt.preventDefault;
             }); 
             d3.select("#duplicateTrackBtn").on("click", (evt) => {
-                propertyOnChange(templateIdx, curveNames.length, templates, allDataViewRows, null, "duplicateTrack");
+                propertyOnChange(templateIdx-1, curveNames.length, templates, allDataViewRows, null, "duplicateTrack");
                 evt.preventDefault;
             }); 
 
-            //remove accordion panel
+            //remove last accordion panel (header and contents)
             $(".ui-accordion-header:last-of-type").remove() 
             $(".ui-accordion-content:last-of-type").remove()
+
             
-
+            
+            
+        } 
+        // Store the updated template in the appropriate mod property except if the track was deleted
+        if(option!="removeTrack"){
+             _mod.property("template" + templateIdx).set(JSON.stringify(templates[templateIdx]));
+             console.log(option,templateIdx,JSON.stringify(templates[templateIdx]).slice(0,22));
         }
-
-        // Store the updated template in the appropriate mod property
-        _mod.property("template" + templateIdx).set(JSON.stringify(templates[templateIdx]));
         renderPlot.multipleLogPlot(templates, allDataViewRows, _mod, _isInitialized, _verticalZoomHeightMultiplier, _verticalZoomHeightProperty, _dataView);
     }
 }

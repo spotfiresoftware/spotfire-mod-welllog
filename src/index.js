@@ -11,14 +11,14 @@ import "core-js/es/array";
 import { render } from "./render.js";
 
 const Spotfire = window.Spotfire;
-const DEBUG = true;
+const DEBUG = !true;
 
 Spotfire.initialize(async (mod) => {
     /**
      * Read metadata and write mod version to DOM
      */
     const modMetaData = mod.metadata;
-    console.log("Mod version:", modMetaData.version ? "v" + modMetaData.version : "unknown version");
+    DEBUG && console.log("Mod version:", modMetaData.version ? "v" + modMetaData.version : "unknown version");
 
     /**
      * Initialize render context - should show 'busy' cursor.
@@ -69,7 +69,6 @@ Spotfire.initialize(async (mod) => {
             mod.visualization.data(),
             mod.windowSize(),
             mod.property("verticalZoomHeightMultiplier"),
-            //mod.property("curveCount"),  //enable to monitor this particular property and trigger the render function
         )
     );
 
@@ -94,13 +93,10 @@ Spotfire.initialize(async (mod) => {
      * @param {Spotfire.AnalysisProperty<boolean>} roundedCurves
      * @param {Spotfire.AnalysisProperty<boolean>} gapfill
      */
-    async function onChange(dataView, windowSize, verticalZoomHeightMultiplier,curveCount) {
+    async function onChange(dataView, windowSize, verticalZoomHeightMultiplier) {
 
         if(reader.hasValueChanged(verticalZoomHeightMultiplier)) {
             DEBUG && console.log("zoom changed")    
-        }
-        if(reader.hasValueChanged(curveCount)) {
-            DEBUG && console.log("curveCount changed",curveCount)    
         }
 
         try {

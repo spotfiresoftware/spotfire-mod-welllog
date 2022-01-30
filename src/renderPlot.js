@@ -35,7 +35,7 @@ export async function logPlot(template_for_plotting, allDataViewRows, headerHeig
     ///console.log(height);
     let height_components = template_overall["height"];
     let width = template_overall["width"];
-    width = Math.round((await _mod.windowSize()).width / (trackCount + .50)); //JLL _mod.windowSize and window.innerWith are the same. I have to reduce by some extra space (.25) that the track might hold. Consider not using magic .5 number
+    width = Math.round((await _mod.windowSize()).width / (trackCount + 1.00)); //JLL _mod.windowSize and window.innerWith are the same. I have to reduce by some extra space to avoid wrapping. the constant makes the whitespace on the right wider if increases.
     //console.log(trackCount, window.innerWidth, (await _mod.windowSize()).width, width ) 
     let margin = template_overall["margin"];
     let gridlines_color = "#D3D3D3";
