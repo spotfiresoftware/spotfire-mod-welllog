@@ -164,8 +164,8 @@ export async function logPlot(template_for_plotting, allDataViewRows, headerHeig
     let y;
 
     //////////////////// define Y scale (depth)  ////////////////////
-    let depthMin = d3.min(valueRows, (d) => d.depth);
-    let depthMax = d3.max(valueRows, (d) => d.depth);
+    let depthMin = d3.min(valueRows, (d) => d.depth) || 0;
+    let depthMax = d3.max(valueRows, (d) => d.depth) || 0;
     y = d3
         .scaleLinear()
         .domain([depthMax, depthMin])

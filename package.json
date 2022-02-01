@@ -9,7 +9,7 @@
         "build-watch": "webpack --watch",
         "start": "npm run build-watch"
     },
-    "author": "aberridg",
+    "author": "aberridg,jleviagu",
     "license": "ISC",
     "dependencies": {},
     "devDependencies": {

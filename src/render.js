@@ -64,7 +64,7 @@ var _mod; // The global mod instance
  * @param {Spotfire.ModProperty<string>} example - an example property
  */
 export async function render(state, mod, dataView, windowSize, verticalZoomHeightProperty) {
-    DEBUG && console.log("render", [arguments])
+    DEBUG && console.log("render:", [arguments])
 
     //init some (global) vars
     _dataView = dataView;
@@ -177,9 +177,11 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
 //        for (const leaf of categoryLeaves) { 
           //it is not about leaves, it is about number of up to 8 mod property tracks
           for (let i=0;i<8;i++){
+              console.log("looping templates")
             let leaf = categoryLeaves[i%categoryLeaves.length] //loop through available leaves
 
             let template = (await _mod.property("template" + categoryIndex)).value(); //get mod
+            console.log(i,leaf,template.slice(0,22))
 
             if (template != "empty" && !isReset) {
                 let parsedTemplate = JSON.parse(template);
@@ -191,6 +193,9 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
             } else { //create default template. 
                 if(template!="empty"){
                     templates.push(buildDefaultTemplate(categoryIndex, leaf.key, trackWidth, window.innerHeight));
+                }
+                if(i<2 && template=="empty"){ //ensure at least a couple of tracks are visible in case all are empty)
+                    templates.push(buildDefaultTemplate(0, leaf.key, trackWidth, window.innerHeight));
                 }
             }
             categoryIndex++;
