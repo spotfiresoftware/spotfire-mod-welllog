@@ -41,7 +41,7 @@ const DEBUG = true; //turns on or off console.logs
 
 var _dataView;
 
-var _isInitialized = false; // this can be used to detect if we need to add divs, etc. On re-rendering after marking. If already initialized, no need to add new divs
+export var _isInitialized = false; // this can be used to detect if we need to add divs, etc. On re-rendering after marking. If already initialized, no need to add new divs
 
 var _verticalZoomHeightMultiplier = 5.0;
 var _verticalZoomHeightProperty;

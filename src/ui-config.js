@@ -8,6 +8,7 @@ import * as d3 from "d3";
 const $ = require("jquery");
 import * as colorHelpers from "./color-helpers.js";
 import * as render from "./render.js"; 
+import * as renderPlot from "./renderPlot.js"
 export var accordionId
 
 import "jquery-ui/ui/widgets/tabs";
@@ -234,7 +235,7 @@ export async function addAccordionTabContents(templateIdx, curveIdx, curveNames,
             .style("width", "95px")
             .attr("value", selectedData)
             .on("input", function (d) {
-                if (templates[i] && _isInitialized) {
+                if (templates[i] && render._isInitialized) {
                     let template = templates[i];
                     let template_components = template[0]["components"];
                     let templateCurves = template_components[0]["curves"];
@@ -248,8 +249,7 @@ export async function addAccordionTabContents(templateIdx, curveIdx, curveNames,
                     } else if (propName == "CutoffSiltSand") {
                         templateCurves[0]["fill"][k]["cutoffs"][2] = selectedData;
                     }
-    
-                    multipleLogPlot(templates, allDataViewRows);
+                    renderPlot.multipleLogPlot(templates, allDataViewRows, _mod, render._isInitialized, _verticalZoomHeightMultiplier, _verticalZoomHeightProperty, _dataView) {
                 }
             });
     }
