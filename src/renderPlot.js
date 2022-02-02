@@ -737,6 +737,7 @@ export async function logPlot(template_for_plotting, headerHeight,_verticalZoomH
         y0 = y.invert(d3.pointer(evt)[1]);
 
         //... by bisecting the data, which finds the index that our y0 would be
+        // Note that the performance of this doesn't seem to be too good
         let bisectData = d3.bisector(function (d) {
             return d["depth"];
         }).left;
