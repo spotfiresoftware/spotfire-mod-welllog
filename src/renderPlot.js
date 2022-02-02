@@ -1049,6 +1049,7 @@ export async function logPlot(template_for_plotting, allDataViewRows, headerHeig
         // AJB - I'm currently working to make this much more driven by looping through column values, etc., rather than
         // value0, value1, d0, d, d1, etc... but have run out of time for today 2nd Feb.
         // - need to move to work with the dataview to select rows and categories and their values
+        // Hmmm... this is too slow!
 
         // Get all rows with this depth
         let allRows = await _dataView.allRows();
