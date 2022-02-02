@@ -45,7 +45,7 @@ var _isInitialized = false; // this can be used to detect if we need to add divs
 
 var _verticalZoomHeightMultiplier = 5.0;
 var _verticalZoomHeightProperty;
-
+var _windowSize;
 
 
 const ISRESET = false; //JLL: to reset to default templates, set it to true and recomplie. Then change curve properties from GUI such as line color to save and set it back to false
@@ -65,7 +65,7 @@ var _mod; // The global mod instance
  */
 export async function render(state, mod, dataView, windowSize, verticalZoomHeightProperty) {
     DEBUG && console.log("render:", [arguments])
-
+    _windowSize = windowSize;
     //init some (global) vars
     _dataView = dataView;
     _mod = mod;
@@ -230,7 +230,7 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
     // plot_templates.push(plot_templates[2])             //duplicate
 
     //renders plot
-    await renderPlot.multipleLogPlot(plot_templates, allDataViewRows, _mod, _isInitialized, _verticalZoomHeightMultiplier, _verticalZoomHeightProperty, _dataView);
+    await renderPlot.multipleLogPlot(plot_templates, allDataViewRows, _mod, _isInitialized, _verticalZoomHeightMultiplier, _verticalZoomHeightProperty, _dataView, windowSize);
 
     // this can be used to detect if we need to add divs, etc.
     // on re-rendering after marking. If already initialized, no need
@@ -446,6 +446,6 @@ export function propertyOnChange(templateIdx, curveIdx, templates, allDataViewRo
              _mod.property("template" + templateIdx).set(JSON.stringify(templates[templateIdx]));
              console.log(option,templateIdx,JSON.stringify(templates[templateIdx]).slice(0,22));
         }
-        renderPlot.multipleLogPlot(templates, allDataViewRows, _mod, _isInitialized, _verticalZoomHeightMultiplier, _verticalZoomHeightProperty, _dataView);
+        renderPlot.multipleLogPlot(templates, allDataViewRows, _mod, _isInitialized, _verticalZoomHeightMultiplier, _verticalZoomHeightProperty, _dataView, _windowSize);
     }
 }
