@@ -15,15 +15,14 @@ export async function logPlot(template_for_plotting, allDataViewRows, headerHeig
      // add the tooltip area to the webpage
      d3.select("#" + "mod-container" + "_tooltip").remove();
      tooltipDiv = d3
-         .select("#" + div_id)
+         .select("#mod-container")
          .append("div")
          .style("visibility", "hidden")        
          .style("top", "0")
          .attr("class", "tooltip")
          .attr("id", "mod-container" + "_tooltip")
          .style("opacity", 0);
-    
-    
+
     let template_overall = template_for_plotting[0]["trackBox"];
     let template_components = template_for_plotting[0]["components"];
     let templateCurves = template_components[0]["curves"][0];
@@ -670,6 +669,7 @@ export async function logPlot(template_for_plotting, allDataViewRows, headerHeig
         .on("mousemove", mousemove);
 
     function tooltipMouseover(evt) {
+        console.log("tooltipMouseover");
         focus.style("display", null);
         tooltipDiv.transition().duration(600).style("opacity", 0.9);
     }
@@ -1000,25 +1000,18 @@ export async function logPlot(template_for_plotting, allDataViewRows, headerHeig
 
         var rectColor = null;
         var target = evt.target || evt.srcElement;
-
-        if (target.attributes.rectcategoryid) {
-            target = d3.select("#" + target.attributes.rectcategoryid.value)._groups[0][0];
-            rectColor = target.style["fill"];
-        }
+        
+        // todo - make this more d3-like...
 
         var curveColor0 = "black";
         var curveColor1 = "black";
+        let curveColorsArray;
         if (target.attributes.curveColors) {
-            var curveColorsArray = target.attributes.curveColors.value.split(",");
-            if (curveColorsArray[0]) {
-                curveColor0 = curveColorsArray[0];
-            }
-            if (curveColorsArray[1]) {
-                curveColor1 = curveColorsArray[1];
-            }
-        } else if (rectColor) {
-            curveColor0 = rectColor;
+            console.log("target", target.attributes.curveColors);
+            curveColorsArray = target.attributes.curveColors.value.split(",");           
         }
+
+        console.log("curveColors", curveColorsArray);
 
         var bisectData = d3.bisector(function (d) {
             return d.continuous(depthCurveName).value();
@@ -1046,56 +1039,44 @@ export async function logPlot(template_for_plotting, allDataViewRows, headerHeig
         if (d == null) {
             d = d0;
         }
-        let value0;
+
+        console.log("tooltip d is ", d);
+
+        let value0 = parseFloat(d.categorical("Value").formattedValue());
+        console.log(value0,d.categorical("Value").formattedValue());
         let value1;
 
-        if (curveNames[0] == "ZONE" || curveNames[0] == "FACIES") {
-            value0 = d0.categorical(curveNames[0]).formattedValue();
-        } else {
-            ///            value0 = d0.continuous(curveNames[0]).value();
-        }
-        if (curveNames[1] == "ZONE" || curveNames[1] == "FACIES") {
-            value1 = d1.categorical(curveNames[1]).formattedValue();
-        } else {
-            ///            value1 = curveNames[1] ? d1.continuous(curveNames[1]).value() : "";
-        }
+        // AJB - I'm currently working to make this much more driven by looping through column values, etc., rather than
+        // value0, value1, d0, d, d1, etc... but have run out of time for today 2nd Feb.
+        // - need to move to work with the dataview to select rows and categories and their values
 
         if (tooltipDiv) {
-            let modContainer = d3.select("#mod-container")._groups[0][0];
-
-            tooltipDiv.html(
-                (d.continuous(depthCurveName).value()
-                    ? depthCurveName + ": " + d.continuous(depthCurveName).value().toFixed(2) + "<br>"
-                    : "") +
-                    (curveNames[0] && value0
-                        ? "<span style='border:1px solid navy; background-color:" +
-                          curveColor0 +
-                          "';>&nbsp;&nbsp;</span>&nbsp;" +
-                          curveNames[0] +
-                          ": " +
-                          value0 +
-                          "<br>"
-                        : "") +
-                    (curveNames[1] && value1
-                        ? "<span style='border:1px solid navy; background-color:" +
-                          curveColor1 +
-                          "';>&nbsp;&nbsp;</span>&nbsp;" +
-                          curveNames[1] +
-                          ": " +
-                          value1 +
-                          "<br>"
-                        : "")
-            );
+            console.log("curveNames", curveNames);
+            let tooltipContent = d.continuous(depthCurveName).value()
+            ? depthCurveName + ": " + d.continuous(depthCurveName).value().toFixed(2) + "<br>"
+            : ""
+            for (let i = 0; i < curveNames.length; i++) {
+                tooltipContent += curveNames[i] +  "<span style='border:1px solid navy; background-color:" +
+                curveColorsArray[i] +
+                "';>&nbsp;&nbsp;</span>&nbsp;" +
+                curveNames[i] +
+                ": " +
+                value0 +
+                "<br>"              
+            }
+            tooltipDiv.html(tooltipContent);
 
             let tooltipX = target.parentNode.parentNode.offsetLeft + getTooltipPositionX(curve_x_func, value0) + 10;
-
+            let modContainer = d3.select("#mod-container");
+            console.log(tooltipX);
             let tooltipY = evt.pageY > modContainer.clientHeight - 40 ? evt.pageY - 40 : evt.pageY + 10;
-            // console.log("Setting tooltip style");
+            console.log("Setting tooltip style");
             tooltipDiv.style("left", tooltipX + "px");
             tooltipDiv.style("top", tooltipY + "px")
                 .style("visibility", "visible");
 
             tooltipDiv.transition().duration(600).style("opacity", 0.9);
+            console.log(tooltipDiv);
         }
 
         focus
