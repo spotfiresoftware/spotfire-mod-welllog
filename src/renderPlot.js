@@ -989,7 +989,7 @@ export async function logPlot(template_for_plotting, allDataViewRows, headerHeig
 
     var focus = svg.append("g").style("display", "none");
 
-    function mousemove(evt) {
+    async function mousemove(evt) {
         // console.log("mousemove");
         if (!tooltipDiv) {
             tooltipDiv = d3.select("#mod-container" + "_tooltip");
@@ -1050,6 +1050,20 @@ export async function logPlot(template_for_plotting, allDataViewRows, headerHeig
         // value0, value1, d0, d, d1, etc... but have run out of time for today 2nd Feb.
         // - need to move to work with the dataview to select rows and categories and their values
 
+        // Get all rows with this depth
+        let allRows = await _dataView.allRows();
+        let allDepthRows = allRows.filter(r => r.continuous("DEPTH").value() == d.continuous("DEPTH").value())
+        console.log("allDepthRows", allDepthRows);
+        // Now filter to just those of interest
+        let values = [];
+        for (let category of curveNames) {
+            // There will only be one row for each category
+            let rowValue = allDepthRows.find(r => r.categorical("Category").formattedValue() == category).categorical("Value");
+            let value = parseFloat(rowValue.formattedValue());
+            console.log("value", value, rowValue);
+            values.push(value);
+        } 
+
         if (tooltipDiv) {
             console.log("curveNames", curveNames);
             let tooltipContent = d.continuous(depthCurveName).value()
@@ -1061,8 +1075,8 @@ export async function logPlot(template_for_plotting, allDataViewRows, headerHeig
                 "';>&nbsp;&nbsp;</span>&nbsp;" +
                 curveNames[i] +
                 ": " +
-                value0 +
-                "<br>"              
+                values[i] +
+                "<br>";
             }
             tooltipDiv.html(tooltipContent);
 
