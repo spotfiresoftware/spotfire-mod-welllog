@@ -10,20 +10,19 @@ export const ZOOMPANELWIDTH = 32;
 import * as uiConfig from "./ui-config.js"; 
 
 
-export async function logPlot(template_for_plotting, allDataViewRows, headerHeight,_verticalZoomHeightMultiplier, _dataView, _mod, trackCount) {
+export async function logPlot(template_for_plotting, headerHeight,_verticalZoomHeightMultiplier, _dataView, _mod, trackCount, windowSize) {
     
      // add the tooltip area to the webpage
      d3.select("#" + "mod-container" + "_tooltip").remove();
      tooltipDiv = d3
-         .select("#" + div_id)
+         .select("#mod-container")
          .append("div")
          .style("visibility", "hidden")        
          .style("top", "0")
          .attr("class", "tooltip")
          .attr("id", "mod-container" + "_tooltip")
          .style("opacity", 0);
-    
-    
+
     let template_overall = template_for_plotting[0]["trackBox"];
     let template_components = template_for_plotting[0]["components"];
     let templateCurves = template_components[0]["curves"][0];
@@ -659,6 +658,7 @@ export async function logPlot(template_for_plotting, allDataViewRows, headerHeig
 
     // append the transparent rectangle to capture mouse movement (tooltip)
     svg.append("rect")
+        .data(valueRows)
         .attr("curveColors", curveColors)
         .attr("width", width - margin.left)
         .attr("x", margin.left)
@@ -667,9 +667,10 @@ export async function logPlot(template_for_plotting, allDataViewRows, headerHeig
         .style("pointer-events", "all")
         .on("mouseover", tooltipMouseover)
         .on("mouseout", tooltipMouseout)
-        .on("mousemove", mousemove);
+        .on("mousemove", (event, d) => mousemove(event, valueRows));
 
     function tooltipMouseover(evt) {
+        console.log("tooltipMouseover");
         focus.style("display", null);
         tooltipDiv.transition().duration(600).style("opacity", 0.9);
     }
@@ -679,268 +680,7 @@ export async function logPlot(template_for_plotting, allDataViewRows, headerHeig
         tooltipDiv.transition().duration(400).style("opacity", 0);
     }
 
-    //////////////  Rectangles for Categories ////////////// JLL move to another module
 
-    try {
-        if (dataType == "category") {
-            var categoryDomain = [];
-            var categoryColorFunc;
-
-            /*			
-			valueIndex    = getCurveIndex(depthCurveName, sfData);
-            categoryIndex = getCurveIndex(curveNames[0], sfData);
-			
-			const groupArraySF = arr => {
-			   return arr.reduce( function(acc, val, ind, array) {
-			      // the accumulated data and lastIndex of accumulated data
-			      const { data, currentIndex } = acc;
-			      // the current object properties
-				  const { value, category, MarkIndex } = {  value: val.items[valueIndex], category: val.items[categoryIndex], MarkIndex: val.hints.index };
-			      // the previous object properties
-			      const v0 = arr[ind-1]?.items[valueIndex];
-			      const g0 = arr[ind-1]?.items[categoryIndex];
-				  const i0 = arr[ind-1]?.hints.index;
-				  // the next object properties
- 			     const v1 = arr[ind+1]?.items[valueIndex];
-			      const g1 = arr[ind+1]?.items[categoryIndex];
-				  const i1 = arr[ind+1]?.hints.index;
-			      if( (ind === 0 || category !== g0)) {
-					 if (g0 && !categoryDomain.includes(g0)) { categoryDomain.push(g0); }
- 			         // recording the index of last object and pushing new subarray
-			         const index = data.push([val]) - 1;
-					 if (data[index-1]) { data[index-1].push(val); }
-					 if (data[index-1]) { 
-					     reduxMarkIds = [];
-					     for (var i=0; i < data[index-1].length-1; i++)  {
-						     reduxMarkIds.push( data[index-1][i].hints.index);
-					     }
-						 data[index-1] = [{top: data[index-1][0].items[valueIndex] , bottom: val.items[valueIndex], category: data[index-1][0].items[categoryIndex], markIds: reduxMarkIds }]; 
-					 }
-			         return { data, currentIndex: index };
-			      };
-			      data[currentIndex].push(val);
-				  // if last node:
-				  if (currentIndex == data.length -1  && ind == array.length -1) { 
-					 reduxMarkIds = [];
-					 for (var i=0; i < data[currentIndex].length; i++)  {
-					     reduxMarkIds.push( data[currentIndex][i].hints.index);
-					 }		  
-				      data[currentIndex] = [{top: data[currentIndex][0].items[valueIndex] , bottom: val.items[valueIndex], category: data[currentIndex][0].items[categoryIndex], markIds:reduxMarkIds  }];
-				  };
-			      return { data, currentIndex };
-			   }, {
-			      data: [],
-			      currentIndex: 0
-			   }).data;
-			}
-			
-			
-			var rectangles_array = groupArraySF(sfData.data);
-*/
-
-            var template_rectangles = [];
-            var categoryColumnName = curveNames[0];
-
-            var Depth = null;
-            var categoryDepthFirst = null;
-            var categoryDepthLast = null;
-            var categoryName = null;
-            var categoriesRectangles = [];
-            var categoriesDomain = [];
-            var categoryColorFunc;
-
-            var categoryRows = [];
-
-            for (let index = 0; index < allDataViewRows.length; index++) {
-                let dataviewRow = allDataViewRows[index];
-
-                let nextDataViewRow = null;
-                if (allDataViewRows[index + 1]) {
-                    nextDataViewRow = allDataViewRows[index + 1];
-                }
-
-                Depth = dataviewRow.continuous(depthCurveName).value();
-                let nextDepth = null;
-                if (nextDataViewRow) {
-                    nextDepth = nextDataViewRow.continuous(depthCurveName).value();
-                } else {
-                    nextDepth = Depth;
-                }
-
-                if (!isNaN(Depth) && Depth !== null) {
-                    if (categoryName == dataviewRow.categorical(categoryColumnName).formattedValue()) {
-                        categoryDepthLast = nextDepth;
-                    }
-
-                    if (
-                        categoryName != dataviewRow.categorical(categoryColumnName).formattedValue() ||
-                        index == allDataViewRows.length - 1
-                    ) {
-                        if (categoryName && categoryName != "(Empty)") {
-                            if (!categoriesDomain.includes(categoryName)) {
-                                categoriesDomain.push(categoryName);
-                            }
-                            categoriesRectangles.push({
-                                top: categoryDepthFirst,
-                                bottom: categoryDepthLast,
-                                category: categoryName,
-                                categoryRows: categoryRows
-                            });
-                        }
-                        categoryDepthFirst = Depth;
-                        categoryDepthLast = nextDepth;
-                        categoryRows = [];
-                    }
-                    categoryName = dataviewRow.categorical(categoryColumnName).formattedValue();
-                    categoryRows.push(dataviewRow);
-                }
-            }
-
-            let range = [
-                "#1f77b4",
-                "#aec7e8",
-                "#ff7f0e",
-                "#ffbb78",
-                "#2ca02c",
-                "#98df8a",
-                "#d62728",
-                "#ff9896",
-                "#9467bd",
-                "#c5b0d5",
-                "#8c564b",
-                "#c49c94",
-                "#e377c2",
-                "#f7b6d2",
-                "#7f7f7f",
-                "#c7c7c7",
-                "#bcbd22",
-                "#dbdb8d",
-                "#17becf",
-                "#9edae5"
-            ];
-
-            categoriesDomain = categoriesDomain.sort();
-
-            // Needs updating to some kind of Spotfire colour scheme, when we work with categories?
-            categoryColorFunc = d3.scaleOrdinal(d3.schemeCategory10).domain(categoryDomain);
-
-            for (let i = 0; i < categoriesRectangles.length; i++) {
-                let categoryRectangle = categoriesRectangles[i];
-                if (categoryRectangle.category) {
-                    function rectClick(event, a, b) {
-                        var markMode = "Replace";
-                        event.preventDefault();
-                        event.stopPropagation();
-                        if (event.shiftKey) {
-                            markMode = "Add";
-                        } else if (event.ctrlKey) {
-                            markMode = "Toggle";
-                        }
-                        _dataView.mark(categoryRectangle.categoryRows, markMode);
-                    }
-
-                    function rectMouseOver(evt) {
-                        focus.style("display", null);
-
-                        tooltipDiv.transition().duration(500).style("opacity", 0.9);
-
-                        var elem = this;
-                        if (elem.nodeName == "text") {
-                            elem = elem.previousElementSibling;
-                        }
-
-                        if (this.attributes.rectCategoryId) {
-                            d3.select("#" + this.attributes.rectCategoryId.value).style("stroke", "black");
-                            d3.select("#" + this.attributes.rectCategoryId.value).style("stroke-width", "2");
-                        }
-                    }
-
-                    function rectMouseOut(d) {
-                        focus.style("display", "none");
-
-                        tooltipDiv.transition().duration(500).style("opacity", 0);
-
-                        var elem = this;
-                        if (elem.nodeName == "text") {
-                            elem = elem.previousElementSibling;
-                        }
-                        if (this.attributes.rectCategoryId) {
-                            d3.select("#" + this.attributes.rectCategoryId.value).style("stroke", "black");
-                            d3.select("#" + this.attributes.rectCategoryId.value).style("stroke-width", "0.5");
-                        }
-                    }
-
-                    svg.append("rect")
-                        .datum(categoryRectangle.markIds)
-                        .attr("id", "Rect" + (categoryRectangle.top * 100).toFixed() + "_" + i)
-                        .attr("class", "rectCategory")
-                        .attr("x", margin.left)
-                        .attr("y", y(categoryRectangle.top))
-                        .attr("width", width - margin.right - margin.left)
-                        .attr("height", Math.abs(y(categoryRectangle.top) - y(categoryRectangle.bottom)))
-                        //.style("cursor", "pointer")
-                        .style("stroke-width", 0.5)
-                        .style("stroke", "black")
-                        .style("fill", "none")
-                        .style("fill", categoryColorFunc(categoryRectangle.category))
-                        .style("opacity", 0.7);
-
-                    var fgObj = svg
-                        .append("foreignObject")
-                        .attr("x", margin.left)
-                        .attr("y", y(categoryRectangle.top))
-                        .attr("width", width - margin.right - margin.left)
-                        .attr("height", Math.abs(y(categoryRectangle.top) - y(categoryRectangle.bottom)));
-                    //.style("cursor", "pointer")
-                    //.on("mousedown", rectClick)
-                    //.on("mousemove", mousemove);
-
-                    var fgDiv = fgObj
-                        .append("xhtml:div")
-                        .attr("id", "fgObj" + categoryRectangle.top + "_" + i)
-                        .attr("rectCategoryId", "Rect" + (categoryRectangle.top * 100).toFixed() + "_" + i)
-                        .style("height", "100%")
-                        .style("text-align", "center")
-                        .style("overflow", "hidden")
-                        .style("word-wrap", "break-word")
-                        .style("position", "relative")
-                        .style("display", "flex")
-                        .style("justify-content", "center")
-                        //.style("cursor", "pointer")
-                        .style("background-color", "transparent")
-                        .style("align-items", "center")
-                        .style("padding-left", "2px")
-                        .style("padding-right", "2px");
-                    //.on("mouseout", rectMouseOut)
-                    //.on("mouseover", rectMouseOver)
-                    //.on("mousedown", rectClick);
-
-                    fgDiv
-                        .append("span")
-                        .style("display", "inline-block")
-                        .style("overflow", "hidden")
-                        .style("font-size", "11px")
-                        .style("color", "black")
-                        .style("font-family", "sans-serif, Roboto")
-                        .style("background-color", "transparent")
-                        .style("pointer-events", "none")
-                        //.style("cursor", "pointer")
-                        //.on('mouseout', rectMouseOut )
-                        //.on("mouseover", rectMouseOver )
-                        //.on("mousedown", rectClick )
-                        .text(function (d) {
-                            if (Math.abs(y(categoryRectangle.top) - y(categoryRectangle.bottom)) >= 11) {
-                                return categoryRectangle.category;
-                            } else {
-                                return "";
-                            }
-                        });
-                }
-            }
-        }
-    } catch (err) {
-        console.log("Could not draw rectangle in logPlot function. error= ", err);
-    }
 
     ////////////////   Prepare Tooltips   ///////////////////
 
@@ -989,7 +729,23 @@ export async function logPlot(template_for_plotting, allDataViewRows, headerHeig
 
     var focus = svg.append("g").style("display", "none");
 
-    function mousemove(evt) {
+    async function mousemove(evt, data) {
+        console.log("data", data);
+        
+        // Find the index of the data row that contains the data underneath the pointer
+        let y0;
+        y0 = y.invert(d3.pointer(evt)[1]);
+
+        //... by bisecting the data, which finds the index that our y0 would be
+        // Note that the performance of this doesn't seem to be too good
+        let bisectData = d3.bisector(function (d) {
+            return d["depth"];
+        }).left;
+
+        let index = bisectData(data, y0);
+
+        let row = data[index];
+
         // console.log("mousemove");
         if (!tooltipDiv) {
             tooltipDiv = d3.select("#mod-container" + "_tooltip");
@@ -998,109 +754,46 @@ export async function logPlot(template_for_plotting, allDataViewRows, headerHeig
             tooltipDiv.transition().duration(400).style("opacity", 0);
         }
 
-        var rectColor = null;
         var target = evt.target || evt.srcElement;
+        // todo - make this more d3-like...
+        let curveColorsArray;
 
-        if (target.attributes.rectcategoryid) {
-            target = d3.select("#" + target.attributes.rectcategoryid.value)._groups[0][0];
-            rectColor = target.style["fill"];
-        }
-
-        var curveColor0 = "black";
-        var curveColor1 = "black";
         if (target.attributes.curveColors) {
-            var curveColorsArray = target.attributes.curveColors.value.split(",");
-            if (curveColorsArray[0]) {
-                curveColor0 = curveColorsArray[0];
-            }
-            if (curveColorsArray[1]) {
-                curveColor1 = curveColorsArray[1];
-            }
-        } else if (rectColor) {
-            curveColor0 = rectColor;
+            console.log("target", target.attributes.curveColors);
+            curveColorsArray = target.attributes.curveColors.value.split(",");
         }
 
-        var bisectData = d3.bisector(function (d) {
-            return d.continuous(depthCurveName).value();
-        }).left;
-
-        var y0;
-
-        y0 = y.invert(d3.pointer(evt)[1]);
-
-        var i = bisectData(allDataViewRows, y0);
-
-        var d1 = allDataViewRows[i];
-        var d0 = allDataViewRows[i - 1];
-
-        var d = null;
-
-        if (d0 && d1) {
-            if (d0.continuous(depthCurveName).value() && d1.continuous(depthCurveName).value()) {
-                d = y0 - d0.continuous(depthCurveName).value() > d1.continuous(depthCurveName).value() - y0 ? d1 : d0;
-            }
-        }
-        if (d == null) {
-            d = d1;
-        }
-        if (d == null) {
-            d = d0;
-        }
-        let value0;
-        let value1;
-
-        if (curveNames[0] == "ZONE" || curveNames[0] == "FACIES") {
-            value0 = d0.categorical(curveNames[0]).formattedValue();
-        } else {
-            ///            value0 = d0.continuous(curveNames[0]).value();
-        }
-        if (curveNames[1] == "ZONE" || curveNames[1] == "FACIES") {
-            value1 = d1.categorical(curveNames[1]).formattedValue();
-        } else {
-            ///            value1 = curveNames[1] ? d1.continuous(curveNames[1]).value() : "";
-        }
-
+        console.log("curveColors", curveColorsArray);
+        console.log("row", row);
         if (tooltipDiv) {
-            let modContainer = d3.select("#mod-container")._groups[0][0];
+            console.log("curveNames", curveNames);
+            let tooltipContent = depthCurveName + ": " + row["depth"].toFixed(2) + "<br>";
+            for (let i = 0; i < curveNames.length; i++) {
+                tooltipContent += curveNames[i] +  "<span style='border:1px solid navy; background-color:" +
+                curveColorsArray[i] +
+                "';>&nbsp;&nbsp;</span>&nbsp;" +
+                ": " +
+                row[curveNames[i]] +
+                "<br>";
+            }
+            tooltipDiv.html(tooltipContent);
 
-            tooltipDiv.html(
-                (d.continuous(depthCurveName).value()
-                    ? depthCurveName + ": " + d.continuous(depthCurveName).value().toFixed(2) + "<br>"
-                    : "") +
-                    (curveNames[0] && value0
-                        ? "<span style='border:1px solid navy; background-color:" +
-                          curveColor0 +
-                          "';>&nbsp;&nbsp;</span>&nbsp;" +
-                          curveNames[0] +
-                          ": " +
-                          value0 +
-                          "<br>"
-                        : "") +
-                    (curveNames[1] && value1
-                        ? "<span style='border:1px solid navy; background-color:" +
-                          curveColor1 +
-                          "';>&nbsp;&nbsp;</span>&nbsp;" +
-                          curveNames[1] +
-                          ": " +
-                          value1 +
-                          "<br>"
-                        : "")
-            );
-
-            let tooltipX = target.parentNode.parentNode.offsetLeft + getTooltipPositionX(curve_x_func, value0) + 10;
-
-            let tooltipY = evt.pageY > modContainer.clientHeight - 40 ? evt.pageY - 40 : evt.pageY + 10;
-            // console.log("Setting tooltip style");
+            let tooltipX = target.parentNode.parentNode.offsetLeft + getTooltipPositionX(curve_x_func, row[curveNames[0]]) + 10;
+            let modContainer = d3.select("#mod-container");
+            console.log(tooltipX);
+            let tooltipY = evt.pageY > windowSize.height - 60 ? evt.pageY - 40 : evt.pageY + 10;
+            console.log("Setting tooltip style");
             tooltipDiv.style("left", tooltipX + "px");
             tooltipDiv.style("top", tooltipY + "px")
                 .style("visibility", "visible");
 
             tooltipDiv.transition().duration(600).style("opacity", 0.9);
+            console.log(tooltipDiv);
         }
 
         focus
             .select(".x")
-            .attr("transform", "translate(" + getTooltipPositionX(curve_x_func, value0) + "," + 0 + ")")
+            .attr("transform", "translate(" + getTooltipPositionX(curve_x_func, row[curveNames[0]]) + "," + 0 + ")")
             .attr("y2", height);
 
         //// circle and lines
@@ -1109,18 +802,18 @@ export async function logPlot(template_for_plotting, allDataViewRows, headerHeig
             .attr(
                 "transform",
                 "translate(" +
-                    getTooltipPositionX(curve_x_func, value0) +
+                    getTooltipPositionX(curve_x_func, row[curveNames[0]]) +
                     "," +
-                    y(d.continuous(depthCurveName).value()) +
+                    y(row["depth"]) +
                     ")"
             )
-            .text(value0 ? value0 : "")
+            .text(row[curveNames[0]] ? row[curveNames[0]] : "")
             .style("cursor", "default");
 
         focus
             .select(".yl")
-            .attr("transform", "translate(" + 0 + "," + y(d.continuous(depthCurveName).value()) + ")")
-            .text(value0 ? value0 : "")
+            .attr("transform", "translate(" + 0 + "," + y(row["depth"]) + ")")
+            .text(row[curveNames[0]] ? row[curveNames[0]] : "")
             .style("cursor", "default");
     }
     // x line
@@ -1163,7 +856,7 @@ export async function logPlot(template_for_plotting, allDataViewRows, headerHeig
  * @param  {Array} templates array of templates. Each one represents one track
  * @param  {Array} allDataViewRows dataview rows
  */
-export async function multipleLogPlot(templates, allDataViewRows, _mod, _isInitialized, _verticalZoomHeightMultiplier, _verticalZoomHeightProperty, _dataView) {
+export async function multipleLogPlot(templates, allDataViewRows, _mod, _isInitialized, _verticalZoomHeightMultiplier, _verticalZoomHeightProperty, _dataView, windowSize) {
     let div_id = "mod-container";
 
     let depth_label_svg;
@@ -1469,7 +1162,7 @@ export async function multipleLogPlot(templates, allDataViewRows, _mod, _isIniti
     let curveCount = templates.length;
     templates.forEach((template, i) => {
 
-        logPlot(template, allDataViewRows, headerHeight + "px", _verticalZoomHeightMultiplier,  _dataView, _mod, curveCount);
+        logPlot(template, headerHeight + "px", _verticalZoomHeightMultiplier,  _dataView, _mod, curveCount, windowSize);
     });
 
     // Apply the height and scroll settings after everything has been rendered - AJB todo - remove hard coded value!
