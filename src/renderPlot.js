@@ -1150,7 +1150,7 @@ export async function multipleLogPlot(
                         width: width,
                         height: height
                     };
-                    // Store the scrollTop so we can re-apply it upon re-rendering from marking
+                    // Store the scrollTop so we can re-apply it upon re-rendering from marking - todo - re-implement this
                     let _scrollTop = currentTarget.scrollTop;
                     let y0 = y_function.invert(rectangle.y);
                     let y1 = y_function.invert(rectangle.y + rectangle.height);
