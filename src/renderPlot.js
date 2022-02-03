@@ -165,7 +165,7 @@ export async function logPlot(
         }
         isFirstLeaf = false;
     }
-    valueRows.sort((a, b) => a["depth"] - b["depth"]);
+    valueRows.sort((a, b) => a.depth - b.depth);
 
     let y;
 
@@ -741,7 +741,7 @@ export async function logPlot(
         //... by bisecting the data, which finds the index that our y0 would be
         // Note that the performance of this doesn't seem to be too good
         let bisectData = d3.bisector(function (d) {
-            return d["depth"];
+            return d.depth;
         }).left;
 
         let index = bisectData(data, y0);
@@ -769,7 +769,7 @@ export async function logPlot(
         //console.log("row", row);
         if (tooltipDiv) {
             //console.log("curveNames", curveNames);
-            let tooltipContent = depthCurveName + ": " + row["depth"].toFixed(2) + "<br>";
+            let tooltipContent = depthCurveName + ": " + row.depth.toFixed(2) + "<br>";
             for (let i = 0; i < curveNames.length; i++) {
                 tooltipContent +=
                     curveNames[i] +
