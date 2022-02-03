@@ -8,6 +8,7 @@ var y_function;
 export const DEPTHLABELPANELWIDTH = 15;
 export const ZOOMPANELWIDTH = 32;
 import * as uiConfig from "./ui-config.js"; 
+import * as render from "./ui-config.js"; 
 
 
 export async function logPlot(template_for_plotting, headerHeight,_verticalZoomHeightMultiplier, _dataView, _mod, trackCount, windowSize) {
@@ -670,7 +671,7 @@ export async function logPlot(template_for_plotting, headerHeight,_verticalZoomH
         .on("mousemove", (event, d) => mousemove(event, valueRows));
 
     function tooltipMouseover(evt) {
-        console.log("tooltipMouseover");
+        //console.log("tooltipMouseover");
         focus.style("display", null);
         tooltipDiv.transition().duration(600).style("opacity", 0.9);
     }
@@ -730,7 +731,7 @@ export async function logPlot(template_for_plotting, headerHeight,_verticalZoomH
     var focus = svg.append("g").style("display", "none");
 
     async function mousemove(evt, data) {
-        console.log("data", data);
+        //console.log("data", data);
         
         // Find the index of the data row that contains the data underneath the pointer
         let y0;
@@ -759,14 +760,14 @@ export async function logPlot(template_for_plotting, headerHeight,_verticalZoomH
         let curveColorsArray;
 
         if (target.attributes.curveColors) {
-            console.log("target", target.attributes.curveColors);
+            //console.log("target", target.attributes.curveColors);
             curveColorsArray = target.attributes.curveColors.value.split(",");
         }
 
-        console.log("curveColors", curveColorsArray);
-        console.log("row", row);
+        //console.log("curveColors", curveColorsArray);
+        //console.log("row", row);
         if (tooltipDiv) {
-            console.log("curveNames", curveNames);
+            //console.log("curveNames", curveNames);
             let tooltipContent = depthCurveName + ": " + row["depth"].toFixed(2) + "<br>";
             for (let i = 0; i < curveNames.length; i++) {
                 tooltipContent += curveNames[i] +  "<span style='border:1px solid navy; background-color:" +
@@ -780,15 +781,15 @@ export async function logPlot(template_for_plotting, headerHeight,_verticalZoomH
 
             let tooltipX = target.parentNode.parentNode.offsetLeft + getTooltipPositionX(curve_x_func, row[curveNames[0]]) + 10;
             let modContainer = d3.select("#mod-container");
-            console.log(tooltipX);
-            let tooltipY = evt.pageY > windowSize.height - 60 ? evt.pageY - 40 : evt.pageY + 10;
-            console.log("Setting tooltip style");
+            //console.log(tooltipX);
+            let tooltipY = evt.pageY > (await _mod.height) - 60 ? evt.pageY - 40 : evt.pageY + 10;
+            //console.log("Setting tooltip style");
             tooltipDiv.style("left", tooltipX + "px");
             tooltipDiv.style("top", tooltipY + "px")
                 .style("visibility", "visible");
 
             tooltipDiv.transition().duration(600).style("opacity", 0.9);
-            console.log(tooltipDiv);
+            //console.log(tooltipDiv);
         }
 
         focus

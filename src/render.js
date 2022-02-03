@@ -43,9 +43,9 @@ var _dataView;
 
 export var _isInitialized = false; // this can be used to detect if we need to add divs, etc. On re-rendering after marking. If already initialized, no need to add new divs
 
-var _verticalZoomHeightMultiplier = 5.0;
-var _verticalZoomHeightProperty;
-var _windowSize;
+export var _verticalZoomHeightMultiplier = 5.0;
+export var _verticalZoomHeightProperty;
+export var _windowSize;
 
 
 const ISRESET = false; //JLL: to reset to default templates, set it to true and recomplie. Then change curve properties from GUI such as line color to save and set it back to false
@@ -163,6 +163,7 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
     //The  buildTemplates function creates 8 tracks as default. If there are only 4 categories, it will duplicate the categories
     //when rebuilding the templates, it will check if a track was deleted by setting the mod property to "empty"
     async function buildTemplates(isReset = false) {
+        console.log("buildTemplates");
         /* let wellLeaves = */(await (await _dataView.hierarchy("WELL")).root()).leaves();
         // selectedWell = wellLeaves[0].key;
 
@@ -177,13 +178,13 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
 //        for (const leaf of categoryLeaves) { 
           //it is not about leaves, it is about number of up to 8 mod property tracks
           for (let i=0;i<8;i++){
-              console.log("looping templates")
+              //console.log("looping templates")
             let leaf = categoryLeaves[i%categoryLeaves.length] //loop through available leaves
 
             let template = (await _mod.property("template" + categoryIndex)).value(); //get mod
-            console.log(i,leaf,template.slice(0,22))
+            //console.log(i,leaf,template.slice(0,22))
 
-            if (template != "empty" && !isReset) {
+            if (template != "empty" && !isReset) { 
                 let parsedTemplate = JSON.parse(template);
                 // Explicitly set the width and height as it is likely to have changed since the template property was set
                 parsedTemplate[0].trackBox.width = trackWidth;
@@ -250,10 +251,11 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
  * @param {*} curveIdx "curve number"
  * @param {*} templates "template structure holding all tracks. See test-template.js"
  * @param {*} allDataViewRows "Spotfire data rows view"
- * @param {*} optionSettings  "JSON options when changing a propName"
+ * @param {*} optionSettings  "JSON options or value when changing a propName"
  * @param {String} option "Property to change or action to take. Options are:Thickness,LineStyle,LineColor,AreaFill,AreaColor,ScaleType,curveName,duplicateCurve*, removeCurve*, duplicateTrack*,removeTrack*"
  */
 export function propertyOnChange(templateIdx, curveIdx, templates, allDataViewRows, optionSettings, option) {
+    console.log("propertyOnChange",arguments);
     if (templates[templateIdx] && _isInitialized) {
         var template = templates[templateIdx];
         let template_components = template[0]["components"];
@@ -298,6 +300,26 @@ export function propertyOnChange(templateIdx, curveIdx, templates, allDataViewRo
         //change ScaleType
         else if (option == "ScaleType") {
             templateCurves[0]["scaleTypeLinearLog"][curveIdx] = optionSettings.value;
+        }
+
+        //change min scale
+        else if (option == "ScaleMin") {
+            templateCurves[0]["fill"][curveIdx]["minScaleX"] = optionSettings;
+        }
+
+        //change max scale
+        else if (option == "ScaleMax") {
+            templateCurves[0]["fill"][curveIdx]["maxScaleX"] = optionSettings;
+        }
+
+        //change Cutoff/Threshold
+        else if (option == "CutoffShaleSilt") {
+            templateCurves[0]["fill"][curveIdx]["cutoffs"][1] = optionSettings;
+        }
+
+        //change Slit/Sand
+        else if (option == "CutoffSiltSand") {
+            templateCurves[0]["fill"][curveIdx]["cutoffs"][2] = optionSettings;
         }
 
         //change curveName
@@ -441,6 +463,12 @@ export function propertyOnChange(templateIdx, curveIdx, templates, allDataViewRo
             
             
         } 
+
+
+
+
+
+
         // Store the updated template in the appropriate mod property except if the track was deleted
         if(option!="removeTrack"){
              _mod.property("template" + templateIdx).set(JSON.stringify(templates[templateIdx]));

@@ -72,7 +72,7 @@ export function configDialog(plot_templates, allDataViewRows, _dataView, _mod, _
     $("#"+elementId).draggable();
     
     //Populates accordion panels
-    for (const i of plot_templates.keys()) createAccordionTabs(plot_templates, i, allDataViewRows, _dataView);
+    for (const i of plot_templates.keys()) createAccordionTabs(plot_templates, i, allDataViewRows, _dataView, _mod);
 
     //generate an accordion
     $("#"+accordionId).accordion({ collapsible: true,heightStyle: 'content'});
@@ -82,7 +82,7 @@ export function configDialog(plot_templates, allDataViewRows, _dataView, _mod, _
 //creates a jquery accordion. Each panel contains one or more tabs
 //an accordion panel represents a track (template[0])
 //a tab contains track curves (template_components[0]["curves"][0];)
-export async function createAccordionTabs(templates, templateIdx, allDataViewRows, _dataView) {
+export async function createAccordionTabs(templates, templateIdx, allDataViewRows, _dataView, _mod) {
 
     let template = templates[templateIdx];
     let template_components = template[0]["components"];
@@ -194,7 +194,7 @@ export async function createAccordionTabs(templates, templateIdx, allDataViewRow
 
         // The contents of the tabs
         for (let k = 0; k < curveNames.length; k++) {
-            await addAccordionTabContents(templateIdx, k, curveNames, tabs, templates, allDataViewRows, curveColors, _dataView);
+            await addAccordionTabContents(templateIdx, k, curveNames, tabs, templates, allDataViewRows, curveColors, _dataView, _mod);
         }
     }
 
@@ -205,17 +205,18 @@ export async function createAccordionTabs(templates, templateIdx, allDataViewRow
 
 
 //populates accordion widgets
-export async function addAccordionTabContents(templateIdx, curveIdx, curveNames, tabs, templates, allDataViewRows, curveColors, _dataView) {
+export async function addAccordionTabContents(templateIdx, curveIdx, curveNames, tabs, templates, allDataViewRows, curveColors, _dataView, _mod) {
 
     //we can take them out of this function, but it is only used within this scope
-    function insertTextInput(divContent, i, k, templates, propName, allDataViewRows) {
+    function insertTextInput(divContent, i, k, templates, propName, allDataViewRows) {188
+
         var selectedData = "";
     
         if (templates[i]) {
             var template = templates[i];
             let template_components = template[0]["components"];
             let templateCurves = template_components[0]["curves"];
-    
+
             if (propName == "ScaleMin") {
                 selectedData = templateCurves[0]["fill"][k]["minScaleX"];
             } else if (propName == "ScaleMax") {
@@ -226,7 +227,7 @@ export async function addAccordionTabContents(templateIdx, curveIdx, curveNames,
                 selectedData = templateCurves[0]["fill"][k]["cutoffs"][2];
             }
         }
-    
+     
         divContent
             .append("input")
             .attr("type", "number")
@@ -234,24 +235,10 @@ export async function addAccordionTabContents(templateIdx, curveIdx, curveNames,
             .style("font-size", "13px")
             .style("width", "95px")
             .attr("value", selectedData)
-            .on("input", function (d) {
-                if (templates[i] && render._isInitialized) {
-                    let template = templates[i];
-                    let template_components = template[0]["components"];
-                    let templateCurves = template_components[0]["curves"];
-    
-                    if (propName == "ScaleMin") {
-                        templateCurves[0]["fill"][k]["minScaleX"] = selectedData;
-                    } else if (propName == "ScaleMax") {
-                        templateCurves[0]["fill"][k]["maxScaleX"] = selectedData;
-                    } else if (propName == "CutoffShaleSilt") {
-                        templateCurves[0]["fill"][k]["cutoffs"][1] = selectedData;
-                    } else if (propName == "CutoffSiltSand") {
-                        templateCurves[0]["fill"][k]["cutoffs"][2] = selectedData;
-                    }
-                    renderPlot.multipleLogPlot(templates, allDataViewRows, _mod, render._isInitialized, _verticalZoomHeightMultiplier, _verticalZoomHeightProperty, _dataView) {
+            .on("input", function (d) { //consider using render.propertyOnChange instead
+                render.propertyOnChange(i, k, templates, allDataViewRows, this.value, propName); 
                 }
-            });
+            );
     }
 
     //we can take them out of this function, but it is only used within this scope
