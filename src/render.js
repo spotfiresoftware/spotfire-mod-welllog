@@ -4,7 +4,7 @@
  * in the license file that is distributed with this file. 
  * - - X
  * - O -
- * - - -
+ * - - X
  */
 
 //@ts-check
