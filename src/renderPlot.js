@@ -4,25 +4,31 @@ import * as colorHelpers from "./color-helpers.js";
 const $ = require("jquery");
 
 var tooltipDiv;
-var y_function; 
+var y_function;
 export const DEPTHLABELPANELWIDTH = 15;
 export const ZOOMPANELWIDTH = 32;
-import * as uiConfig from "./ui-config.js"; 
-import * as render from "./ui-config.js"; 
+import * as uiConfig from "./ui-config.js";
+import * as render from "./ui-config.js";
 
-
-export async function logPlot(template_for_plotting, headerHeight,_verticalZoomHeightMultiplier, _dataView, _mod, trackCount, windowSize) {
-    
-     // add the tooltip area to the webpage
-     d3.select("#" + "mod-container" + "_tooltip").remove();
-     tooltipDiv = d3
-         .select("#mod-container")
-         .append("div")
-         .style("visibility", "hidden")        
-         .style("top", "0")
-         .attr("class", "tooltip")
-         .attr("id", "mod-container" + "_tooltip")
-         .style("opacity", 0);
+export async function logPlot(
+    template_for_plotting,
+    headerHeight,
+    _verticalZoomHeightMultiplier,
+    _dataView,
+    _mod,
+    trackCount,
+    windowSize
+) {
+    // add the tooltip area to the webpage
+    d3.select("#" + "mod-container" + "_tooltip").remove();
+    tooltipDiv = d3
+        .select("#mod-container")
+        .append("div")
+        .style("visibility", "hidden")
+        .style("top", "0")
+        .attr("class", "tooltip")
+        .attr("id", "mod-container" + "_tooltip")
+        .style("opacity", 0);
 
     let template_overall = template_for_plotting[0]["trackBox"];
     let template_components = template_for_plotting[0]["components"];
@@ -35,8 +41,8 @@ export async function logPlot(template_for_plotting, headerHeight,_verticalZoomH
     ///console.log(height);
     let height_components = template_overall["height"];
     let width = template_overall["width"];
-    width = Math.round((await _mod.windowSize()).width / (trackCount + 1.00)); //JLL _mod.windowSize and window.innerWith are the same. I have to reduce by some extra space to avoid wrapping. the constant makes the whitespace on the right wider if increases.
-    //console.log(trackCount, window.innerWidth, (await _mod.windowSize()).width, width ) 
+    width = Math.round((await _mod.windowSize()).width / (trackCount + 1.0)); //JLL _mod.windowSize and window.innerWith are the same. I have to reduce by some extra space to avoid wrapping. the constant makes the whitespace on the right wider if increases.
+    //console.log(trackCount, window.innerWidth, (await _mod.windowSize()).width, width )
     let margin = template_overall["margin"];
     let gridlines_color = "#D3D3D3";
     let gridlines_strokeWidth = 0.2;
@@ -98,9 +104,9 @@ export async function logPlot(template_for_plotting, headerHeight,_verticalZoomH
         .attr("class", "trackHeaderDivContentGear")
         .on("click", function (d) {
             //open the accordion (if not already open)
-            document.getElementById("config_menu").style.visibility="visible";
+            document.getElementById("config_menu").style.visibility = "visible";
             //ui_config.config_menu_open(d); //d should be the accordion index
-            let k=div_id.slice(-1);
+            let k = div_id.slice(-1);
             var accordionTab = document.querySelectorAll(".ui-accordion-header")[k];
             if (accordionTab.getAttribute("aria-expanded") == "false") accordionTab.click();
         });
@@ -668,7 +674,7 @@ export async function logPlot(template_for_plotting, headerHeight,_verticalZoomH
         .style("pointer-events", "all")
         .on("mouseover", tooltipMouseover)
         .on("mouseout", tooltipMouseout)
-        .on("mousemove", (event, d) => mousemove(event, valueRows));
+        .on("mousemove", (event, d) => showTooltip(event, valueRows));
 
     function tooltipMouseover(evt) {
         //console.log("tooltipMouseover");
@@ -680,8 +686,6 @@ export async function logPlot(template_for_plotting, headerHeight,_verticalZoomH
         focus.style("display", "none");
         tooltipDiv.transition().duration(400).style("opacity", 0);
     }
-
-
 
     ////////////////   Prepare Tooltips   ///////////////////
 
@@ -700,9 +704,6 @@ export async function logPlot(template_for_plotting, headerHeight,_verticalZoomH
             return 1;
         }
     }
-
-    let curve_x_func = x_functions_for_each_curve[curveNames[0]];
-
     var second_curve = null;
     var second_curve_x_func = null;
 
@@ -728,11 +729,11 @@ export async function logPlot(template_for_plotting, headerHeight,_verticalZoomH
 
     feMerge.append("feMergeNode").attr("in", "SourceGraphic");
 
-    var focus = svg.append("g").style("display", "none");
+    var focus = svg.append("g").style("display", "none").attr("id", "focus");
 
-    async function mousemove(evt, data) {
+    async function showTooltip(evt, data) {
         //console.log("data", data);
-        
+
         // Find the index of the data row that contains the data underneath the pointer
         let y0;
         y0 = y.invert(d3.pointer(evt)[1]);
@@ -770,84 +771,106 @@ export async function logPlot(template_for_plotting, headerHeight,_verticalZoomH
             //console.log("curveNames", curveNames);
             let tooltipContent = depthCurveName + ": " + row["depth"].toFixed(2) + "<br>";
             for (let i = 0; i < curveNames.length; i++) {
-                tooltipContent += curveNames[i] +  "<span style='border:1px solid navy; background-color:" +
-                curveColorsArray[i] +
-                "';>&nbsp;&nbsp;</span>&nbsp;" +
-                ": " +
-                row[curveNames[i]] +
-                "<br>";
+                tooltipContent +=
+                    curveNames[i] +
+                    "<span style='border:1px solid navy; background-color:" +
+                    curveColorsArray[i] +
+                    "';>&nbsp;&nbsp;</span>&nbsp;" +
+                    ": " +
+                    row[curveNames[i]] +
+                    "<br>";
             }
             tooltipDiv.html(tooltipContent);
 
-            let tooltipX = target.parentNode.parentNode.offsetLeft + getTooltipPositionX(curve_x_func, row[curveNames[0]]) + 10;
-            let modContainer = d3.select("#mod-container");
-            //console.log(tooltipX);
-            let tooltipY = evt.pageY > (await _mod.height) - 60 ? evt.pageY - 40 : evt.pageY + 10;
-            //console.log("Setting tooltip style");
+            let tooltipX = evt.clientX;
+            // The line commented out below makes the tooltip position follow the x coordinates of the line, but it then
+            // jumps around a lot. It's a design decision... The code is left in below in case future versions decide differently!
+            //target.parentNode.parentNode.offsetLeft + getTooltipPositionX(x_functions_for_each_curve[curveNames[0]], row[curveNames[0]]) + 10;
+            let windowSize = await _mod.windowSize();
+
+            let tooltipY = evt.clientY > windowSize.height - 60 ? evt.pageY - 40 : evt.pageY + 10;
+
             tooltipDiv.style("left", tooltipX + "px");
-            tooltipDiv.style("top", tooltipY + "px")
-                .style("visibility", "visible");
+            tooltipDiv.style("top", tooltipY + "px").style("visibility", "visible");
 
             tooltipDiv.transition().duration(600).style("opacity", 0.9);
-            //console.log(tooltipDiv);
         }
 
-        focus
-            .select(".x")
-            .attr("transform", "translate(" + getTooltipPositionX(curve_x_func, row[curveNames[0]]) + "," + 0 + ")")
-            .attr("y2", height);
+        /**
+         * Lines, circles hovering over the curves, etc.
+         */
 
-        //// circle and lines
-        focus
-            .select(".y")
-            .attr(
-                "transform",
-                "translate(" +
-                    getTooltipPositionX(curve_x_func, row[curveNames[0]]) +
-                    "," +
-                    y(row["depth"]) +
-                    ")"
-            )
+        // y line (horizontal)
+        let yLine = focus.select("#y_line");
+        if (yLine.empty()) {
+            yLine = focus.append("line").attr("class", "y_line").attr("id", "y_line");
+        }
+        yLine
+            .style("stroke", "blue")
+            .style("stroke-dasharray", "3,3")
+            .style("cursor", "default")
+            .style("opacity", 0.6)
+            .attr("x1", 0)
+            .attr("x2", height)
+            .attr("transform", "translate(" + 0 + "," + y(row.depth) + ")")
             .text(row[curveNames[0]] ? row[curveNames[0]] : "")
             .style("cursor", "default");
 
-        focus
-            .select(".yl")
-            .attr("transform", "translate(" + 0 + "," + y(row["depth"]) + ")")
-            .text(row[curveNames[0]] ? row[curveNames[0]] : "")
-            .style("cursor", "default");
+        for (let curveName of curveNames) {
+            // X Line - vertical
+            let curveColorIndex = curveColorsArray[curveNames.indexOf(curveName)];
+            let xLine = focus.select("#x_line_" + curveName);
+            if (xLine.empty()) {
+                xLine = focus
+                    .append("line")
+                    .attr("class", "x")
+                    .attr("id", "x_line_" + curveName);
+            }
+            xLine
+                .style("stroke", curveColorIndex)
+                .style("stroke-dasharray", "3,3")
+                .style("cursor", "default")
+                .style("opacity", 0.6)
+                .attr("y1", 0)
+                .attr("y2", width)
+                .attr(
+                    "transform",
+                    "translate(" +
+                        getTooltipPositionX(x_functions_for_each_curve[curveName], row[curveName]) +
+                        "," +
+                        0 +
+                        ")"
+                )
+                .attr("y2", height);
+
+            // Circle
+            let circle = focus.select("#circle_" + curveName);
+            if (circle.empty()) {
+                circle = focus
+                    .append("circle")
+                    .attr("class", "x")
+                    .attr("id", "circle_" + curveName);
+            }
+            circle
+                .attr("class", "y")
+                .style("fill", curveColorIndex ? curveColorIndex : "black")
+                .style("cursor", "default")
+                .style("stroke", curveColorIndex ? curveColorIndex : "black")
+                .attr("r", 3)
+                .attr(
+                    "transform",
+                    "translate(" +
+                        getTooltipPositionX(x_functions_for_each_curve[curveName], row[curveName]) +
+                        "," +
+                        y(row.depth) +
+                        ")"
+                )
+                .text(row[curveName] ? row[curveName] : "")
+                .style("cursor", "default");
+        }
     }
-    // x line
-    focus
-        .append("line")
-        .attr("class", "x")
-        .style("stroke", "red")
-        .style("stroke-dasharray", "3,3")
-        .style("cursor", "default")
-        .style("opacity", 0.6)
-        .attr("y1", 0)
-        .attr("y2", width);
 
-    // y line
-    focus
-        .append("line")
-        .attr("class", "yl")
-        .style("stroke", "blue")
-        .style("stroke-dasharray", "3,3")
-        .style("cursor", "default")
-        .style("opacity", 0.6)
-        .attr("x1", 0)
-        .attr("x2", height);
-
-    // circle
-    focus
-        .append("circle")
-        .attr("class", "y")
-        .style("fill", curveColors[0] ? curveColors[0] : "black")
-        .style("cursor", "default")
-        .style("stroke", curveColors[0] ? curveColors[0] : "black")
-        .attr("r", 3);
-//var _verticalZoomHeightMultiplier = 5.0;
+    //var _verticalZoomHeightMultiplier = 5.0;
 }
 
 //
@@ -857,7 +880,16 @@ export async function logPlot(template_for_plotting, headerHeight,_verticalZoomH
  * @param  {Array} templates array of templates. Each one represents one track
  * @param  {Array} allDataViewRows dataview rows
  */
-export async function multipleLogPlot(templates, allDataViewRows, _mod, _isInitialized, _verticalZoomHeightMultiplier, _verticalZoomHeightProperty, _dataView, windowSize) {
+export async function multipleLogPlot(
+    templates,
+    allDataViewRows,
+    _mod,
+    _isInitialized,
+    _verticalZoomHeightMultiplier,
+    _verticalZoomHeightProperty,
+    _dataView,
+    windowSize
+) {
     let div_id = "mod-container";
 
     let depth_label_svg;
@@ -870,14 +902,15 @@ export async function multipleLogPlot(templates, allDataViewRows, _mod, _isIniti
             .style("position", "relative")
             .style("width", DEPTHLABELPANELWIDTH + "px");
         const tracksDepthLabelInner = tracksDepthLabelOuter
-            .append("div") 
+            .append("div")
             .attr("id", "tracksDepthLabelInner")
             .style("position", "fixed")
             .style("top", window.innerHeight * 0.5 + "px")
             .style("left", "5px")
             .attr("height", window.innerHeight);
 
-        depth_label_svg = tracksDepthLabelInner.append("svg")
+        depth_label_svg = tracksDepthLabelInner
+            .append("svg")
             .attr("id", "tracksDepthLabelSvg")
             .attr("height", 300)
             .attr("width", 20);
@@ -903,7 +936,8 @@ export async function multipleLogPlot(templates, allDataViewRows, _mod, _isIniti
     // Add a tools div - not currently used - previously had the zoom control in it. Todo - consider adding
     // zoom functionality back in!
     if (!_isInitialized) {
-        d3.select("#" + div_id).append("div")
+        d3.select("#" + div_id)
+            .append("div")
             .attr("id", "TracksToolDiv")
             .style("display", "inline-flex")
             .style("flex-direction", "column")
@@ -920,7 +954,7 @@ export async function multipleLogPlot(templates, allDataViewRows, _mod, _isIniti
     //event.stopPropagation();
     //});
 
-/*    
+    /*    
         var confBtn = TracksToolDiv.append("div")
             .attr("id", "confBtnDiv")
             .style("margin-top", "20px")
@@ -1078,7 +1112,7 @@ export async function multipleLogPlot(templates, allDataViewRows, _mod, _isIniti
                     width = 1,
                     height = 1;
 
-                    let $selection = $("<div/>")
+                let $selection = $("<div/>")
                     .css({
                         position: "absolute",
                         border: "1px solid #0a1530",
@@ -1118,14 +1152,15 @@ export async function multipleLogPlot(templates, allDataViewRows, _mod, _isIniti
                     };
                     // Store the scrollTop so we can re-apply it upon re-rendering from marking
                     let _scrollTop = currentTarget.scrollTop;
-                    let  y0 = y_function.invert(rectangle.y);
-                    let  y1 = y_function.invert(rectangle.y + rectangle.height);
+                    let y0 = y_function.invert(rectangle.y);
+                    let y1 = y_function.invert(rectangle.y + rectangle.height);
                     let allRows = await _dataView.allRows();
 
-                
                     // console.log("y0", y0, "y1", y1, "rectangle", rectangle);
                     _dataView.mark(
-                        allRows.filter((d) => d.continuous("DEPTH").value() >= y0 && d.continuous("DEPTH").value() <= y1),
+                        allRows.filter(
+                            (d) => d.continuous("DEPTH").value() >= y0 && d.continuous("DEPTH").value() <= y1
+                        ),
                         markMode
                     );
 
@@ -1162,14 +1197,12 @@ export async function multipleLogPlot(templates, allDataViewRows, _mod, _isIniti
     // now plot!
     let curveCount = templates.length;
     templates.forEach((template, i) => {
-
-        logPlot(template, headerHeight + "px", _verticalZoomHeightMultiplier,  _dataView, _mod, curveCount, windowSize);
+        logPlot(template, headerHeight + "px", _verticalZoomHeightMultiplier, _dataView, _mod, curveCount, windowSize);
     });
 
     // Apply the height and scroll settings after everything has been rendered - AJB todo - remove hard coded value!
     // let modContainer = d3.select("#mod-container")._groups[0][0];
     let modContainer = d3.select("#mod-container");
-
 
     trackHoldersContainerDiv.attr(
         "style",
@@ -1185,10 +1218,4 @@ export async function multipleLogPlot(templates, allDataViewRows, _mod, _isIniti
     // Just calling scrollTop() doesn't work - hence the need to animate
     // -- would be preferable to do this in a d3 native way rather than jQuery, but d3 doesn't seem to work...
     // $("#trackHoldersContainer").animate({ scrollTop: _scrollTop }, 10);
-
-
- 
-
 }
-
-
