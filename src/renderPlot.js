@@ -10,12 +10,14 @@ export const ZOOMPANELWIDTH = 32;
 import * as uiConfig from "./ui-config.js";
 import * as render from "./ui-config.js";
 
+var _scrollTop; // The scroll top - used for scrolling after marking
+
 export async function logPlot(
     template_for_plotting,
     headerHeight,
-    _verticalZoomHeightMultiplier,
-    _dataView,
-    _mod,
+    verticalZoomHeightMultiplier,
+    dataView,
+    mod,
     trackCount,
     windowSize
 ) {
@@ -37,12 +39,14 @@ export async function logPlot(
 
     let div_id = template_overall["div_id"];
 
-    let height = template_overall["height"] * _verticalZoomHeightMultiplier - 120;
+    let height = template_overall["height"] * verticalZoomHeightMultiplier - 120;
     ///console.log(height);
     let height_components = template_overall["height"];
     let width = template_overall["width"];
-    width = Math.round((await _mod.windowSize()).width / (trackCount + 1.0)); //JLL _mod.windowSize and window.innerWith are the same. I have to reduce by some extra space to avoid wrapping. the constant makes the whitespace on the right wider if increases.
-    //console.log(trackCount, window.innerWidth, (await _mod.windowSize()).width, width )
+    //JLL _mod.windowSize and window.innerWith are the same. I have to reduce by some extra space to avoid wrapping. the constant makes the whitespace on the right wider if increases.
+    //AJB - scaled the constant according to the number of tracks we have. This makes the tracks scale correctly, 
+    // regardless of the number we have
+    width = Math.round((await mod.windowSize()).width / trackCount - 60 / trackCount);
     let margin = template_overall["margin"];
     let gridlines_color = "#D3D3D3";
     let gridlines_strokeWidth = 0.2;
@@ -74,7 +78,7 @@ export async function logPlot(
         .style("overflow-y", "hidden")
         .style("position", "sticky")
         .style("top", 0)
-        .style("background-color", await _mod.getRenderContext().styling.general.backgroundColor)
+        .style("background-color", await mod.getRenderContext().styling.general.backgroundColor)
         .style("z-index", 1)
         .style("height", headerHeight)
         .style("display", "inline-flex")
@@ -142,7 +146,7 @@ export async function logPlot(
     let curvesDescription = "";
 
     /* For now, let's filter the data and pivot it based on the curve names */
-    let categoryLeaves = (await (await _dataView.hierarchy("Category")).root()).leaves();
+    let categoryLeaves = (await (await dataView.hierarchy("Category")).root()).leaves();
     let depthKeys = new Map();
     let valueRows = [];
     // The template contains the curve names that this data is intended for, so we need to find out which data is required
@@ -756,8 +760,7 @@ export async function logPlot(
             tooltipDiv.transition().duration(400).style("opacity", 0);
         }
 
-        var target = evt.target || evt.srcElement;
-        // todo - make this more d3-like...
+        var target = evt.target || evt.srcElement;      
         let curveColorsArray;
 
         if (target.attributes.curveColors) {
@@ -786,7 +789,7 @@ export async function logPlot(
             // The line commented out below makes the tooltip position follow the x coordinates of the line, but it then
             // jumps around a lot. It's a design decision... The code is left in below in case future versions decide differently!
             //target.parentNode.parentNode.offsetLeft + getTooltipPositionX(x_functions_for_each_curve[curveNames[0]], row[curveNames[0]]) + 10;
-            let windowSize = await _mod.windowSize();
+            let windowSize = await mod.windowSize();
 
             let tooltipY = evt.clientY > windowSize.height - 60 ? evt.pageY - 40 : evt.pageY + 10;
 
@@ -883,17 +886,17 @@ export async function logPlot(
 export async function multipleLogPlot(
     templates,
     allDataViewRows,
-    _mod,
-    _isInitialized,
-    _verticalZoomHeightMultiplier,
-    _verticalZoomHeightProperty,
-    _dataView,
+    mod,
+    isInitialized,
+    verticalZoomHeightMultiplier,
+    verticalZoomHeightProperty,
+    dataView,
     windowSize
 ) {
     let div_id = "mod-container";
 
     let depth_label_svg;
-    if (!_isInitialized) {
+    if (!isInitialized) {
         const tracksDepthLabelOuter = d3
             .select("#" + div_id)
             .append("div")
@@ -931,11 +934,11 @@ export async function multipleLogPlot(
         .style("text-anchor", "end")
         .attr("transform", "rotate(-90) translate(0,10)")
         .text(depthCurveName + (depthUnit != "" ? " (" + depthUnit + ")" : ""))
-        .style("fill", _mod.getRenderContext().styling.general.font.color);
+        .style("fill", mod.getRenderContext().styling.general.font.color);
 
     // Add a tools div - not currently used - previously had the zoom control in it. Todo - consider adding
     // zoom functionality back in!
-    if (!_isInitialized) {
+    if (!isInitialized) {
         d3.select("#" + div_id)
             .append("div")
             .attr("id", "TracksToolDiv")
@@ -1150,14 +1153,14 @@ export async function multipleLogPlot(
                         width: width,
                         height: height
                     };
-                    // Store the scrollTop so we can re-apply it upon re-rendering from marking - todo - re-implement this
-                    let _scrollTop = currentTarget.scrollTop;
+                    // Store the scrollTop so we can re-apply it upon re-rendering from marking
+                    _scrollTop = currentTarget.scrollTop;
                     let y0 = y_function.invert(rectangle.y);
                     let y1 = y_function.invert(rectangle.y + rectangle.height);
-                    let allRows = await _dataView.allRows();
+                    let allRows = await dataView.allRows();
 
                     // console.log("y0", y0, "y1", y1, "rectangle", rectangle);
-                    _dataView.mark(
+                    dataView.mark(
                         allRows.filter(
                             (d) => d.continuous("DEPTH").value() >= y0 && d.continuous("DEPTH").value() <= y1
                         ),
@@ -1176,7 +1179,7 @@ export async function multipleLogPlot(
         let template = templates[ii];
 
         if (template) {
-            if (!_isInitialized) {
+            if (!isInitialized) {
                 let TrackHolder = d3.select("#" + div_id).append("div");
 
                 TrackHolder.style("vertical-align", "middle")
@@ -1197,7 +1200,7 @@ export async function multipleLogPlot(
     // now plot!
     let curveCount = templates.length;
     templates.forEach((template, i) => {
-        logPlot(template, headerHeight + "px", _verticalZoomHeightMultiplier, _dataView, _mod, curveCount, windowSize);
+        logPlot(template, headerHeight + "px", verticalZoomHeightMultiplier, dataView, mod, curveCount, windowSize);
     });
 
     // Apply the height and scroll settings after everything has been rendered - AJB todo - remove hard coded value!
@@ -1214,8 +1217,8 @@ export async function multipleLogPlot(
             "overflow-y:scroll"
     );
 
-    // JLL: what is this for?
+    // JLL: what is this for? - for scrolling the div back to the previous position after a marking event (AJB)
     // Just calling scrollTop() doesn't work - hence the need to animate
     // -- would be preferable to do this in a d3 native way rather than jQuery, but d3 doesn't seem to work...
-    // $("#trackHoldersContainer").animate({ scrollTop: _scrollTop }, 10);
+    $("#trackHoldersContainer").animate({ scrollTop: _scrollTop }, 10);
 }

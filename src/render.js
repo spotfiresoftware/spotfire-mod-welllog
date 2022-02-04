@@ -173,7 +173,7 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
         let categoryLeaves = (await (await _dataView.hierarchy("Category")).root()).leaves();
 
         let trackWidth = (windowSize.width - renderPlot.ZOOMPANELWIDTH - renderPlot.DEPTHLABELPANELWIDTH - 20) / categoryLeaves.length;
-
+        
         let templates = [];
         let categoryIndex = 0;
 
@@ -233,8 +233,8 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
     // plot_templates[0]=test_templates.test_templates[2] //override track
     // plot_templates.push(plot_templates[2])             //duplicate
 
-    //renders plot
-    await renderPlot.multipleLogPlot(plot_templates, allDataViewRows, _mod, _isInitialized, _verticalZoomHeightMultiplier, _verticalZoomHeightProperty, _dataView, windowSize);
+    //renders plot    
+    await renderPlot.multipleLogPlot(plot_templates, allDataViewRows, mod, _isInitialized, _verticalZoomHeightMultiplier, _verticalZoomHeightProperty, _dataView, windowSize);
 
     // this can be used to detect if we need to add divs, etc.
     // on re-rendering after marking. If already initialized, no need
@@ -466,11 +466,6 @@ export function propertyOnChange(templateIdx, curveIdx, templates, allDataViewRo
             
             
         } 
-
-
-
-
-
 
         // Store the updated template in the appropriate mod property except if the track was deleted
         if(option!="removeTrack"){
