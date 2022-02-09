@@ -885,7 +885,6 @@ export async function logPlot(
  */
 export async function multipleLogPlot(
     templates,
-    allDataViewRows,
     mod,
     isInitialized,
     verticalZoomHeightMultiplier,
@@ -1187,6 +1186,7 @@ export async function multipleLogPlot(
                     .style("display", "inline-block")
                     .style("overflow-y", "hidden");
             }
+//            console.log(div_id,template[0])
             template[0]["trackBox"]["div_id"] = div_id + "TrackHolder" + ii;
         }
     }
