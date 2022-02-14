@@ -33,14 +33,14 @@ export function configDialog(plot_templates, allDataViewRows, _dataView, _mod, _
         .style("padding", "0")
         .style("border", "0")
         .append("div")
-        .html(
+        .html( //  del: ◫ 🗑︎ 🗒︎ 🗑️− ␡ 🇩🇪 -－﹣− ➖ copy: ⊘ 🇨🇵 🞡 🞢 🞣 🞤 ✚ 🞥 🞦 🞧
             `
             <DIV id="${elementId}">
                 <DIV id="${elementId}_content" style="position:relative;">
                     <A id=closeBtn title="Close settings" >✖</I></I></A>
                     <div id="trackBtns" >
-                        <a id="duplicateTrackBtn" title="Duplicate last track" >◫</a>
-                        <a id="removeTrackBtn" title="Delete last track" >⊘</a>
+                        <a id="removeTrackBtn" title="Delete last track" >🗑︎ &nbsp;  </a>
+                        <a id="duplicateTrackBtn" title="Duplicate last track" >🞤</a>
                     </div>
                     <h3 class="${elementId}_header" style="float: left;margin-left: 10px;color:black;margin-top:7px">Well Log Tracks Settings</h3>
                     <DIV id="${accordionId}" style="clear:both;padding-left:6px;padding-right:6px"></DIV>
@@ -148,20 +148,17 @@ export async function createAccordionTabs(templates, templateIdx, allDataViewRow
             });
 
 
-        //because these buttons are outside the loop, I am preventing to bind the button multiple times
-        //it would be ideal to have these buttons it on the track header level to copy or delete the selected track
+        //It would be ideal to have these buttons it on the track header level to copy or delete the selected track
         //and not duplicate or remove the last track from the templates
-        //BUG: it only binds once. for some reason it looses its mousedown powers.
-        if (!templateIdx-1){
-            d3.select("#removeTrackBtn").on("click", (evt) => {
-                render.propertyOnChange(templateIdx, curveNames.length, templates, allDataViewRows, null, "removeTrack");
-                evt.preventDefault;
-            });
-            d3.select("#duplicateTrackBtn").on("click", (evt) => {
-                render.propertyOnChange(templateIdx, curveNames.length, templates, allDataViewRows, null, "duplicateTrack");
-                evt.preventDefault;
-            }); 
-        }
+        //console.log("createAccordionTabs",arguments)
+        d3.select("#removeTrackBtn").on("click", (evt) => {
+            render.propertyOnChange(templateIdx, curveNames.length, templates, allDataViewRows, null, "removeTrack");
+            evt.preventDefault;
+        });
+        d3.select("#duplicateTrackBtn").on("click", (evt) => {
+            render.propertyOnChange(templateIdx, curveNames.length, templates, allDataViewRows, null, "duplicateTrack");
+            evt.preventDefault;
+        }); 
 
 
         //JLL: Do not remove as it is a placeholder for future functionality. You can test by uncommenting

@@ -100,20 +100,21 @@
                     "title": "Value",
                     "defaultVisibility": "visible"
                 }
-            },
-            {
-                "name": "WELL",
-                "mode": "categorical",
-                "allowMultipleMeasures": false,
-                "placement": "top",
-                "propertyControl": {
-                    "title": "WELL"
-                },
-                "allowNonAggregatingMeasures": true,
-                "legendItem": {
-                    "title": "WELL",
-                    "defaultVisibility": "visible"
-                }
+            // well is not used for now
+            // },
+            // { 
+            //     "name": "WELL",
+            //     "mode": "categorical",
+            //     "allowMultipleMeasures": false,
+            //     "placement": "top",
+            //     "propertyControl": {
+            //         "title": "WELL"
+            //     },
+            //     "allowNonAggregatingMeasures": true,
+            //     "legendItem": {
+            //         "title": "WELL",
+            //         "defaultVisibility": "visible"
+            //     }
             }
         ]
     },

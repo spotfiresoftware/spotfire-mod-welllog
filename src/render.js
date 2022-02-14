@@ -165,9 +165,9 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
 
     //The  buildTemplates function creates 8 tracks as default. If there are only 4 categories, it will duplicate the categories
     //when rebuilding the templates, it will check if a track was deleted by setting the mod property to "empty"
-    async function buildTemplates(isReset = false) {
-        console.log("buildTemplates");
-        /* let wellLeaves = */(await (await _dataView.hierarchy("WELL")).root()).leaves();
+    async function buildTemplates(isReset = false) { 
+        //console.log("buildTemplates");
+        /* let wellLeaves = (await (await _dataView.hierarchy("WELL")).root()).leaves();*/ 
         // selectedWell = wellLeaves[0].key;
 
         let categoryLeaves = (await (await _dataView.hierarchy("Category")).root()).leaves();
@@ -198,7 +198,8 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
                 if(template!="empty"){
                     templates.push(buildDefaultTemplate(categoryIndex, leaf.key, trackWidth, window.innerHeight));
                 }
-                if(i<2 && template=="empty"){ //ensure at least a couple of tracks are visible in case all are empty)
+                if(i<1 && template=="empty"){ //ensure at least a couple of tracks are visible in case all are empty)
+                    //console.log(i,template)
                     templates.push(buildDefaultTemplate(0, leaf.key, trackWidth, window.innerHeight));
                 }
             }
@@ -234,7 +235,7 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
     // plot_templates.push(plot_templates[2])             //duplicate
 
     //renders plot    
-    await renderPlot.multipleLogPlot(plot_templates, allDataViewRows, mod, _isInitialized, _verticalZoomHeightMultiplier, _verticalZoomHeightProperty, _dataView, windowSize);
+    await renderPlot.multipleLogPlot(plot_templates, mod, _isInitialized, _verticalZoomHeightMultiplier, _verticalZoomHeightProperty, _dataView, windowSize);
 
     // this can be used to detect if we need to add divs, etc.
     // on re-rendering after marking. If already initialized, no need
@@ -258,7 +259,7 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
  * @param {String} option "Property to change or action to take. Options are:Thickness,LineStyle,LineColor,AreaFill,AreaColor,ScaleType,curveName,duplicateCurve*, removeCurve*, duplicateTrack*,removeTrack*"
  */
 export function propertyOnChange(templateIdx, curveIdx, templates, allDataViewRows, optionSettings, option) {
-    console.log("propertyOnChange",arguments);
+    //console.log("propertyOnChange",arguments);
     if (templates[templateIdx] && _isInitialized) {
         var template = templates[templateIdx];
         let template_components = template[0]["components"];
@@ -470,8 +471,8 @@ export function propertyOnChange(templateIdx, curveIdx, templates, allDataViewRo
         // Store the updated template in the appropriate mod property except if the track was deleted
         if(option!="removeTrack"){
              _mod.property("template" + templateIdx).set(JSON.stringify(templates[templateIdx]));
-             console.log(option,templateIdx,JSON.stringify(templates[templateIdx]).slice(0,22));
+             //console.log(option,templateIdx,templates[templateIdx]);
         }
-        renderPlot.multipleLogPlot(templates, allDataViewRows, _mod, _isInitialized, _verticalZoomHeightMultiplier, _verticalZoomHeightProperty, _dataView, _windowSize);
+        renderPlot.multipleLogPlot(templates, _mod, _isInitialized, _verticalZoomHeightMultiplier, _verticalZoomHeightProperty, _dataView, _windowSize);
     }
 }
