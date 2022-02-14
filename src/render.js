@@ -165,9 +165,9 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
 
     //The  buildTemplates function creates 8 tracks as default. If there are only 4 categories, it will duplicate the categories
     //when rebuilding the templates, it will check if a track was deleted by setting the mod property to "empty"
-    async function buildTemplates(isReset = false) {
+    async function buildTemplates(isReset = false) { 
         //console.log("buildTemplates");
-        /* let wellLeaves = */(await (await _dataView.hierarchy("WELL")).root()).leaves();
+        /* let wellLeaves = (await (await _dataView.hierarchy("WELL")).root()).leaves();*/ 
         // selectedWell = wellLeaves[0].key;
 
         let categoryLeaves = (await (await _dataView.hierarchy("Category")).root()).leaves();

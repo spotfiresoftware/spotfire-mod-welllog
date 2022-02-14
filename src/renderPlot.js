@@ -92,9 +92,9 @@ export async function logPlot(
                 .style("display", "block")
                 .style("color", "#BDBFC3");
         })
-        .on("mouseout", (e) => {
-            d3.select("#" + div_id + "_gear").style("display", "none");
-        })
+        // .on("mouseout", (e) => {
+        //     d3.select("#" + div_id + "_gear").style("display", "none");
+        // })
 
         .append("div")
         .attr("class", "trackHeaderDivContent")
@@ -104,7 +104,7 @@ export async function logPlot(
         );
 
     d3.select("#" + div_id + "_gear")
-        .style("display", "none")
+        //.style("display", "none")
         .attr("class", "trackHeaderDivContentGear")
         .on("click", function (d) {
             //open the accordion (if not already open)
@@ -112,7 +112,7 @@ export async function logPlot(
             //ui_config.config_menu_open(d); //d should be the accordion index
             let k = div_id.slice(-1);
             var accordionTab = document.querySelectorAll(".ui-accordion-header")[k];
-            if (accordionTab.getAttribute("aria-expanded") == "false") accordionTab.click();
+            if (accordionTab && accordionTab.getAttribute("aria-expanded") == "false") accordionTab.click();
         });
 
     var trackHeaderDivContent = trackHeaderDiv;
@@ -921,19 +921,19 @@ export async function multipleLogPlot(
         d3.select("#tracksDepthLabelInner")
             .style("top", window.innerHeight * 0.5 + "px")
             .attr("height", window.innerHeight);
-    }
+    } 
 
     //depth_label_svg.selectAll("*").remove();
-
-    let depthCurveName = "DEPTH";
-    let depthUnit = "m";
-    depth_label_svg
-        .append("text")
-        .style("fill", "black")
-        .style("text-anchor", "end")
-        .attr("transform", "rotate(-90) translate(0,10)")
-        .text(depthCurveName + (depthUnit != "" ? " (" + depthUnit + ")" : ""))
-        .style("fill", mod.getRenderContext().styling.general.font.color);
+    //JLL we don't need this
+    // let depthCurveName = "DEPTH";
+    // let depthUnit = "m";
+    // depth_label_svg
+    //     .append("text")
+    //     .style("fill", "black")
+    //     .style("text-anchor", "end")
+    //     .attr("transform", "rotate(-90) translate(0,10)")
+    //     .text(depthCurveName + (depthUnit != "" ? " (" + depthUnit + ")" : ""))
+    //     .style("fill", mod.getRenderContext().styling.general.font.color);
 
     // Add a tools div - not currently used - previously had the zoom control in it. Todo - consider adding
     // zoom functionality back in!
@@ -1187,7 +1187,7 @@ export async function multipleLogPlot(
                     .style("overflow-y", "hidden");
             }
 //            console.log(div_id,template[0])
-            template[0]["trackBox"]["div_id"] = div_id + "TrackHolder" + ii;
+//            template[0]["trackBox"]["div_id"] = div_id + "TrackHolder" + ii;
         }
     }
 
@@ -1217,7 +1217,7 @@ export async function multipleLogPlot(
             "overflow-y:scroll"
     );
 
-    // JLL: what is this for? - for scrolling the div back to the previous position after a marking event (AJB)
+    // Scrolls the div back to the previous position after a marking event (AJB)
     // Just calling scrollTop() doesn't work - hence the need to animate
     // -- would be preferable to do this in a d3 native way rather than jQuery, but d3 doesn't seem to work...
     $("#trackHoldersContainer").animate({ scrollTop: _scrollTop }, 10);

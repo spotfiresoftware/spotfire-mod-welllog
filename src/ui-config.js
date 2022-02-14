@@ -33,14 +33,14 @@ export function configDialog(plot_templates, allDataViewRows, _dataView, _mod, _
         .style("padding", "0")
         .style("border", "0")
         .append("div")
-        .html(
+        .html( //  del: ◫ 🗑︎ 🗒︎ 🗑️− ␡ 🇩🇪 -－﹣− ➖ copy: ⊘ 🇨🇵 🞡 🞢 🞣 🞤 ✚ 🞥 🞦 🞧
             `
             <DIV id="${elementId}">
                 <DIV id="${elementId}_content" style="position:relative;">
                     <A id=closeBtn title="Close settings" >✖</I></I></A>
                     <div id="trackBtns" >
-                        <a id="duplicateTrackBtn" title="Duplicate last track" >◫</a>
-                        <a id="removeTrackBtn" title="Delete last track" >⊘</a>
+                        <a id="removeTrackBtn" title="Delete last track" >🗑︎ &nbsp;  </a>
+                        <a id="duplicateTrackBtn" title="Duplicate last track" >🞤</a>
                     </div>
                     <h3 class="${elementId}_header" style="float: left;margin-left: 10px;color:black;margin-top:7px">Well Log Tracks Settings</h3>
                     <DIV id="${accordionId}" style="clear:both;padding-left:6px;padding-right:6px"></DIV>
