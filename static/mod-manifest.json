@@ -1,6 +1,6 @@
 {
     "apiVersion": "1.2",
-    "version": "2.1.1",
+    "version": "2.1.2",
     "name": "Well Log v2.0 - Unpivot",
     "id": "spotfire-well-log-mod-unpivot",
     "icon": "icon.svg",
