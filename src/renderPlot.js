@@ -665,9 +665,9 @@ export async function logPlot(
 
     ////////////////   Prepare Tooltips   ///////////////////
 
-    function getTooltipPositionX(xFunction, xArgument) {
-        if (xFunction && xArgument && xFunction(xArgument) && typeof xArgument != "string") {
-            var xVal = xFunction(xArgument);
+    function getTooltipPositionX(xFunction, xArgument) {        
+        if (xFunction && xArgument != null && xFunction(xArgument) != null && typeof xArgument != "string") {
+            var xVal = xFunction(xArgument);            
             if (xVal < margin.left) {
                 xVal = margin.left;
             } else if (xVal > width - margin.right) {
