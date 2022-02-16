@@ -139,7 +139,7 @@ export async function logPlot(
 
     svg = logPlot_sub_div.append("svg");
 
-    let x_functions_for_each_curve = {};
+    let xFunctions = {};
 
     let mins = [];
     let maxes = [];
@@ -216,40 +216,34 @@ export async function logPlot(
             max_this = maxScaleX;
         }
 
-        let x_func;
         let x;
-        let xAxis_header;
-        let xAxis;
 
-        x = d3
+        if (scaleTypeLinearLog[k] == "linear") {
+            x = d3
             .scaleLinear()
             .domain([min_this, max_this])
             .nice()
             .range([margin.left, width - margin.right]);
-        if (scaleTypeLinearLog[k] == "log") {
+        } else if (scaleTypeLinearLog[k] == "log") {
             x = d3
                 .scaleLog()
                 .domain([min_this, max_this])
-                .range([margin.left, width - margin.right]);
+                .range([margin.left, width - margin.right]);                
         } else if (dataType == "category") {
             x = d3
                 .scaleOrdinal()
                 .domain([" ", ""])
                 .range([margin.left, width - margin.right]);
-        } else if (scaleTypeLinearLog[k] == "linear") {
-        }
-        if (k == 0) {
-            x_func == x;
         }
 
-        x_functions_for_each_curve[curveNames[k]] = x;
+        xFunctions[curveNames[k]] = x;
     }
 
     for (let k = 0; k < curveNames.length; k++) {
         let min = mins[k];
         let max = maxes[k];
 
-        let header_text_line = curveNames[k];
+        let headerTextLine = curveNames[k];
 
         curvesDescription = curvesDescription + "-" + curveNames[k];
 
@@ -259,9 +253,9 @@ export async function logPlot(
         }
 
         if (!isNaN(min) && !isNaN(max)) {
-            header_text_line = min.toFixed(1) + " - " + curveNames[k] + curveUnit + " - " + max.toFixed(1);
+            headerTextLine = min.toFixed(1) + " - " + curveNames[k] + curveUnit + " - " + max.toFixed(1);
         } else {
-            header_text_line = curveNames[k];
+            headerTextLine = curveNames[k];
         }
 
         //////////////  Building Track Components  //////////////
@@ -273,10 +267,10 @@ export async function logPlot(
 
         var gridlines_obj = d3
             .axisTop()
-            .ticks((width - margin.left - margin.right) / 25)
+            .ticks((width - margin.left - margin.right) / 30)
             .tickFormat("")
             .tickSize(-height + margin.top + 10)
-            .scale(x_functions_for_each_curve[curveNames[0]]);
+            .scale(xFunctions[curveNames[0]]);
         svg.append("g")
             .attr("class", "grid")
             .call(gridlines_obj)
@@ -301,20 +295,19 @@ export async function logPlot(
             .style("font-size", "11px")
             .style("cursor", "default")
             .style("fill", curveColors[k])
-            .text(header_text_line);
+            .text(headerTextLine);
 
         let translate_string = "translate(0,17)";
 
         let xAxis_header = function (g) {
             return g.attr("transform", translate_string).call(
                 d3
-                    .axisBottom(x_functions_for_each_curve[curveNames[k]])
-                    .ticks((width - margin.left - margin.right) / 25)
-                    .tickSizeOuter(0)
+                    .axisBottom(xFunctions[curveNames[k]])
+                    .ticks((width - margin.left - margin.right) / 40)                    
             );
         };
 
-        svg_header.append("g").call(xAxis_header).append("text");
+        svg_header.append("g").call(xAxis_header); //.append("text");
 
         //////////////   define the lines and areas  //////////////
 
@@ -324,33 +317,33 @@ export async function logPlot(
             .append("rect")
             .attr("x", margin.left + 1)
             .attr("y", margin.top)
-            .attr("width", width - margin.right - margin.left - 1)
+            .attr("width", width - margin.right - margin.left + 10)
             .attr("height", y(depthMax) - y(depthMin));
 
-        function getOpacity(n, threshold_curve1, threshold_curve2) {
+        function getOpacity(n, thresholdCurve1, thresholdCurve2) {
             if (n == 0) return 1;
-            else if (threshold_curve1) return 1;
-            else if (threshold_curve2) return 1;
+            else if (thresholdCurve1) return 1;
+            else if (thresholdCurve2) return 1;
             else return 0;
         }
 
         if (dataType == "curve") {
-            for (let i = 0; i < templateCurves["fill"].length; i++) {
-                if (templateCurves["fill"][i]["fill"] == "yes") {
-                    let number_colors = templateCurves["fill"][i]["fillColors"].length;
-                    let curveName1 = templateCurves["fill"][i]["curveName"];
+            for (let fillIndex = 0; fillIndex < templateCurves["fill"].length; fillIndex++) {
+                if (templateCurves["fill"][fillIndex]["fill"] == "yes") {
+                    let numColors = templateCurves["fill"][fillIndex]["fillColors"].length;
+                    let curveName = templateCurves["fill"][fillIndex]["curveName"];
 
-                    for (let j = 0; j < number_colors; j++) {
+                    for (let colorIndex = 0; colorIndex < numColors; colorIndex++) {
                         let area1 = d3.area();
                         let threshold = -99999999;
                         let fillColor = "#333333";
                         let colorInterpolation = d3.interpolateSpectral;
 
-                        if (number_colors !== 0) {
-                            threshold = templateCurves["fill"][i]["cutoffs"][j];
-                            fillColor = templateCurves["fill"][i]["fillColors"][j];
+                        if (numColors !== 0) {
+                            threshold = templateCurves["fill"][fillIndex]["cutoffs"][colorIndex];
+                            fillColor = templateCurves["fill"][fillIndex]["fillColors"][colorIndex];
                             colorInterpolation = colorHelpers.getColorInterpolator(
-                                templateCurves["fill"][i]["colorInterpolator"][j]
+                                templateCurves["fill"][fillIndex]["colorInterpolator"][colorIndex]
                             );
                         }
 
@@ -358,20 +351,20 @@ export async function logPlot(
                             let colorInterpolator_functions_for_each_curve = {};
 
                             if (scaleTypeLinearLog[k] == "linear") {
-                                colorInterpolator_functions_for_each_curve[curveName1 + "_" + j] = d3
+                                colorInterpolator_functions_for_each_curve[curveName + "_" + colorIndex] = d3
                                     .scaleSequential(colorInterpolation)
-                                    .domain(x_functions_for_each_curve[curveName1].domain());
+                                    .domain(xFunctions[curveName].domain());
                             } else if (scaleTypeLinearLog[k] == "log") {
-                                colorInterpolator_functions_for_each_curve[curveName1 + "_" + j] = d3
+                                colorInterpolator_functions_for_each_curve[curveName + "_" + colorIndex] = d3
                                     .scaleSequentialLog(colorInterpolation)
-                                    .domain(x_functions_for_each_curve[curveName1].domain());
+                                    .domain(xFunctions[curveName].domain());
                             }
 
                             // Linear gradient fill
                             var grd = svg
                                 .append("defs")
                                 .append("linearGradient")
-                                .attr("id", "linear-gradient-" + curveName1 + "_" + j)
+                                .attr("id", "linear-gradient-" + curveName + "_" + colorIndex)
                                 .attr("gradientUnits", "userSpaceOnUse")
                                 .attr("x1", 0)
                                 .attr("x2", 0)
@@ -384,21 +377,21 @@ export async function logPlot(
                                     return ((y(d.depth) - y(depthMin)) / (y(depthMax) - y(depthMin))) * 100.0 + "%";
                                 })
                                 .attr("stop-color", function (d, i) {
-                                    return !isNaN(d[curveName1])
-                                        ? colorInterpolator_functions_for_each_curve[curveName1 + "_" + j](
-                                              d[curveName1]
+                                    return !isNaN(d[curveName])
+                                        ? colorInterpolator_functions_for_each_curve[curveName + "_" + colorIndex](
+                                              d[curveName]
                                           )
                                         : "rgba(0,0,0,0)";
                                 });
 
-                            if (colorInterpolator_functions_for_each_curve[curveName1 + "_" + j]) {
+                            if (colorInterpolator_functions_for_each_curve[curveName + "_" + colorIndex]) {
                                 var svg_legend_color_scale = trackHeaderDivContent.append("div").append("svg");
                                 svg_legend_color_scale.attr("height", 15).attr("width", width);
 
                                 svg_legend_color_scale
                                     .append("defs")
                                     .append("linearGradient")
-                                    .attr("id", "linear-gradient-legend-" + curveName1 + "_" + j)
+                                    .attr("id", "linear-gradient-legend-" + curveName + "_" + colorIndex)
                                     .attr("gradientUnits", "userSpaceOnUse")
                                     .attr("x1", margin.left)
                                     .attr("x2", width - margin.right)
@@ -407,23 +400,23 @@ export async function logPlot(
                                     .selectAll("stop")
                                     .data(
                                         d3.range(
-                                            x_functions_for_each_curve[curveName1].domain()[0],
-                                            x_functions_for_each_curve[curveName1].domain()[1]
+                                            xFunctions[curveName].domain()[0],
+                                            xFunctions[curveName].domain()[1]
                                         )
                                     )
                                     .join("stop")
                                     .attr("offset", function (d) {
                                         return (
-                                            ((d - x_functions_for_each_curve[curveName1].domain()[0]) /
-                                                (x_functions_for_each_curve[curveName1].domain()[1] -
-                                                    x_functions_for_each_curve[curveName1].domain()[0] -
+                                            ((d - xFunctions[curveName].domain()[0]) /
+                                                (xFunctions[curveName].domain()[1] -
+                                                    xFunctions[curveName].domain()[0] -
                                                     1)) *
                                                 100 +
                                             "%"
                                         );
                                     })
                                     .attr("stop-color", function (d) {
-                                        return colorInterpolator_functions_for_each_curve[curveName1 + "_" + j](d);
+                                        return colorInterpolator_functions_for_each_curve[curveName + "_" + colorIndex](d);
                                     });
 
                                 svg_legend_color_scale
@@ -432,21 +425,21 @@ export async function logPlot(
                                     .attr("y", 1)
                                     .attr("width", width - margin.left - margin.right)
                                     .attr("height", 18)
-                                    .attr("fill", "url(#linear-gradient-legend-" + curveName1 + "_" + j + ")")
+                                    .attr("fill", "url(#linear-gradient-legend-" + curveName + "_" + colorIndex + ")")
                                     .attr("stroke", "black")
                                     .attr("stroke-width", 0.5);
 
                                 //d3.select("#"+div_id+" div div.trackHeaderDivContent").append('br')
                             }
 
-                            fillColor = "url(#linear-gradient-" + curveName1 + "_" + j + ")";
+                            fillColor = "url(#linear-gradient-" + curveName + "_" + colorIndex + ")";
                         }
 
-                        if (templateCurves["fill"][i]["fillDirection"] == "left") {
+                        if (templateCurves["fill"][fillIndex]["fillDirection"] == "left") {
                             let start_from_left = template_overall["margin"]["left"];
                             area1
                                 .x1(function (d, i) {
-                                    return x_functions_for_each_curve[curveName1](d[curveNames[k]]);
+                                    return xFunctions[curveName](d[curveNames[k]]);
                                 })
                                 .x0(function (d, i) {
                                     return start_from_left;
@@ -464,9 +457,9 @@ export async function logPlot(
                                 .attr("d", area1(valueRows))
                                 .attr("stroke", "none")
                                 .attr("fill", fillColor)
-                                .attr("fill-opacity", getOpacity(j, threshold, null));
+                                .attr("fill-opacity", getOpacity(colorIndex, threshold, null));
                         }
-                        if (templateCurves["fill"][i]["fillDirection"] == "right") {
+                        if (templateCurves["fill"][fillIndex]["fillDirection"] == "right") {
                             let start_from_right = template_overall["margin"]["right"];
                             let start_from_left = template_overall["margin"]["left"];
                             area1
@@ -478,7 +471,7 @@ export async function logPlot(
                                     return (value || value == 0) && value > threshold;
                                 })
                                 .x0(function (d, i) {
-                                    return x_functions_for_each_curve[curveNames[k]](d[curveNames[k]]);
+                                    return xFunctions[curveNames[k]](d[curveNames[k]]);
                                 })
                                 .y(function (d, i) {
                                     return y(d.depth);
@@ -490,9 +483,9 @@ export async function logPlot(
                                 .attr("d", area1(valueRows))
                                 .attr("stroke", "none")
                                 .attr("fill", fillColor)
-                                .attr("fill-opacity", getOpacity(j, threshold, null));
+                                .attr("fill-opacity", getOpacity(colorIndex, threshold, null));
                         }
-                        if (templateCurves["fill"][i]["fillDirection"] == "between") {
+                        if (templateCurves["fill"][fillIndex]["fillDirection"] == "between") {
                             let between_2_curve = templateCurves["fill"][k]["curve2"];
 
                             var indexCurve2;
@@ -503,30 +496,30 @@ export async function logPlot(
                                 }
                             }
 
-                            let fillColor2 = templateCurves["fill"][indexCurve2]["fillColors"][j];
-                            let curve2Threshold = templateCurves["fill"][indexCurve2]["cutoffs"][j];
+                            let fillColor2 = templateCurves["fill"][indexCurve2]["fillColors"][colorIndex];
+                            let curve2Threshold = templateCurves["fill"][indexCurve2]["cutoffs"][colorIndex];
 
                             if (fillColor2 == "interpolator") {
-                                fillColor2 = "url(#linear-gradient-" + between_2_curve + "_" + j + ")";
+                                fillColor2 = "url(#linear-gradient-" + between_2_curve + "_" + colorIndex + ")";
                             }
 
-                            let second_curve_x_func = x_functions_for_each_curve[between_2_curve];
-                            let first_curve_x_func = x_functions_for_each_curve[curveName1];
+                            let second_curve_x_func = xFunctions[between_2_curve];
+                            let first_curve_x_func = xFunctions[curveName];
 
                             area1
                                 .x1(function (d, i) {
-                                    return first_curve_x_func(d[curveName1]);
+                                    return first_curve_x_func(d[curveName]);
                                 })
                                 .x0(function (d, i) {
                                     return second_curve_x_func(d[between_2_curve]);
                                 })
                                 .defined(function (d, i) {
                                     return (
-                                        (d[curveName1] || d[curveName1] == 0) &&
-                                        d[curveName1] > threshold &&
+                                        (d[curveName] || d[curveName] == 0) &&
+                                        d[curveName] > threshold &&
                                         (d[between_2_curve] || d[between_2_curve] == 0) &&
                                         d[between_2_curve] > curve2Threshold &&
-                                        first_curve_x_func(d[curveName1]) > second_curve_x_func(d[between_2_curve])
+                                        first_curve_x_func(d[curveName]) > second_curve_x_func(d[between_2_curve])
                                     );
                                 })
                                 .y(function (d, i) {
@@ -539,7 +532,7 @@ export async function logPlot(
                                 .attr("d", area1(valueRows))
                                 .attr("stroke", "none")
                                 .attr("fill", fillColor)
-                                .attr("fill-opacity", getOpacity(j, threshold, curve2Threshold));
+                                .attr("fill-opacity", getOpacity(colorIndex, threshold, curve2Threshold));
                         }
                     }
                 }
@@ -547,19 +540,18 @@ export async function logPlot(
             let line = d3
                 .line()
                 .x(function (d) {
-                    if (isNaN(x_functions_for_each_curve[curveNames[k]](d[curveNames[k]]))) {
+                    if (isNaN(xFunctions[curveNames[k]](d[curveNames[k]]))) {
+                        //console.log("Argh");
                         return null;
                     } else {
-                        return x_functions_for_each_curve[curveNames[k]](d[curveNames[k]]);
+                        //console.log("curvename", curveNames[k], x_functions_for_each_curve[curveNames[k]](d[curveNames[k]]));
+                        return xFunctions[curveNames[k]](d[curveNames[k]]);
                     }
                 })
                 .y(function (d) {
                     return y(d.depth);
-                })
-                .defined(function (d) {
-                    return d[curveNames[k]] && d[curveNames[k]] != 0; //AJB not sure about checking for zero here!
                 });
-
+            //console.log(curveNames[k]);
             svg.append("path")
                 .attr("fill", "none")
                 .attr("clip-path", "url('#clip')")
@@ -713,7 +705,7 @@ export async function logPlot(
 
     if (templateCurves["fill"][0]["curve2"]) {
         second_curve = templateCurves["fill"][0]["curve2"];
-        second_curve_x_func = x_functions_for_each_curve[second_curve];
+        second_curve_x_func = xFunctions[second_curve];
     }
 
     var filter = svg
@@ -839,7 +831,7 @@ export async function logPlot(
                 .attr(
                     "transform",
                     "translate(" +
-                        getTooltipPositionX(x_functions_for_each_curve[curveName], row[curveName]) +
+                        getTooltipPositionX(xFunctions[curveName], row[curveName]) +
                         "," +
                         0 +
                         ")"
@@ -863,7 +855,7 @@ export async function logPlot(
                 .attr(
                     "transform",
                     "translate(" +
-                        getTooltipPositionX(x_functions_for_each_curve[curveName], row[curveName]) +
+                        getTooltipPositionX(xFunctions[curveName], row[curveName]) +
                         "," +
                         y(row.depth) +
                         ")"
