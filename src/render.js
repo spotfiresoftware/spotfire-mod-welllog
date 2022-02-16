@@ -214,13 +214,15 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
      * Drawing code!
      *
      */ 
-
+ 
     //read templates from mod property
     let plot_templates = await buildTemplates(ISRESET); //JLL: use true to reset, change some properties to save changes from gui and put it back to false
 
     //creates a draggable configuration dialog with options for each track with nothing inside but the placeholders for accordion
-    !_isInitialized && uiConfig.configDialog(plot_templates, allDataViewRows, dataView, _mod, _verticalZoomHeightMultiplier, _verticalZoomHeightProperty);
+    console.log("configDialog")
+    uiConfig.configDialog(plot_templates, allDataViewRows, _dataView, _mod, _verticalZoomHeightMultiplier, _verticalZoomHeightProperty,_isInitialized);
     
+
     //creates each plot per template
 
     // JLL: DEBUGGING templates
@@ -229,10 +231,10 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
     // - to disable, use plot_templates["test0"] or plot_templates["test4"]
     // - string template indexes are invalid and are therefore ignored by the rendering code
 
-    //plot_templates=test_templates.test_templates        //use this line to reset. test_template[5] is for facies not yet implemented, so just pop it
-    // plot_templates.pop()                               //remove last track
-    // plot_templates[0]=test_templates.test_templates[2] //override track
-    // plot_templates.push(plot_templates[2])             //duplicate
+    // plot_templates=test_templates.test_templates        //use this line to reset. test_template[5] is for facies not yet implemented, so just pop it
+    // plot_templates.pop()                                //remove last track
+    // plot_templates[0]=test_templates.test_templates[2]  //override track
+    // plot_templates.push(plot_templates[2])              //duplicate
 
     //renders plot    
     await renderPlot.multipleLogPlot(plot_templates, mod, _isInitialized, _verticalZoomHeightMultiplier, _verticalZoomHeightProperty, dataView, windowSize);

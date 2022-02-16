@@ -8,74 +8,76 @@ import * as d3 from "d3";
 const $ = require("jquery");
 import * as colorHelpers from "./color-helpers.js";
 import * as render from "./render.js"; 
-import * as renderPlot from "./renderPlot.js"
 export var accordionId
 
 import "jquery-ui/ui/widgets/tabs";
 import "jquery-ui/ui/widgets/accordion"; 
 import "jquery-ui/ui/widgets/draggable"; 
 
-
-//makes a div draggable 
-function draggable(elmnt) {
-
-}
-
 //creates or re-creates a draggable configuration Dialog popup with close buttons and accordion placeholder
-export function configDialog(plot_templates, allDataViewRows, _dataView, _mod, _verticalZoomHeightMultiplier, _verticalZoomHeightProperty) {
+export function configDialog(plot_templates, allDataViewRows, _dataView, _mod, _verticalZoomHeightMultiplier, _verticalZoomHeightProperty,_isInitialized) {
 
-    let elementId = "config_menu"
-    accordionId = elementId+"_accordion"
+    if (!_isInitialized){
+        let elementId = "config_menu"
+        accordionId = elementId+"_accordion"
 
-    //add dialog placeholder to #mod-container
-    d3.select("#mod-container")
-        .style("margin", "0")
-        .style("padding", "0")
-        .style("border", "0")
-        .append("div")
-        .html( //  del: ◫ 🗑︎ 🗒︎ 🗑️− ␡ 🇩🇪 -－﹣− ➖ copy: ⊘ 🇨🇵 🞡 🞢 🞣 🞤 ✚ 🞥 🞦 🞧
-            `
-            <DIV id="${elementId}">
-                <DIV id="${elementId}_content" style="position:relative;">
-                    <A id=closeBtn title="Close settings" >✖</I></I></A>
-                    <div id="trackBtns" >
-                        <a id="removeTrackBtn" title="Delete last track" >🗑︎ &nbsp;  </a>
-                        <a id="duplicateTrackBtn" title="Duplicate last track" >🞤</a>
-                    </div>
-                    <h3 class="${elementId}_header" style="float: left;margin-left: 10px;color:black;margin-top:7px">Well Log Tracks Settings</h3>
-                    <DIV id="${accordionId}" style="clear:both;padding-left:6px;padding-right:6px"></DIV>
+        //add dialog placeholder to #mod-container
+        d3.select("#mod-container")
+            .style("margin", "0")
+            .style("padding", "0")
+            .style("border", "0")
+            .append("div")
+            .html( //  del: ◫ 🗑︎ 🗒︎ 🗑️− ␡ 🇩🇪 -－﹣− ➖ copy: ⊘ 🇨🇵 🞡 🞢 🞣 🞤 ✚ 🞥 🞦 🞧
+                `
+                <DIV id="${elementId}">
+                    <DIV id="${elementId}_content" style="position:relative;">
+                        <A id=closeBtn title="Close settings" >✖</I></I></A>
+                        <div id="trackBtns" >
+                            <a id="removeTrackBtn" title="Delete last track" >🗑︎ &nbsp;  </a>
+                            <a id="duplicateTrackBtn" title="Duplicate last track" >🞤</a>
+                        </div>
+                        <h3 class="${elementId}_header" style="float: left;margin-left: 10px;color:black;margin-top:7px">Well Log Tracks Settings</h3>
+                        <DIV id="${accordionId}" style="clear:both;padding-left:6px;padding-right:6px"></DIV>
+                    </DIV>
                 </DIV>
-            </DIV>
-            <style>
-            #${elementId}{width:333px}
-            #closeBtn{color:darkgray;cursor:pointer;float:right;font-size:1.5em;margin:5px} 
-            #closeBtn:hover {color:#1b8888;}
-            #trackBtns {float:right;margin: 0px 2px 0 0;top: 6px;left: -3px;}
-            #trackBtns a {font-size:1.5em;color: darkgray;padding: 1px;width: 7px;}            
-            #trackBtns a:hover {color:#1b8888;}
-            #duplicateTrackBtn{top: 5px; position: relative;left:-3px;}
-            #removeTrackBtn{position: relative;top: 4px;margin-left: 2px;} 
-            .ui-accordion-content{height:auto };
-            </style>
-            `
-        );
+                <style>
+                #${elementId}{width:333px}
+                #closeBtn{color:darkgray;cursor:pointer;float:right;font-size:1.5em;margin:5px} 
+                #closeBtn:hover {color:#1b8888;}
+                #trackBtns {float:right;margin: 0px 2px 0 0;top: 6px;left: -3px;}
+                #trackBtns a {font-size:1.5em;color: darkgray;padding: 1px;width: 7px;}            
+                #trackBtns a:hover {color:#1b8888;}
+                #duplicateTrackBtn{top: 5px; position: relative;left:-3px;}
+                #removeTrackBtn{position: relative;top: 4px;margin-left: 2px;} 
+                .ui-accordion-content{height:auto };
+                </style>
+                `
+            );
 
-    //setup close button
-    this.close = function(){document.getElementById(elementId).style.visibility="hidden";}
+        //setup close button
+        this.close = function(){document.getElementById(elementId).style.visibility="hidden";}
 
-    document.getElementById('closeBtn').addEventListener('click', this.close ); 
+        document.getElementById('closeBtn').addEventListener('click', this.close ); 
 
-    //hide the config dialog
-    document.getElementById(elementId).style.visibility="hidden"; 
+        //hide the config dialog
+        document.getElementById(elementId).style.visibility="hidden"; 
 
-    //makes the configuration popup draggable
-    $("#"+elementId).draggable();
-    
+        //makes the configuration popup draggable
+        $("#"+elementId).draggable();
+    }
     //Populates accordion panels
+    $("#config_menu_accordion").empty()
     for (const i of plot_templates.keys()) createAccordionTabs(plot_templates, i, allDataViewRows, _dataView, _mod);
 
-    //generate an accordion
-    $("#"+accordionId).accordion({ collapsible: true,heightStyle: 'content'});
+    if(!_isInitialized){
+        //generate an accordion
+        $("#"+accordionId).accordion({ collapsible: true,heightStyle: 'content'});
+    }
+    else{
+        $("#config_menu_accordion").accordion("refresh")
+    }
+    
+
 
 } 
 
@@ -83,6 +85,7 @@ export function configDialog(plot_templates, allDataViewRows, _dataView, _mod, _
 //an accordion panel represents a track (template[0])
 //a tab contains track curves (template_components[0]["curves"][0];)
 export async function createAccordionTabs(templates, templateIdx, allDataViewRows, _dataView, _mod) {
+
 
     let template = templates[templateIdx];
     let template_components = template[0]["components"];
@@ -476,6 +479,7 @@ export async function addAccordionTabContents(templateIdx, curveIdx, curveNames,
                 text: leaf.key
             });
         }
+        console.log(measureDdOptions)
 
         $("#dropdown_measure_selector_" + curveIdx + "_" + templateIdx).ddslick({
             data: measureDdOptions,
