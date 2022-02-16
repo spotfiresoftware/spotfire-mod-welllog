@@ -348,14 +348,14 @@ export async function logPlot(
                         }
 
                         if (fillColor == "interpolator" && colorInterpolation) {
-                            let colorInterpolator_functions_for_each_curve = {};
+                            let colorInterpolatorFunctions = {};
 
                             if (scaleTypeLinearLog[k] == "linear") {
-                                colorInterpolator_functions_for_each_curve[curveName + "_" + colorIndex] = d3
+                                colorInterpolatorFunctions[curveName + "_" + colorIndex] = d3
                                     .scaleSequential(colorInterpolation)
                                     .domain(xFunctions[curveName].domain());
                             } else if (scaleTypeLinearLog[k] == "log") {
-                                colorInterpolator_functions_for_each_curve[curveName + "_" + colorIndex] = d3
+                                colorInterpolatorFunctions[curveName + "_" + colorIndex] = d3
                                     .scaleSequentialLog(colorInterpolation)
                                     .domain(xFunctions[curveName].domain());
                             }
@@ -378,13 +378,13 @@ export async function logPlot(
                                 })
                                 .attr("stop-color", function (d, i) {
                                     return !isNaN(d[curveName])
-                                        ? colorInterpolator_functions_for_each_curve[curveName + "_" + colorIndex](
+                                        ? colorInterpolatorFunctions[curveName + "_" + colorIndex](
                                               d[curveName]
                                           )
                                         : "rgba(0,0,0,0)";
                                 });
 
-                            if (colorInterpolator_functions_for_each_curve[curveName + "_" + colorIndex]) {
+                            if (colorInterpolatorFunctions[curveName + "_" + colorIndex]) {
                                 var svg_legend_color_scale = trackHeaderDivContent.append("div").append("svg");
                                 svg_legend_color_scale.attr("height", 15).attr("width", width);
 
@@ -416,7 +416,7 @@ export async function logPlot(
                                         );
                                     })
                                     .attr("stop-color", function (d) {
-                                        return colorInterpolator_functions_for_each_curve[curveName + "_" + colorIndex](d);
+                                        return colorInterpolatorFunctions[curveName + "_" + colorIndex](d);
                                     });
 
                                 svg_legend_color_scale
