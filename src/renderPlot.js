@@ -382,8 +382,7 @@ export async function logPlot(
 
                             if (colorInterpolatorFunctions[curveName + "_" + colorIndex]) {
                                 var svg_legend_color_scale = trackHeaderDivContent.append("div").append("svg");
-                                svg_legend_color_scale.attr("height", 15).attr("width", width);
-
+                                svg_legend_color_scale.attr("height", 15).attr("width", width);                            
                                 svg_legend_color_scale
                                     .append("defs")
                                     .append("linearGradient")
@@ -395,23 +394,23 @@ export async function logPlot(
                                     .attr("y2", 0)
                                     .selectAll("stop")
                                     .data(
-                                        d3.range(xFunctions[curveName].domain()[0], xFunctions[curveName].domain()[1])
+                                        // ticks gives us a nice, controlled, small number of increments to use for the offsets
+                                        d3.ticks(xFunctions[curveName].domain()[0], xFunctions[curveName].domain()[1], 5) 
                                     )
                                     .join("stop")
                                     .attr("offset", function (d) {
-                                        return (
+                                        // offset is the percentage through the range of the value returned from ticks aboce
+                                        let offset = (
                                             ((d - xFunctions[curveName].domain()[0]) /
                                                 (xFunctions[curveName].domain()[1] -
-                                                    xFunctions[curveName].domain()[0] -
-                                                    1)) *
+                                                    xFunctions[curveName].domain()[0])) *
                                                 100 +
                                             "%"
                                         );
+                                        return offset;
                                     })
-                                    .attr("stop-color", function (d) {
-                                        return colorInterpolatorFunctions[curveName + "_" + colorIndex](d);
-                                    });
-
+                                    .attr("stop-color", d => colorInterpolatorFunctions[curveName + "_" + colorIndex](d));
+                                    
                                 svg_legend_color_scale
                                     .append("rect")
                                     .attr("x", margin.left)
