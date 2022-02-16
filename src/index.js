@@ -64,7 +64,7 @@ Spotfire.initialize(async (mod) => {
      * @type {Spotfire.Reader}
      */
     // Pass an already created reader as the argument to the wrapper function.
-     let reader = readerWithChangeChecker(
+    let reader = readerWithChangeChecker(
         mod.createReader(
             mod.visualization.data(),
             mod.windowSize(),

@@ -170,7 +170,7 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
         /* let wellLeaves = (await (await _dataView.hierarchy("WELL")).root()).leaves();*/ 
         // selectedWell = wellLeaves[0].key;
 
-        let categoryLeaves = (await (await _dataView.hierarchy("Category")).root()).leaves();
+        let categoryLeaves = (await (await dataView.hierarchy("Category")).root()).leaves();
 
         let trackWidth = (windowSize.width - renderPlot.ZOOMPANELWIDTH - renderPlot.DEPTHLABELPANELWIDTH - 20) / categoryLeaves.length;
         
@@ -219,7 +219,7 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
     let plot_templates = await buildTemplates(ISRESET); //JLL: use true to reset, change some properties to save changes from gui and put it back to false
 
     //creates a draggable configuration dialog with options for each track with nothing inside but the placeholders for accordion
-    !_isInitialized && uiConfig.configDialog(plot_templates, allDataViewRows, _dataView, _mod, _verticalZoomHeightMultiplier, _verticalZoomHeightProperty);
+    !_isInitialized && uiConfig.configDialog(plot_templates, allDataViewRows, dataView, _mod, _verticalZoomHeightMultiplier, _verticalZoomHeightProperty);
     
     //creates each plot per template
 
@@ -235,7 +235,7 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
     // plot_templates.push(plot_templates[2])             //duplicate
 
     //renders plot    
-    await renderPlot.multipleLogPlot(plot_templates, mod, _isInitialized, _verticalZoomHeightMultiplier, _verticalZoomHeightProperty, _dataView, windowSize);
+    await renderPlot.multipleLogPlot(plot_templates, mod, _isInitialized, _verticalZoomHeightMultiplier, _verticalZoomHeightProperty, dataView, windowSize);
 
     // this can be used to detect if we need to add divs, etc.
     // on re-rendering after marking. If already initialized, no need
@@ -463,9 +463,6 @@ export function propertyOnChange(templateIdx, curveIdx, templates, allDataViewRo
             $(".ui-accordion-header:last-of-type").remove() 
             $(".ui-accordion-content:last-of-type").remove()
 
-            
-            
-            
         } 
 
         // Store the updated template in the appropriate mod property except if the track was deleted

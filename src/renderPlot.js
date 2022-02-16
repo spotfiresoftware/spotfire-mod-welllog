@@ -3,12 +3,11 @@ import * as colorHelpers from "./color-helpers.js";
 
 const $ = require("jquery");
 
-var tooltipDiv;
-var y_function;
+var _tooltipDiv;
+var _yFunction;
+
 export const DEPTHLABELPANELWIDTH = 15;
 export const ZOOMPANELWIDTH = 32;
-import * as uiConfig from "./ui-config.js";
-import * as render from "./ui-config.js";
 
 var _scrollTop; // The scroll top - used for scrolling after marking
 
@@ -21,9 +20,10 @@ export async function logPlot(
     trackCount,
     windowSize
 ) {
+
     // add the tooltip area to the webpage
     d3.select("#" + "mod-container" + "_tooltip").remove();
-    tooltipDiv = d3
+    _tooltipDiv = d3
         .select("#mod-container")
         .append("div")
         .style("visibility", "hidden")
@@ -44,7 +44,7 @@ export async function logPlot(
     let height_components = template_overall["height"];
     let width = template_overall["width"];
     //JLL _mod.windowSize and window.innerWith are the same. I have to reduce by some extra space to avoid wrapping. the constant makes the whitespace on the right wider if increases.
-    //AJB - scaled the constant according to the number of tracks we have. This makes the tracks scale correctly, 
+    //AJB - scaled the constant according to the number of tracks we have. This makes the tracks scale correctly,
     // regardless of the number we have
     width = Math.round((await mod.windowSize()).width / trackCount - 60 / trackCount);
     let margin = template_overall["margin"];
@@ -190,7 +190,7 @@ export async function logPlot(
             });
     };
 
-    y_function = y;
+    _yFunction = y;
 
     //////////////  Building curves within tracks //////////////
     for (let k = 0; k < curveNames.length; k++) {
@@ -220,15 +220,15 @@ export async function logPlot(
 
         if (scaleTypeLinearLog[k] == "linear") {
             x = d3
-            .scaleLinear()
-            .domain([min_this, max_this])
-            .nice()
-            .range([margin.left, width - margin.right]);
+                .scaleLinear()
+                .domain([min_this, max_this])
+                .nice()
+                .range([margin.left, width - margin.right]);
         } else if (scaleTypeLinearLog[k] == "log") {
             x = d3
                 .scaleLog()
                 .domain([min_this, max_this])
-                .range([margin.left, width - margin.right]);                
+                .range([margin.left, width - margin.right]);
         } else if (dataType == "category") {
             x = d3
                 .scaleOrdinal()
@@ -300,11 +300,9 @@ export async function logPlot(
         let translate_string = "translate(0,17)";
 
         let xAxis_header = function (g) {
-            return g.attr("transform", translate_string).call(
-                d3
-                    .axisBottom(xFunctions[curveNames[k]])
-                    .ticks((width - margin.left - margin.right) / 40)                    
-            );
+            return g
+                .attr("transform", translate_string)
+                .call(d3.axisBottom(xFunctions[curveNames[k]]).ticks((width - margin.left - margin.right) / 40));
         };
 
         svg_header.append("g").call(xAxis_header); //.append("text");
@@ -378,9 +376,7 @@ export async function logPlot(
                                 })
                                 .attr("stop-color", function (d, i) {
                                     return !isNaN(d[curveName])
-                                        ? colorInterpolatorFunctions[curveName + "_" + colorIndex](
-                                              d[curveName]
-                                          )
+                                        ? colorInterpolatorFunctions[curveName + "_" + colorIndex](d[curveName])
                                         : "rgba(0,0,0,0)";
                                 });
 
@@ -399,10 +395,7 @@ export async function logPlot(
                                     .attr("y2", 0)
                                     .selectAll("stop")
                                     .data(
-                                        d3.range(
-                                            xFunctions[curveName].domain()[0],
-                                            xFunctions[curveName].domain()[1]
-                                        )
+                                        d3.range(xFunctions[curveName].domain()[0], xFunctions[curveName].domain()[1])
                                     )
                                     .join("stop")
                                     .attr("offset", function (d) {
@@ -438,13 +431,13 @@ export async function logPlot(
                         if (templateCurves["fill"][fillIndex]["fillDirection"] == "left") {
                             let marginLeft = template_overall["margin"]["left"];
                             area1
-                                .x1(d => xFunctions[curveName](d[curveNames[k]]))
+                                .x1((d) => xFunctions[curveName](d[curveNames[k]]))
                                 .x0(marginLeft)
-                                .defined(d=> {
+                                .defined((d) => {
                                     let value = d[curveNames[k]];
                                     return (value || value == 0) && value > threshold;
                                 })
-                                .y(d => y(d.depth));
+                                .y((d) => y(d.depth));
 
                             svg.append("path")
                                 .attr("class", "area")
@@ -458,12 +451,12 @@ export async function logPlot(
                             let marginRight = template_overall["margin"]["right"];
                             area1
                                 .x1(width - marginRight)
-                                .defined(d => {
+                                .defined((d) => {
                                     let value = d[curveNames[k]];
                                     return (value || value == 0) && value > threshold;
                                 })
-                                .x0(d =>  xFunctions[curveNames[k]](d[curveNames[k]]))
-                                .y(d => y(d.depth));
+                                .x0((d) => xFunctions[curveNames[k]](d[curveNames[k]]))
+                                .y((d) => y(d.depth));
 
                             svg.append("path")
                                 .attr("class", "area")
@@ -663,12 +656,12 @@ export async function logPlot(
     function tooltipMouseover(evt) {
         //console.log("tooltipMouseover");
         focus.style("display", null);
-        tooltipDiv.transition().duration(600).style("opacity", 0.9);
+        _tooltipDiv.transition().duration(600).style("opacity", 0.9);
     }
 
     function tooltipMouseout(evt) {
         focus.style("display", "none");
-        tooltipDiv.transition().duration(400).style("opacity", 0);
+        _tooltipDiv.transition().duration(400).style("opacity", 0);
     }
 
     ////////////////   Prepare Tooltips   ///////////////////
@@ -733,14 +726,14 @@ export async function logPlot(
         let row = data[index];
 
         // console.log("mousemove");
-        if (!tooltipDiv) {
-            tooltipDiv = d3.select("#mod-container" + "_tooltip");
+        if (!_tooltipDiv) {
+            _tooltipDiv = d3.select("#mod-container" + "_tooltip");
         }
-        if (tooltipDiv) {
-            tooltipDiv.transition().duration(400).style("opacity", 0);
+        if (_tooltipDiv) {
+            _tooltipDiv.transition().duration(400).style("opacity", 0);
         }
 
-        var target = evt.target || evt.srcElement;      
+        var target = evt.target || evt.srcElement;
         let curveColorsArray;
 
         if (target.attributes.curveColors) {
@@ -750,7 +743,7 @@ export async function logPlot(
 
         //console.log("curveColors", curveColorsArray);
         //console.log("row", row);
-        if (tooltipDiv) {
+        if (_tooltipDiv) {
             //console.log("curveNames", curveNames);
             let tooltipContent = depthCurveName + ": " + row.depth.toFixed(2) + "<br>";
             for (let i = 0; i < curveNames.length; i++) {
@@ -763,7 +756,7 @@ export async function logPlot(
                     row[curveNames[i]] +
                     "<br>";
             }
-            tooltipDiv.html(tooltipContent);
+            _tooltipDiv.html(tooltipContent);
 
             let tooltipX = evt.clientX;
             // The line commented out below makes the tooltip position follow the x coordinates of the line, but it then
@@ -773,10 +766,10 @@ export async function logPlot(
 
             let tooltipY = evt.clientY > windowSize.height - 60 ? evt.pageY - 40 : evt.pageY + 10;
 
-            tooltipDiv.style("left", tooltipX + "px");
-            tooltipDiv.style("top", tooltipY + "px").style("visibility", "visible");
+            _tooltipDiv.style("left", tooltipX + "px");
+            _tooltipDiv.style("top", tooltipY + "px").style("visibility", "visible");
 
-            tooltipDiv.transition().duration(600).style("opacity", 0.9);
+            _tooltipDiv.transition().duration(600).style("opacity", 0.9);
         }
 
         /**
@@ -818,11 +811,7 @@ export async function logPlot(
                 .attr("y2", width)
                 .attr(
                     "transform",
-                    "translate(" +
-                        getTooltipPositionX(xFunctions[curveName], row[curveName]) +
-                        "," +
-                        0 +
-                        ")"
+                    "translate(" + getTooltipPositionX(xFunctions[curveName], row[curveName]) + "," + 0 + ")"
                 )
                 .attr("y2", height);
 
@@ -842,11 +831,7 @@ export async function logPlot(
                 .attr("r", 3)
                 .attr(
                     "transform",
-                    "translate(" +
-                        getTooltipPositionX(xFunctions[curveName], row[curveName]) +
-                        "," +
-                        y(row.depth) +
-                        ")"
+                    "translate(" + getTooltipPositionX(xFunctions[curveName], row[curveName]) + "," + y(row.depth) + ")"
                 )
                 .text(row[curveName] ? row[curveName] : "")
                 .style("cursor", "default");
@@ -901,7 +886,7 @@ export async function multipleLogPlot(
         d3.select("#tracksDepthLabelInner")
             .style("top", window.innerHeight * 0.5 + "px")
             .attr("height", window.innerHeight);
-    } 
+    }
 
     //depth_label_svg.selectAll("*").remove();
     //JLL we don't need this
@@ -1054,6 +1039,7 @@ export async function multipleLogPlot(
 
     // Add a div for the tracks/plots (if it doesn't exist - todo - switch to using i)
     let trackHoldersContainerDiv;
+    // Check to see if the trackHoldersContainer already exists. If not, create it
     if (d3.select("#trackHoldersContainer").node()) {
         trackHoldersContainerDiv = d3.select("#trackHoldersContainer");
         trackHoldersContainerDiv.selectAll("*").remove();
@@ -1063,111 +1049,113 @@ export async function multipleLogPlot(
             .append("div")
             .attr("id", "trackHoldersContainer")
             .style("z-index", 10)
-            .attr("id", "trackHoldersContainer")
-            // This is the main marking event
-            .on("mousedown", function (mouseDownEvent) {
-                // console.log(
-                //     "trackHoldersContainerDiv mouseDown",
-                //     mouseDownEvent.currentTarget.offsetTop,
-                //     mouseDownEvent.target
-                // );
-
-                let getMarkMode = function (e) {
-                    // shift: add rows
-                    // control: toggle rows
-                    // none: replace rows
-                    if (e.shiftKey) {
-                        return "Add";
-                    } else if (e.ctrlKey) {
-                        return "Toggle";
-                    }
-
-                    return "Replace";
-                };
-
-                let markMode = getMarkMode(mouseDownEvent);
-                //
-                // Create initial marking rectangle, will be used if the user only clicks.
-                //
-                let x = mouseDownEvent.pageX,
-                    y = mouseDownEvent.pageY,
-                    width = 1,
-                    height = 1;
-
-                let $selection = $("<div/>")
-                    .css({
-                        position: "absolute",
-                        border: "1px solid #0a1530",
-                        "background-color": "#8daddf",
-                        opacity: "0.5"
-                    })
-                    .hide()
-                    .appendTo(this);
-
-                // draw the marking rectangle
-                $(this).on("mousemove", function (mouseMoveEvent) {
-                    x = Math.min(mouseDownEvent.pageX, mouseMoveEvent.pageX);
-                    y = Math.min(mouseDownEvent.pageY, mouseMoveEvent.pageY);
-                    width = Math.abs(mouseDownEvent.pageX - mouseMoveEvent.pageX);
-                    height = Math.abs(mouseDownEvent.pageY - mouseMoveEvent.pageY);
-
-                    $selection.css({
-                        left: x + "px",
-                        top: y + "px",
-                        width: width + "px",
-                        height: height + "px"
-                    });
-
-                    $selection.show();
-                });
-                let currentTarget = mouseDownEvent.currentTarget;
-
-                $(this).on("mouseup", async function () {
-                    // console.log("mouseDownEvent.target", mouseDownEvent.target, mouseDownEvent.currentTarget);
-                    var rectangle = {
-                        x: mouseDownEvent.clientX,
-                        // the currentTarget is always the container rect
-                        // -- offsetTop is the offset to the top of the page
-                        y: mouseDownEvent.clientY - currentTarget.offsetTop + currentTarget.scrollTop,
-                        width: width,
-                        height: height
-                    };
-                    // Store the scrollTop so we can re-apply it upon re-rendering from marking
-                    _scrollTop = currentTarget.scrollTop;
-                    let y0 = y_function.invert(rectangle.y);
-                    let y1 = y_function.invert(rectangle.y + rectangle.height);
-                    let allRows = await dataView.allRows();
-
-                    // console.log("y0", y0, "y1", y1, "rectangle", rectangle);
-                    dataView.mark(
-                        allRows.filter(
-                            (d) => d.continuous("DEPTH").value() >= y0 && d.continuous("DEPTH").value() <= y1
-                        ),
-                        markMode
-                    );
-
-                    $selection.remove();
-                    $(this).off("mouseup mousemove");
-                });
-            });
+            .attr("id", "trackHoldersContainer");
     }
+
+    // Now set up the div
+    trackHoldersContainerDiv
+        // This is the main marking event
+        .on("mousedown", function (mouseDownEvent) {
+            // console.log(
+            //     "trackHoldersContainerDiv mouseDown",
+            //     mouseDownEvent.currentTarget.offsetTop,
+            //     mouseDownEvent.target
+            // );
+
+            let getMarkMode = function (e) {
+                // shift: add rows
+                // control: toggle rows
+                // none: replace rows
+                if (e.shiftKey) {
+                    return "Add";
+                } else if (e.ctrlKey) {
+                    return "Toggle";
+                }
+
+                return "Replace";
+            };
+
+            let markMode = getMarkMode(mouseDownEvent);
+            //
+            // Create initial marking rectangle, will be used if the user only clicks.
+            //
+            let x = mouseDownEvent.pageX,
+                y = mouseDownEvent.pageY,
+                width = 1,
+                height = 1;
+
+            let $selection = $("<div/>")
+                .css({
+                    position: "absolute",
+                    border: "1px solid #0a1530",
+                    "background-color": "#8daddf",
+                    opacity: "0.5"
+                })
+                .hide()
+                .appendTo(this);
+
+            // draw the marking rectangle
+            $(this).on("mousemove", function (mouseMoveEvent) {
+                x = Math.min(mouseDownEvent.pageX, mouseMoveEvent.pageX);
+                y = Math.min(mouseDownEvent.pageY, mouseMoveEvent.pageY);
+                width = Math.abs(mouseDownEvent.pageX - mouseMoveEvent.pageX);
+                height = Math.abs(mouseDownEvent.pageY - mouseMoveEvent.pageY);
+
+                $selection.css({
+                    left: x + "px",
+                    top: y + "px",
+                    width: width + "px",
+                    height: height + "px"
+                });
+
+                $selection.show();
+            });
+            let currentTarget = mouseDownEvent.currentTarget;
+
+            $(this).on("mouseup", async function () {
+                // console.log("mouseDownEvent.target", mouseDownEvent.target, mouseDownEvent.currentTarget);
+                var rectangle = {
+                    x: mouseDownEvent.clientX,
+                    // the currentTarget is always the container rect
+                    // -- offsetTop is the offset to the top of the page
+                    y: mouseDownEvent.clientY - currentTarget.offsetTop + currentTarget.scrollTop,
+                    width: width,
+                    height: height
+                };
+                // Store the scrollTop so we can re-apply it upon re-rendering from marking
+                _scrollTop = currentTarget.scrollTop;
+                let y0 = _yFunction.invert(rectangle.y);
+                let y1 = _yFunction.invert(rectangle.y + rectangle.height);
+
+                let allRows = await dataView.allRows();
+
+                // console.log("y0", y0, "y1", y1, "rectangle", rectangle);
+                dataView.mark(
+                    allRows.filter((d) => d.continuous("DEPTH").value() >= y0 && d.continuous("DEPTH").value() <= y1),
+                    markMode
+                );
+
+                $selection.remove();
+                $(this).off("mouseup mousemove");
+            });
+        });
 
     // setup trackholders - todo - remove properly - removing this has no effect on the rendering
     // but the divs are referred to when plotting!
-    for (let ii = 0; ii < templates.length; ii++) {
-        let template = templates[ii];
+    for (let templateIndex = 0; templateIndex < templates.length; templateIndex++) {
+        let template = templates[templateIndex];
 
         if (template) {
             if (!isInitialized) {
                 let TrackHolder = d3.select("#" + div_id).append("div");
 
                 TrackHolder.style("vertical-align", "middle")
-                    .attr("id", div_id + "TrackHolder" + ii)
+                    .attr("id", div_id + "TrackHolder" + templateIndex)
                     .style("display", "inline-block")
                     .style("overflow-y", "hidden");
             }
-//            console.log(div_id,template[0])
-//            template[0]["trackBox"]["div_id"] = div_id + "TrackHolder" + ii;
+            //            console.log(div_id,template[0])
+            //            template[0]["trackBox"]["div_id"] = div_id + "TrackHolder" + ii;
         }
     }
 
@@ -1179,9 +1167,9 @@ export async function multipleLogPlot(
 
     // now plot!
     let curveCount = templates.length;
-    templates.forEach((template, i) => {
-        logPlot(template, headerHeight + "px", verticalZoomHeightMultiplier, dataView, mod, curveCount, windowSize);
-    });
+    templates.forEach(template => 
+        logPlot(template, headerHeight + "px", verticalZoomHeightMultiplier, dataView, mod, curveCount, windowSize)
+    );
 
     // Apply the height and scroll settings after everything has been rendered - AJB todo - remove hard coded value!
     // let modContainer = d3.select("#mod-container")._groups[0][0];
