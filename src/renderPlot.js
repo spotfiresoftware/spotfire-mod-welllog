@@ -436,21 +436,16 @@ export async function logPlot(
                         }
 
                         if (templateCurves["fill"][fillIndex]["fillDirection"] == "left") {
-                            let start_from_left = template_overall["margin"]["left"];
+                            let marginLeft = template_overall["margin"]["left"];
                             area1
-                                .x1(function (d, i) {
-                                    return xFunctions[curveName](d[curveNames[k]]);
-                                })
-                                .x0(function (d, i) {
-                                    return start_from_left;
-                                })
-                                .defined(function (d, i) {
+                                .x1(d => xFunctions[curveName](d[curveNames[k]]))
+                                .x0(marginLeft)
+                                .defined(d=> {
                                     let value = d[curveNames[k]];
                                     return (value || value == 0) && value > threshold;
                                 })
-                                .y(function (d, i) {
-                                    return y(d.depth);
-                                });
+                                .y(d => y(d.depth));
+
                             svg.append("path")
                                 .attr("class", "area")
                                 .attr("clip-path", "url('#clip')")
@@ -460,22 +455,15 @@ export async function logPlot(
                                 .attr("fill-opacity", getOpacity(colorIndex, threshold, null));
                         }
                         if (templateCurves["fill"][fillIndex]["fillDirection"] == "right") {
-                            let start_from_right = template_overall["margin"]["right"];
-                            let start_from_left = template_overall["margin"]["left"];
+                            let marginRight = template_overall["margin"]["right"];
                             area1
-                                .x1(function (d, i) {
-                                    return width - start_from_right;
-                                })
-                                .defined(function (d, i) {
+                                .x1(width - marginRight)
+                                .defined(d => {
                                     let value = d[curveNames[k]];
                                     return (value || value == 0) && value > threshold;
                                 })
-                                .x0(function (d, i) {
-                                    return xFunctions[curveNames[k]](d[curveNames[k]]);
-                                })
-                                .y(function (d, i) {
-                                    return y(d.depth);
-                                });
+                                .x0(d =>  xFunctions[curveNames[k]](d[curveNames[k]]))
+                                .y(d => y(d.depth));
 
                             svg.append("path")
                                 .attr("class", "area")
