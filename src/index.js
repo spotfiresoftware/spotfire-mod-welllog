@@ -26,7 +26,6 @@ Spotfire.initialize(async (mod) => {
      */
     const context = mod.getRenderContext();
 
-
     /**
     * Wrap a reader and adds an additional method called `hasChanged`.
     * It allows you to check whether a passed argument is new or unchanged since the last time the subscribe loop was called.

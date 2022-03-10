@@ -4,7 +4,6 @@
     "name": "Well Log Chart",
     "id": "datascience-mods-well-log-chart",
     "icon": "icon.svg",
-    "externalResources": ["https://fonts.gstatic.com/s/materialicons/v50/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2"],    
     "properties": [
         {
             "name": "verticalZoomHeightMultiplier",

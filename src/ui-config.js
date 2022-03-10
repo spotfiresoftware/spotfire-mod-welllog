@@ -558,7 +558,7 @@ export async function addAccordionTabContents(templateIdx, curveIdx, curveNames,
         divItem = controlgroup
             .append("div")
             .attr("class", "controlGroupDiv")
-            .on("mousedown", function (evt) {
+            .on("mousedown", function (evt) { 
                 evt.stopPropagation();
             });
         divItem.text("Fill:").append("br");
@@ -601,6 +601,9 @@ export async function addAccordionTabContents(templateIdx, curveIdx, curveNames,
         divItem.text("Min:").append("br");
         insertTextInput(divItem, templateIdx, curveIdx, templates, "ScaleMin", allDataViewRows);
 
+        //divItem = controlgroup
+
+        //scale Max
         divItem = controlgroup
             .append("div")
             .attr("class", "controlGroupDiv")
