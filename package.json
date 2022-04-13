@@ -4,7 +4,7 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "server": "node development-server.js dist",
+        "server": "mods-dev-server dist",
         "build": "webpack --mode production --devtool false",
         "build-watch": "webpack --watch",
         "start": "npm run build-watch"
@@ -24,7 +24,7 @@
         "ddslick": "^1.0.3",
         "jquery": "^3.6.0",
         "jquery-ui": "^1.12.1",
-        "live-server": "^1.2.1",
+        "@tibco/spotfire-mods-dev-server": "^1.0.1",
         "webpack": "^5.62.1",
         "webpack-cli": "^4.9.1"
     }
