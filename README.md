@@ -20,3 +20,14 @@ These instructions assume that you have [Node.js](https://nodejs.org/en/) (which
 - Run `npm run build`. This will bundle the JavaScript and place it in the `dist` folder. It also copies the contents of `static` into `dist`. This task will not watch for changes in the code.
 - In Spotfire, follow the steps of creating a new mod and then browse for, and point to, the _manifest_ in the `dist` folder.
   
+
+  taken from https://github.com/aberridg/well-log-v2/tree/8ea794a0ac7bc4d972d74e5b289c47d6caf4634c
+  "Extracted various colouring functions to color-helpers.js"  aberridg committed on May 21, 2021
+
+  #TODO
+- Discrete points rather than lines for pressure
+- Remove Null values for each curve automatically
+- Naming of log curve and selection
+- Set Min Max and Color of the curve – Linear or Log scale
+- Ability to change which log curves are in which track - on / off (how many curves in each
+- Zoom in to depth section and then reverse out again using right mouse

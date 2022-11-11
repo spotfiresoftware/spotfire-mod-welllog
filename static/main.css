@@ -5,12 +5,11 @@
 */
 
 html,
+body,
 #mod-container {
-    margin: 0;    
+    margin: 0;
+    height: 100%;
     overflow: hidden;
-}
-body {
-    overflow-y: hidden;
 }
 
 #mod-container {
@@ -157,8 +156,8 @@ svg {
   
   #TracksToolDiv {
    height: 100%;
-   --background-color: red;
-   --border: 1px solid blue;
+   //background-color: red;
+   //border: 1px solid blue;
   }
   
   #slider-zoom path.handle:hover, 
@@ -177,7 +176,7 @@ svg {
     margin-left: 2px;
     margin-right: 2px;
     margin-bottom: 5px;
-    border: 1px solid #999999;
+    border: 1px solid lightgray;
   } 
   
   .controlgroup {
@@ -275,8 +274,13 @@ svg {
   .dd-option-image, .dd-selected-image {
       max-width: 72px !important;;
   }
-    
   
+  
+  
+  #accordionConf {
+  padding-left: 6px;
+  padding-right: 6px;
+  }
   
   #selectedWellDiv {
   padding-left: 10px;
@@ -320,69 +324,48 @@ svg {
   
   
   html { overflow-y: auto; }
-  #config_menu {overflow-y: auto;    position: fixed;    left: 0px;    top: 0;    z-index: 99998;    color: #fff;    background: #fff;    padding-bottom: 5px;    border: 1px solid #b18888;}
-  #config_menu_inner { padding: 5px; }
-  #config_menu_inner ul { margin: 0; padding: 0; list-style-type: none; }
-  #config_menu_inner li { margin: 0; padding: 0; }
-  #config_menu_inner a { display: block; margin: -1px 0 0 0; padding: 7px; font-size: 14px; text-decoration: none; color: #fff; border-top: 1px solid #444; border-bottom: 1px solid #444; }
-  #config_menu_inner a:hover { text-decoration: none; background: #444; }
+  #drawer_wall { display: none; position: fixed; left: 0; top: 0; z-index: 99995; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); }
+  #drawer_btn { position: absolute; right: 0; top: 0; }
+  #drawer_btn a { display: block; width: 26px; height: 26px; text-align:center; line-height:1px;color: #fff; text-decoration: none; background: #333; }
+  #drawer_menu { overflow-y: auto; position: fixed; left: -220px; top: 0; z-index: 99998; width: 220px; height: 100%; color: #fff; background: #333; }
+  #drawer_menu_inner { padding: 5px; }
+  #drawer_menu_inner ul { margin: 0; padding: 0; list-style-type: none; }
+  #drawer_menu_inner li { margin: 0; padding: 0; }
+  #drawer_menu_inner a { display: block; margin: -1px 0 0 0; padding: 7px; font-size: 14px; text-decoration: none; color: #fff; border-top: 1px solid #444; border-bottom: 1px solid #444; }
+  #drawer_menu_inner a:hover { text-decoration: none; background: #444; }
+  #drawer_content { width: 100%; max-width: 728px; margin: 0 auto; padding:10px; background: #eee; }
+  #drawer_content p { margin-top: 0; }
   .disabled {pointer-events: none; cursor: default; opacity: 0.5;}
-
-  .ctrlBtn {
-    border: 1px solid #8f8e8e;
-    border-radius: 20%;
-    background: #f1f1f1;
-    box-shadow: 1px 1px 1px 0px;
-  }
-  .ctrlBtn:hover {
-    background: #dfdfdf;
-  }
-
-
-
-  /*Popup (to replace drawer?)*/
-  .popup-jsc {
-    width: min-content !important;
-    background-color: #eaeaea !important;
-    border-radius: 0.5em;
-    border: 1px solid whitesmoke;
-    box-shadow: rgb(187 187 187) 5px 4px 9px 1px;
-}
-
-.flt.drag {
-    border: none;
-    margin: 0;
-    padding: 5px;
-    color:"white";
-    background: "whitesmoke";
-}
-
-
-.trackHeaderDivContentGear:hover{
-    color:#858991 !important;
-    cursor:pointer;
-}
-
-[id*="mod-containerTrackHolder2_gear"][id*="_gear"],
-.trackHeaderDivContentGear{
-    color:#BDBFC3;
-    /* display: block; */
-    height:15px;
-    position: absolute;
-    height:14px;
-    top: 0;
-    right: 0;
-    /* vertical-align: middle; */
-}
-
-.popupContents {
-display: inline-block;
-padding: 6px 10px;
-font: 1em arial, helvetica, sans-serif;
-color: #555;
-background-color: #ddd;
-border:1px outset lightgray;
-border-radius:.5em;
-}
-
   
+
+  #settings{
+    font-size: 12px;
+    color:black;
+    z-index: 999;
+    right: 33px;
+    cursor: pointer;
+    position: fixed;
+  }
+
+  #dialog{
+    position: fixed;
+    background-color: floralwhite;
+    border: 1px solid gray;
+    width: 95%;
+    height: 95%;
+    right: 50px;
+    z-index: 999;
+  }
+
+
+  /* horizontal line */
+  #hr {
+    width: 100%;
+    background: #00cf8a;
+    position: absolute;
+    height: 1px;
+    border: 0;
+    z-index: 2;
+    margin: -1px;
+}
+   
