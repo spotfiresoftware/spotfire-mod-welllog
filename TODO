@@ -1,0 +1,12 @@
+♣ sometimes filling left will fill the entire track, not just left. 
+♣ refresh dropdown for measure: When changing the categorical values, the tab needs to be recreated
+♣ marking is not working as it used to. Marking crashes after a couple of tries
+► Sometimes the scale of a particular category value overlaps with a number. Try setting a min-max number of labels.
+► It would nice to delete the intended track or curve, not just the last one.
+► what are the maximum data points for optimal performance?
+
+Legend:
+► future release
+♫ great job!
+♪ good job!
+♣ bug, but feeling lucky

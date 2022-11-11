@@ -1,0 +1,31 @@
+{
+    "name": "js-webpack-starter",
+    "version": "1.0.1",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "server": "mods-dev-server dist",
+        "build": "webpack --mode production --devtool false",
+        "build-watch": "webpack --watch",
+        "start": "npm run build-watch"
+    },
+    "author": "aberridg,jleviagu",
+    "license": "ISC",
+    "dependencies": {},
+    "devDependencies": {
+        "@babel/core": "^7.10.4",
+        "@babel/plugin-transform-runtime": "^7.10.4",
+        "@babel/preset-env": "^7.10.4",
+        "babel-loader": "^8.1.0",
+        "copy-webpack-plugin": "^6.0.3",
+        "core-js": "^3.6.5",
+        "d3": "^6.6.1",
+        "d3-simple-slider": "^1.10.4",
+        "ddslick": "^1.0.3",
+        "jquery": "^3.6.0",
+        "jquery-ui": "^1.12.1",
+        "@tibco/spotfire-mods-dev-server": "^1.0.1",
+        "webpack": "^5.62.1",
+        "webpack-cli": "^4.9.1"
+    }
+}

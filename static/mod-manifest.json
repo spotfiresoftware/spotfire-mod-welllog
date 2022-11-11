@@ -1,0 +1,126 @@
+{
+    "apiVersion": "1.2",
+    "version": "1.0.0",
+    "name": "Well Log Chart",
+    "id": "datascience-mods-well-log-chart",
+    "icon": "icon.svg",
+    "properties": [
+        {
+            "name": "verticalZoomHeightMultiplier",
+            "type": "double", 
+            "defaultValue": 2.0
+        },        
+        {
+            "name": "curveCount",
+            "type": "integer", 
+            "defaultValue": 0
+        },
+        {
+            "name": "template0", 
+            "type": "string",
+            "defaultValue": "empty"
+        },
+        {
+            "name": "template1",
+            "type": "string",
+            "defaultValue": "empty"
+        },
+        {
+            "name": "template2",
+            "type": "string",
+            "defaultValue": "empty"
+        },
+        {
+            "name": "template3",
+            "type": "string",
+            "defaultValue": "empty"
+        },
+        {
+            "name": "template4",
+            "type": "string",
+            "defaultValue": "empty"
+        },
+        {
+            "name": "template5",
+            "type": "string",
+            "defaultValue": "empty"
+        },
+        {
+            "name": "template6",
+            "type": "string",
+            "defaultValue": "empty"
+        },
+        {
+            "name": "template7",
+            "type": "string",
+            "defaultValue": "empty"
+        }
+    ],
+    "dataViewDefinition": {
+        "axes": [
+            {
+                "name": "DEPTH",
+                "mode": "continuous",
+                "allowMultipleMeasures": false,
+                "placement": "left",
+                "propertyControl": {
+                    "title": "Depth Axis"
+                },
+                "allowNonAggregatingMeasures": true,
+                "legendItem": {
+                    "title": "Depth Axis",
+                    "defaultVisibility": "visible"
+                }
+            },
+            {
+                "name": "Category",
+                "mode": "categorical",
+                "allowMultipleMeasures": false,
+                "placement": "right",
+                "propertyControl": {
+                    "title": "Category"
+                },
+                "allowNonAggregatingMeasures": true,
+                "legendItem": {
+                    "title": "Category",
+                    "defaultVisibility": "visible"
+                }
+            },
+            {
+                "name": "Value",
+                "mode": "categorical",
+                "allowMultipleMeasures": false,
+                "placement": "bottom",
+                "propertyControl": {
+                    "title": "Value"
+                },
+                "allowNonAggregatingMeasures": true,
+                "legendItem": {
+                    "title": "Value",
+                    "defaultVisibility": "visible"
+                }
+            // well is not used for now
+            // },
+            // { 
+            //     "name": "WELL",
+            //     "mode": "categorical",
+            //     "allowMultipleMeasures": false,
+            //     "placement": "top",
+            //     "propertyControl": {
+            //         "title": "WELL"
+            //     },
+            //     "allowNonAggregatingMeasures": true,
+            //     "legendItem": {
+            //         "title": "WELL",
+            //         "defaultVisibility": "visible"
+            //     }
+            }
+        ]
+    },
+    "files": [
+        "index.html",
+        "main.css",
+        "jquery-ui.css",
+        "bundle.js"
+    ]
+}

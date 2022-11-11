@@ -1,0 +1,388 @@
+/*
+* Copyright © 2020. TIBCO Software Inc.
+* This file is subject to the license terms contained
+* in the license file that is distributed with this file.
+*/
+
+html,
+#mod-container {
+    margin: 0;    
+    overflow: hidden;
+}
+body {
+    overflow-y: hidden;
+}
+
+#mod-container {
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+.hidden {
+    display: none;
+}
+
+.line-hover {
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.line-hover-fill {
+    pointer-events: none;
+    stroke: #fff;
+    stroke-width: 5px;
+}
+
+.line-hover-casing {
+    pointer-events: none;
+    stroke: #333;
+    stroke-width: 7px;
+}
+
+.line-hover-bg {
+    stroke: #333;
+    stroke-opacity: 0;
+    stroke-width: 7px;
+}
+
+.selection {
+    visibility: hidden;
+    pointer-events: none;
+    position: absolute;
+    border: 1px solid #677085;
+    background-color: rgba(0, 90, 230, 0.17);
+    width: 0;
+    height: 0;
+    top: 0;
+    left: 0;
+}
+
+.selection-bg {
+    visibility: hidden;
+    position: absolute;
+    background-color: rgba(200, 90, 230, 0);
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+}
+
+.x-axis-label-container {
+    position: absolute;
+    cursor: pointer;
+}
+
+.x-axis-label-container:hover > .x-axis-label-background {
+    opacity: 0.085;
+}
+
+.x-axis-label-background {
+    position: absolute;
+    height: 24px;
+    border-radius: 4px;
+    opacity: 0;
+}
+
+.x-axis-label-parent {
+    position: absolute;
+    /* pointer-events: none; */
+}
+
+.x-axis-label {
+    /* pointer-events: none; */
+    position: relative;
+    top: 4px;
+    left: -50%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+}
+
+/* CSS from JSViz */
+svg {
+    font-weight: 300;
+    font-size: 12px;
+    background-color: inherit;
+  }
+  
+  
+
+.tooltip {   
+    position: absolute;     
+    text-align: left; 
+    min-width: 50px;                
+    min-height: 10px;                 
+    padding: 4px;             
+    font: 10px sans-serif;        
+    background: black;
+    color: white;
+    border: 0px;      
+    border-radius: 0px;           
+    pointer-events: none;         
+  }
+  
+  #dropdownWell {
+    padding-left:5px;
+  }
+  
+  
+  /* fallback */
+  @font-face {
+    font-family: 'Material Icons';
+    font-style: normal;
+    font-weight: 400;
+    src: url(https://fonts.gstatic.com/s/materialicons/v50/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2) format('woff2');
+  }
+  
+  .material-icons {
+    font-family: 'Material Icons';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 22px;
+    line-height: 0.8;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+  }
+  
+  #TracksToolDiv {
+   height: 100%;
+   --background-color: red;
+   --border: 1px solid blue;
+  }
+  
+  #slider-zoom path.handle:hover, 
+  #slider-zoom path.handle:focus,
+  #plusBtn, #minusBtn, #confBtn {
+    outline: -webkit-focus-ring-color auto 0px;
+  }
+  
+  .ui-selectmenu-open {
+   z-index:99999;
+   position: fixed;
+  }
+  
+  fieldset {
+    display: block;
+    margin-left: 2px;
+    margin-right: 2px;
+    margin-bottom: 5px;
+    border: 1px solid #999999;
+  } 
+  
+  .controlgroup {
+    display:flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+  
+  
+  .controlGroupDiv {
+    /*margin-bottom: 5px;*/
+    margin: 2px;
+  }
+  
+  
+  .dd-select {
+      height:18px;
+      border-bottom-right-radius: 3px !important;
+      border-bottom-left-radius: 3px !important;
+      border-top-right-radius: 3px !important;
+      border-top-left-radius: 3px !important;
+  }  
+  
+  .dd-pointer {
+      width: 0;
+      height: 0;
+      position: absolute;
+      right: 7px !important;
+      top: 50%;
+      margin-top: -3px;
+  }
+  
+  
+  .dd-selected {
+      height:15px;
+      overflow: hidden;
+      display: block;
+      padding-top: 2px !important;
+      padding-bottom: 2px !important;
+      padding-left: 5px !important;
+      padding-right: 5px !important;
+      background: #dcdcdc !important;
+      font-weight: normal !important;
+      border: none;
+  }
+  
+  
+  .dd-selected:hover {
+    background: #cdcdcd !important;
+    cursor: pointer;
+  }
+  
+  .dd-option {
+      padding-top: 2px !important;
+      padding-bottom: 2px !important;
+      padding-left: 5px !important;
+      padding-right: 5px !important;
+  
+      background: #f6f6f6 !important;
+      display: block;
+      border-bottom: solid 1px #ddd;
+      overflow: hidden;
+      text-decoration: none;
+      color: #333;
+      cursor: pointer;
+      -webkit-transition: all 0.25s ease-in-out;
+      -moz-transition: all 0.25s ease-in-out;
+      -o-transition: all 0.25s ease-in-out;
+      -ms-transition: all 0.25s ease-in-out;
+  }
+  
+  .dd-option-selected {
+      background: #bcbcbc !important;
+  }
+  
+  .dd-selected-text {
+    cursor: pointer;
+  }
+  
+  .dd-option-text {
+    cursor: pointer;
+  }
+  
+  .dd-option:hover {
+      background: #eaeaea !important;
+  }
+  
+  .dd-options {
+      z-index: 99999 !important;
+      position: fixed !important;
+  }
+  
+  
+  
+  .dd-option-image, .dd-selected-image {
+      max-width: 72px !important;;
+  }
+    
+  
+  
+  #selectedWellDiv {
+  padding-left: 10px;
+  padding-right: 2px;
+  padding-bottom: 5px;
+  }
+  
+  .ui-accordion .ui-accordion-content {
+      padding: 0px 2px 0px 2px !important;
+      border-top: 0;
+      overflow: auto;
+      line-height: 1.2 !important;
+  }
+  
+  
+  
+  
+  .ui-accordion .ui-accordion-header {
+      display: block;
+      cursor: pointer;
+      position: relative;
+      margin: 2px 0 0 0;
+      padding: .3em .3em .3em .3em !important;
+      font-size: 100%;
+  }
+  
+  .ui-tabs .ui-tabs-panel {
+      display: block;
+      border-width: 0;
+      padding: 0.5em 0.5em !important;
+      background: none;
+  }
+  
+  
+  .ui-tabs .ui-tabs-nav .ui-tabs-anchor {
+      float: left;
+      padding: 0.25em 1em 0.08em 1em !important;
+      text-decoration: none;
+  }
+  
+  
+  
+  html { overflow-y: auto; }
+  #config_menu {overflow-y: auto;    position: fixed;    left: 0px;    top: 0;    z-index: 99998;    color: #fff;    background: #fff;    padding-bottom: 5px;    border: 1px solid #b18888;}
+  #config_menu_inner { padding: 5px; }
+  #config_menu_inner ul { margin: 0; padding: 0; list-style-type: none; }
+  #config_menu_inner li { margin: 0; padding: 0; }
+  #config_menu_inner a { display: block; margin: -1px 0 0 0; padding: 7px; font-size: 14px; text-decoration: none; color: #fff; border-top: 1px solid #444; border-bottom: 1px solid #444; }
+  #config_menu_inner a:hover { text-decoration: none; background: #444; }
+  .disabled {pointer-events: none; cursor: default; opacity: 0.5;}
+
+  .ctrlBtn {
+    border: 1px solid #8f8e8e;
+    border-radius: 20%;
+    background: #f1f1f1;
+    box-shadow: 1px 1px 1px 0px;
+  }
+  .ctrlBtn:hover {
+    background: #dfdfdf;
+  }
+
+
+
+  /*Popup (to replace drawer?)*/
+  .popup-jsc {
+    width: min-content !important;
+    background-color: #eaeaea !important;
+    border-radius: 0.5em;
+    border: 1px solid whitesmoke;
+    box-shadow: rgb(187 187 187) 5px 4px 9px 1px;
+}
+
+.flt.drag {
+    border: none;
+    margin: 0;
+    padding: 5px;
+    color:"white";
+    background: "whitesmoke";
+}
+
+
+.trackHeaderDivContentGear:hover{
+    color:#858991 !important;
+    cursor:pointer;
+}
+
+[id*="mod-containerTrackHolder2_gear"][id*="_gear"],
+.trackHeaderDivContentGear{
+    color:#BDBFC3;
+    /* display: block; */
+    height:15px;
+    position: absolute;
+    height:14px;
+    top: 0;
+    right: 0;
+    /* vertical-align: middle; */
+}
+
+.popupContents {
+display: inline-block;
+padding: 6px 10px;
+font: 1em arial, helvetica, sans-serif;
+color: #555;
+background-color: #ddd;
+border:1px outset lightgray;
+border-radius:.5em;
+}
+
+  
