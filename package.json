@@ -23,7 +23,7 @@
         "d3-simple-slider": "^1.10.4",
         "ddslick": "^1.0.3",
         "jquery": "^3.6.0",
-        "jquery-ui": "^1.12.1",
+        "jquery-ui": "^1.13.2",
         "@tibco/spotfire-mods-dev-server": "^1.0.1",
         "webpack": "^5.62.1",
         "webpack-cli": "^4.9.1"
