@@ -1,6 +1,6 @@
 {
-    "name": "js-webpack-starter",
-    "version": "1.0.1",
+    "name": "js-welllog-chart",
+    "version": "1.0.0",
     "description": "",
     "main": "index.js",
     "scripts": {
