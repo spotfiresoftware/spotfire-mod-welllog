@@ -1,4 +1,4 @@
-# Well Log Chart
+# Well Log Mod for TIBCO Spotfire®
 The well log visualization is a detailed two-dimensional record of tracks that can be used in petroleum exploration and production applications to show various physical, chemical, electrical, or other properties of the rock/fluid mixtures versus depth penetrated during drilling. Well-log visualization is important in E&P operations in the areas of analyzing electron density, resistivity, photoelectric effect, neutron absorption rate and other related properties, which in turn are useful in the determination of reservoir volume, hydrocarbon in place, reserves estimation and formation lithology
 
 ## Background
