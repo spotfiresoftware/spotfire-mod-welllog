@@ -14,18 +14,17 @@ These instructions assume that you have [Node.js](https://nodejs.org/en/) (which
 ## Data Requirements
 This Mod works with pivoted data requiring at least 3 columns: Depth, Category and Value for the unpivoted categories.  Here is an example of a small data set:
 
-```
-DEPTH	Category	Value
-200		GR	        113.9
-200		CAL	        176.867
-200		PHIN	    0.447
-200		PHID	    0.218
-200		RESD	    5.927
-200.25	GR	        112.033
-200.25	CAL	        175.83
-200.25	PHIN	    0.482
-200.25	PHID	    0.22
-```
+|DEPTH|Category|Value|
+|-|-|-|
+|200|GR|113.9|
+|200|CAL|176.867|
+|200|PHIN|0.447|
+|200|PHID|0.218|
+|200|RESD|5.927|
+|200.25|GR|112.033|
+|200.25|CAL|175.83|
+|200.25|PHIN|0.482|
+|200.25|PHID|0.22|
 
 # How to get started (with development server)
 - Open a terminal at the location of this example.
