@@ -1,6 +1,9 @@
 # Well Log Mod for TIBCO Spotfire®
 The well log visualization is a detailed two-dimensional record of tracks that can be used in petroleum exploration and production applications to show various physical, chemical, electrical, or other properties of the rock/fluid mixtures versus depth penetrated during drilling. Well-log visualization is important in E&P operations in the areas of analyzing electron density, resistivity, photoelectric effect, neutron absorption rate and other related properties, which in turn are useful in the determination of reservoir volume, hydrocarbon in place, reserves estimation and formation lithology
 
+> **Note:** This Mod is work in progress 
+
+
 ## Background
 The original Well Log Mod was developed by [Justin Gosses](https://www.linkedin.com/in/justingosses/) called [Wellio-viz.js](https://github.com/JustinGOSSES/wellioviz) available on his [github repository](https://github.com/JustinGOSSES/wellioviz) 
 
@@ -12,14 +15,14 @@ All source code for the mod example can be found in the `src` folder. Other nece
 These instructions assume that you have [Node.js](https://nodejs.org/en/) (which includes npm) installed.
 
 ## Data Requirements
-This Mod works with pivoted data requiring at least depth and some other continuous measure. For example, GR, CAL, PHID, etc.  Here is an example of a small data set:
+This Mod works with *pivoted* data requiring at least depth and some other continuous measure. For example, GR, CAL, PHID, etc.  Here is an example of a small data set:
 
-| DEPTH | GR   |     | PHIN |    | PHID   | CAL     |
-|-------|------|-----|------|----|--------|---------|
-| 200   | 113.9| 0.447| 0.218|    | 176.867|         |
-| 200.15| 113.8| 0.458| 0.218|    | 177.759|         |
-| 200.18| 114.0| 0.337| 0.218|    | 176.347|         |
-| 200.25| 114.3| 0.380| 0.222|    | 175.834|         |
+| DEPTH | GR   | PHIN|  PHID| CAL    |
+|-------|------|-----|------|--------|
+| 200   | 113.9| 0.447| 0.218| 176.867|
+| 200.15| 113.8| 0.458| 0.218| 177.759|
+| 200.18| 114.0| 0.337| 0.218| 176.347|
+| 200.25| 114.3| 0.380| 0.222| 175.834|
 
 # How to get started (with development server)
 - Open a terminal at the location of this example.
