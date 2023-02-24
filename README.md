@@ -23,7 +23,7 @@ This Mod works with pivoted data requiring at least 3 columns: Depth, Category a
 |200|RESD|5.927|
 |200.25|GR|112.033|
 |200.25|CAL|175.83|
-|200.25|PHIN|0.482|
+|200.25|PHIN|0.482| 
 |200.25|PHID|0.22|
 
 # How to get started (with development server)
