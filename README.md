@@ -14,12 +14,12 @@ These instructions assume that you have [Node.js](https://nodejs.org/en/) (which
 ## Data Requirements
 This Mod works with pivoted data requiring at least depth and some other continuous measure. For example, GR, CAL, PHID, etc.  Here is an example of a small data set:
 
-|DEPTH|GR||PHIN||PHID|CAL|
-|-|-|-|-|-|-|
-|200|113.9|0.447|0.218|176.867|
-|200.15|113.8|0.458|0.218|177.759|
-|200.18|114.0|0.337|0.218|176.347|
-|200.25|114.3|0.380|0.222|175.834|
+| DEPTH | GR   |     | PHIN |    | PHID   | CAL     |
+|-------|------|-----|------|----|--------|---------|
+| 200   | 113.9| 0.447| 0.218|    | 176.867|         |
+| 200.15| 113.8| 0.458| 0.218|    | 177.759|         |
+| 200.18| 114.0| 0.337| 0.218|    | 176.347|         |
+| 200.25| 114.3| 0.380| 0.222|    | 175.834|         |
 
 # How to get started (with development server)
 - Open a terminal at the location of this example.
