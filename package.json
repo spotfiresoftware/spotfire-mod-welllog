@@ -24,7 +24,7 @@
         "ddslick": "^1.0.3",
         "jquery": "^3.6.0",
         "jquery-ui": "^1.12.1",
-        "webpack": "^5.62.1",
+        "webpack": "^5.76.0",
         "webpack-cli": "^4.9.1"
     }
 }
