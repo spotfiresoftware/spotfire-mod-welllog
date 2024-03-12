@@ -1,7 +1,21 @@
 # Well Log Mod for TIBCO Spotfire®
 The well log visualization is a detailed two-dimensional record of tracks that can be used in petroleum exploration and production applications to show various physical, chemical, electrical, or other properties of the rock/fluid mixtures versus depth penetrated during drilling. Well-log visualization is important in E&P operations in the areas of analyzing electron density, resistivity, photoelectric effect, neutron absorption rate and other related properties, which in turn are useful in the determination of reservoir volume, hydrocarbon in place, reserves estimation and formation lithology
 
-> **Note:** This Mod is work in progress 
+> **Note:** This Mod is work in progress. Main change is that it uses pivoted data, but the number of measures is limited to th number of axes defined in the mod-manifest.json. Feel free to contribute!
+
+### Contribute to this version of the Well Log Mod
+1. Clone repository: `git clone <repository-url>`
+2. Navigate to repository: `cd <repository-name>`
+3. Fetch branches: `git fetch origin`
+4. Switch to branch: `git checkout <branch-name>`
+5. Make changes in the code.
+6. Stage changes: `git add .`
+7. Commit changes: `git commit -m "<commit-message>"`
+8. Push changes: `git push origin <branch-name>`
+
+**Note:** The branch name in this case is `pivoted` and the repostitory url is `https://github.com/spotfiresoftware/spotfire-mod-welllog.git` 
+
+
 
 
 ## Background

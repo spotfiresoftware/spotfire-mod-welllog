@@ -1,1 +1,8 @@
-<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><defs><style>.cls-1,.cls-2{fill:#fa7864;}.cls-1{opacity:0.6;isolation:isolate;}</style></defs><title>Mods_icons</title><path class="cls-1" d="M24,3.0516V7.0524L17.0004,4.2516l-4.0008,6L9,8.2524,3,12.252l-3-1.5V6.7524l3,1.5L9,4.2516,12.9996,6.252l4.0008-6Z"/><path class="cls-2" d="M17.0004,8.3364l-4.0008,5.952L9,12.3036,3,16.272,0,14.784V24H24V11.1132Z"/></svg>
+<!--edit on https://boxy-svg.com/app-->
+<svg id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>.cls-1,.cls-2{fill:#fa7864;}.cls-1{opacity:0.6;isolation:isolate;}</style>
+  </defs>
+  <title>Mods_icons</title>
+  <path style="stroke: rgb(0, 0, 0); fill: rgb(23, 216, 14);" d="M 11.579 -0.955 C 10.994 -0.662 11.757 0.919 11.106 0.782 C 9.797 0.507 1.776 3.314 0.335 4.888 C -0.999 6.345 23.452 7.933 23.645 8.047 C 28.767 11.066 2.209 13.863 0.652 16.038 C -0.782 18.041 20.706 19.553 21.56 19.67 C 26.689 20.375 11.264 25.674 11.264 25.923"></path>
+</svg>

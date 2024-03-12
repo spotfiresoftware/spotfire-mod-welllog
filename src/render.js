@@ -16,7 +16,7 @@ import { invalidateTooltip } from "./extended-api.js";
 import { nodeFormattedPathAsArray } from "./extended-api.js";
 import { addHandlersSelection } from "./ui-input.js";
 import { event } from "jquery";
-// import { hess_templates } from "./HESS_PlotTemplate.js";
+import { test_template as test_template } from "./PlotTemplate.js";
 
 /**
  * @typedef {{
@@ -1052,13 +1052,13 @@ export async function render(state, mod, dataView, windowSize, verticalZoomHeigh
     //plot_templates = buildTemplates(dataRows,nt); 
     //lets use hess hardcoded template
 
-    plot_templates = hess_templates;
+    plot_templates = test_template;
 
     //set width
     var trackWidth = (window.innerWidth - zoneLogTrackWidth - zoneLogTrackWidth - ZoomPanelWidth - depthLabelPanelWidth - 30) / numberOfTracks;
 
     //fix widths
-    hess_templates.forEach(x=>{
+    test_template.forEach(x=>{
         x[0].trackBox.height=window.innerHeight;
         x[0].trackBox.width=trackWidth
     })
