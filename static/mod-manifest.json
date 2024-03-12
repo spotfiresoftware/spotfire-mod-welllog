@@ -337,7 +337,6 @@
         "index.html",
         "main.css",
         "jquery-ui.css",
-        "bundle.js",
-        "ace.1.2.3.js"
+        "bundle.js"
     ]
 }

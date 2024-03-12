@@ -16,7 +16,7 @@ import { invalidateTooltip } from "./extended-api.js";
 import { nodeFormattedPathAsArray } from "./extended-api.js";
 import { addHandlersSelection } from "./ui-input.js";
 import { event } from "jquery";
-import { hess_templates } from "./HESS_PlotTemplate.js";
+// import { hess_templates } from "./HESS_PlotTemplate.js";
 
 /**
  * @typedef {{
