@@ -1,4 +1,4 @@
-export var test_template = [
+export var plot_template = [
     [
         {
             "components": [
@@ -12,10 +12,10 @@ export var test_template = [
                                 "#e43a3a"
                             ],
                             "curveNames": [
-                                "C3",
+                                "C1",
                                 "C2",
-                                "C4",
-                                "C1"
+                                "C3",
+                                "C4"
                             ],
                             "curveStrokeDashArray": [
                                 "solid",

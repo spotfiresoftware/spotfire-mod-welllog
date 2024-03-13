@@ -33,7 +33,9 @@ Spotfire.initialize(async (mod) => {
     const reader = mod.createReader(
         mod.visualization.data(),
         mod.windowSize(),
-        mod.property("verticalZoomHeightMultiplier")
+        mod.property("verticalZoomHeightMultiplier"),
+        mod.property("trackDocPropMappings"),
+        mod.property("trackVisibility"),
     );
 
     /**
@@ -53,8 +55,11 @@ Spotfire.initialize(async (mod) => {
      * @param {Spotfire.DataView} dataView
      * @param {Spotfire.Size} windowSize
      * @param {Spotfire.AnalysisProperty<string>} verticalZoomHeightMultiplier
+     * @param {Spotfire.AnalysisProperty<string>} trackVisibility
      */
-    async function onChange(dataView, windowSize, verticalZoomHeightMultiplier) {
+    async function onChange(dataView, windowSize, verticalZoomHeightMultiplier, trackDocPropMappings, trackVisibility) {
+
+        console.clear();
 
         try {
             await render(
@@ -62,7 +67,9 @@ Spotfire.initialize(async (mod) => {
                 mod,
                 dataView,
                 windowSize,
-                verticalZoomHeightMultiplier
+                verticalZoomHeightMultiplier,
+                trackDocPropMappings,
+                trackVisibility
             );
             
             context.signalRenderComplete();

@@ -347,15 +347,6 @@ svg {
     position: fixed;
   }
 
-  #dialog{
-    position: fixed;
-    background-color: floralwhite;
-    border: 1px solid gray;
-    width: 95%;
-    height: 95%;
-    right: 50px;
-    z-index: 999;
-  }
 
 
   /* horizontal line */

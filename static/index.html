@@ -8,40 +8,105 @@
 
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8" />
-        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <title>Spotfire Mod Example</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="stylesheet" type="text/css" media="all" href="main.css" />
-        <link rel="stylesheet" type="text/css" media="all" href="jquery-ui.css" />
-    </head>
-    <body> 
 
-    <div id="dialog" hidden>
-        <a style="position: absolute;right:5px;cursor: pointer;" onclick="document.getElementById('dialog').hidden=true">❌</a>
-        
-        <span hidden>Mappings:   <span id="trackMmappingEditor"><textarea id="trackMmapping" title="JSON editor configuration maapings"></textarea></span>
-        Resolution: <input type="integer" id="trackResolution" title="number of values to skip for sampling purposes. For example, 0 is max resolution. 1 is every other value. 100 is every 100th">
-    </span>
-                <pre>
-                Visibility: <input id="trackVisibility" title="8 digit number consisting of 1 and 0 to select which tracks to hide. Example: 01101110 will remove first, fourth and last track ">
-            </pre>
- <center><button id="setSettings">Apply</button></center>
-        </pre>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Spotfire Mod Example</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" type="text/css" media="all" href="main.css" />
+</head>
+
+<body>
+
+    <div id="dialog" xhidden>
+        <div id="dialog-container">
+            <a class="close-button" onclick="document.getElementById('dialog').hidden=true">❌</a>
+            <div class="input-container">
+                <div class="input-item" id="track-visibility-checkboxes">
+                </div>
+                <div class="input-item" hidden>
+                    Visibility: <input id="trackVisibility"
+                    title="8 digit number consisting of 1 and 0 to select which tracks to hide. Example: 01101110 will remove first, fourth and last track ">
+                </div>
+                <div class="input-item" hidden >
+                    Resolution: <input type="integer" id="trackResolution" status="pending to be implemented"
+                        title="number of values to skip for sampling purposes. For example, 0 is max resolution. 1 is every other value. 100 is every 100th">
+                </div>
+                <div class="input-item">
+                    Mappings: <span id="trackMappingsEditor"><div id="trackMappings"
+                            title="JSON editor configuration maapings"></div></span>
+                </div>
+                <button id="setSettings">Apply</button>
+            </div>
+        </div>
     </div>
-            
- 
-        <div id="settings" onclick="document.getElementById('dialog').hidden=false">☼</div>
-        <hr id="hr">
-        <div id="mod-container"></div>
-        <script id="spotfire-loader">var Spotfire=function(e){"use strict";return e.initialize=function(e){var t="sfTemp"+1e4*Math.random()+"Cb",r=window;r[t]=e;var a={subject:"GetUrl",callbackId:-1,options:{cbId:t}};r.addEventListener("message",(function e(t){if(t.source!==r.parent||!t.data.src)return;r.removeEventListener("message",e);var a=document,n=a.createElement("script");n.src=t.data.src,(a.head||a.body).appendChild(n)})),r.parent.postMessage(a,"*")},e}({});</script>
-        <script src="bundle.js"></script>
-        <script src="ace.1.9.6.js"></script>
-        <script src="mode-json.js"></script>
-        <script src="theme-cobalt.js"></script>
+    <style for-the-dialog>
+        #dialog {
+            background-color: #f0f0f0ff;
+            position: fixed;
+            width: 35vw;
+            height: 65vh;
+            z-index: 5;
+            margin: 5px;
+            border: 1px solid black;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        #dialog-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            margin: 11px;
+        }
+
+        .close-button {
+            align-self: flex-end;
+            padding: 5px;
+            cursor: pointer;
+        }
+
+        .input-container {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .input-item {
+            margin-bottom: 10px;
+        }
 
 
+        #trackMappings {
+            box-sizing: border-box;
+            width: 100%;
+            height: 50vh;
+        }
 
-    </body>
+        #setSettings {
+            align-self: center;
+            padding: 10px;
+            width: 200px;
+            margin-top: 10px;
+        }
+    </style>
+
+
+    <hr id="hr">
+    <div id="mod-container"></div>
+    <script
+        id="spotfire-loader">var Spotfire = function (e) { "use strict"; return e.initialize = function (e) { var t = "sfTemp" + 1e4 * Math.random() + "Cb", r = window; r[t] = e; var a = { subject: "GetUrl", callbackId: -1, options: { cbId: t } }; r.addEventListener("message", (function e(t) { if (t.source !== r.parent || !t.data.src) return; r.removeEventListener("message", e); var a = document, n = a.createElement("script"); n.src = t.data.src, (a.head || a.body).appendChild(n) })), r.parent.postMessage(a, "*") }, e }({});</script>
+    <script src="bundle.js"></script>
+
+    <script src="./ace/ace.1.32.7.js"></script>
+    <script src="./ace/theme-eclipse.js"></script>
+    <script src="./ace/mode-javascript.js"></script>
+    <script src="./ace/worker-javascript.js"></script>
+
+    <script src="settings-icon.js"></script>
+
+</body>
+
 </html>
